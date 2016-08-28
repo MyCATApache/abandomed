@@ -1,11 +1,9 @@
 package io.mycat.net2;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,17 +12,19 @@ import org.slf4j.LoggerFactory;
  * @author wuzh
  */
 public abstract class Connection implements ClosableConnection {
+	public static final int STATE_CONNECTING=0;
+	public static final int STATE_IDLE=1;
+	public static final int STATE_CLOSING=-1;
+	public static final int STATE_CLOSED=-2;
+	
     public static Logger LOGGER = LoggerFactory.getLogger(Connection.class);
     protected String host;
     protected int port;
     protected int localPort;
     protected long id;
-
-    public enum State {
-        connecting, connected, closing, closed, failed
-    }
-
-    private State state = State.connecting;
+    private NIOReactor reactor;
+    private Object attachement;
+    private int state = STATE_CONNECTING;
 
     // 连接的方向，in表示是客户端连接过来的，out表示自己作为客户端去连接对端Sever
     public enum Direction {
@@ -53,7 +53,6 @@ public abstract class Connection implements ClosableConnection {
     private long lastPerfCollectTime;
     @SuppressWarnings("rawtypes")
     protected NIOHandler handler;
-    private ReactorBufferPool myBufferPool;
 
     public Connection(SocketChannel channel) {
         this.channel = channel;
@@ -63,7 +62,19 @@ public abstract class Connection implements ClosableConnection {
         this.lastWriteTime = startupTime;
         this.lastPerfCollectTime = startupTime;
     }
+    /**
+     * 確保Connection，Session相关的属性值的改变在Reactor线程中完成，防止变量无法被Reactor线程看到
+     * @param r
+     */
+    public void invokeLater(Runnable r)
+    {
+    	reactor.invokeLater(r);
+    }
 
+    public void ensureInActorThread()
+    {
+    	reactor.ensureInActorThread();
+    }
     public void resetPerfCollectTime() {
         netInBytes = 0;
         netOutBytes = 0;
@@ -145,14 +156,7 @@ public abstract class Connection implements ClosableConnection {
         return netOutBytes;
     }
 
-    private ByteBuffer allocate() {
-        return NetSystem.getInstance().getBufferPool().allocate();
-    }
-
-    private final void recycle(ByteBuffer buffer) {
-        NetSystem.getInstance().getBufferPool().recycle(buffer);
-    }
-
+    
     public void setHandler(NIOHandler<? extends Connection> handler) {
         this.handler = handler;
 
@@ -169,7 +173,7 @@ public abstract class Connection implements ClosableConnection {
 
  
     public boolean isConnected() {
-        return (this.state == Connection.State.connected);
+        return (this.state != STATE_CONNECTING && state!=STATE_CLOSING && state!=STATE_CLOSED );
     }
 
 
@@ -267,9 +271,12 @@ public abstract class Connection implements ClosableConnection {
 
 
 
-    @SuppressWarnings("unchecked")
+  	public void setNIOReactor(NIOReactor actorThreadId) {
+		this.reactor = actorThreadId;
+	}
+
+	@SuppressWarnings("unchecked")
     public void register(Selector selector, ReactorBufferPool myBufferPool) throws IOException {
-        this.myBufferPool = myBufferPool;
         processKey = channel.register(selector, SelectionKey.OP_READ, this);
         NetSystem.getInstance().addConnection(this);
         this.readDataBuffer =new MappedFileConDataBuffer(id+".rtmp");
@@ -344,7 +351,13 @@ public abstract class Connection implements ClosableConnection {
         }
     }
 
-    public void disableRead() {
+    public Object getAttachement() {
+		return attachement;
+	}
+	public void setAttachement(Object attachement) {
+		this.attachement = attachement;
+	}
+	public void disableRead() {
 
         SelectionKey key = this.processKey;
         key.interestOps(key.interestOps() & OP_NOT_READ);
@@ -365,7 +378,7 @@ public abstract class Connection implements ClosableConnection {
         }
     }
 
-    public void setState(State newState) {
+    public void setState(int newState) {
         this.state = newState;
     }
 
@@ -374,7 +387,8 @@ public abstract class Connection implements ClosableConnection {
      * 
      * @throws IOException
      */
-    protected void asynRead() throws IOException {
+    @SuppressWarnings("unchecked")
+	protected void asynRead() throws IOException {
         if (this.isClosed) {
             return;
         }
@@ -420,7 +434,7 @@ public abstract class Connection implements ClosableConnection {
 		return readDataBuffer;
 	}
 
-	public State getState() {
+	public int getState() {
         return state;
     }
 
@@ -447,10 +461,12 @@ public abstract class Connection implements ClosableConnection {
                 + direction + ", startupTime=" + startupTime + ", lastReadTime=" + lastReadTime + ", lastWriteTime="
                 + lastWriteTime + "]";
     }
-
-   
-    public ReactorBufferPool getMyBufferPool() {
-        return myBufferPool;
+    public String getReactor()
+    {
+    	return this.reactor.getName();
     }
-
+	public boolean belongsActor(String reacotr) {
+		return this.reactor.getName().equals(reacotr);
+	}
+  
 }

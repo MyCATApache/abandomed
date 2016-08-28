@@ -21,28 +21,17 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2;
+package io.mycat.mysql;
 
-public interface ClosableConnection {
-	
-	/**
-	 * 关闭连接
-	 */
-	void close(String reason);
+/**
+ * @author mycat
+ */
+public interface Versions {
 
-	boolean isClosed();
+    /**协议版本**/
+    public static final byte PROTOCOL_VERSION = 10;
 
-	public void idleCheck();
+    /**服务器版**/
+    public static final byte[] SERVER_VERSION = "Fake MySQL server".getBytes();
 
-	long getStartupTime();
-
-	String getHost();
-
-	int getPort();
-
-	int getLocalPort();
-
-	long getNetInBytes();
-
-	long getNetOutBytes();
 }

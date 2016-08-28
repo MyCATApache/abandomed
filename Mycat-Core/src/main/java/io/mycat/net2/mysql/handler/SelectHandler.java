@@ -26,12 +26,12 @@ package io.mycat.net2.mysql.handler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.net2.mysql.connection.front.MySQLFrontendConnection;
-import io.mycat.net2.mysql.packet.MySQLPacket;
+import io.mycat.mysql.MySQLConnection;
+import io.mycat.mysql.packet.MySQLPacket;
+import io.mycat.mysql.util.ParseUtil;
 import io.mycat.net2.mysql.parser.ServerParseSelect;
 import io.mycat.net2.mysql.response.FakeResultSet;
 import io.mycat.net2.mysql.response.SelectVersionComment;
-import io.mycat.net2.mysql.util.ParseUtil;
 
 /**
  * @author mycat
@@ -40,7 +40,7 @@ public final class SelectHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SelectHandler.class);
 
-    public static void handle(String stmt, MySQLFrontendConnection c, int offs) {
+    public static void handle(String stmt, MySQLConnection c, int offs) {
         int offset = offs;
         switch (ServerParseSelect.parse(stmt, offs)) {
         case ServerParseSelect.VERSION_COMMENT:
@@ -106,13 +106,7 @@ public final class SelectHandler {
             break;
         default:
             // c.execute(stmt, ServerParse.SELECT);
-            LOGGER.debug("Execute sql message at DB.");
-            c.setNextConnectedStatus(MySQLPacket.OK_PACKET);
-            LOGGER.debug("Send response packets to client.");
-            c.setNextConnectedStatus(MySQLPacket.OK_PACKET);
-            FakeResultSet.response(c);
-            LOGGER.debug("Finish sql executing.");
-            c.setNextConnectedStatus(MySQLPacket.EOF_PACKET);
+            
         }
     }
 

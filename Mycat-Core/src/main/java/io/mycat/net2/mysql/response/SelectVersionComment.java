@@ -25,14 +25,14 @@ package io.mycat.net2.mysql.response;
 
 import java.nio.ByteBuffer;
 
-import io.mycat.net2.mysql.connection.front.MySQLFrontendConnection;
-import io.mycat.net2.mysql.definination.Fields;
-import io.mycat.net2.mysql.packet.EOFPacket;
-import io.mycat.net2.mysql.packet.FieldPacket;
-import io.mycat.net2.mysql.packet.MySQLPacket;
-import io.mycat.net2.mysql.packet.ResultSetHeaderPacket;
-import io.mycat.net2.mysql.packet.RowDataPacket;
-import io.mycat.net2.mysql.packet.util.PacketUtil;
+import io.mycat.mysql.Fields;
+import io.mycat.mysql.MySQLConnection;
+import io.mycat.mysql.packet.EOFPacket;
+import io.mycat.mysql.packet.FieldPacket;
+import io.mycat.mysql.packet.MySQLPacket;
+import io.mycat.mysql.packet.ResultSetHeaderPacket;
+import io.mycat.mysql.packet.RowDataPacket;
+import io.mycat.mysql.util.PacketUtil;
 
 /**
  * @author mycat
@@ -56,7 +56,7 @@ public final class SelectVersionComment {
         eof.packetId = ++packetId;
     }
 
-    public static void response(MySQLFrontendConnection c) {
+    public static void response(MySQLConnection c) {
     	ByteBuffer byteBuf= c.getWriteDataBuffer().beginWrite(1024);
         // write header
         header.write(byteBuf,header.calcPacketSize());
@@ -86,9 +86,6 @@ public final class SelectVersionComment {
         c.getWriteDataBuffer().endWrite(byteBuf);
         c.enableWrite(true);
 
-        c.setNextConnectedStatus(MySQLPacket.OK_PACKET);
-        c.setNextConnectedStatus(MySQLPacket.OK_PACKET);
-        c.setNextConnectedStatus(MySQLPacket.EOF_PACKET);
     }
 
 }

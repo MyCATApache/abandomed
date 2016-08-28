@@ -12,6 +12,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.engine.ErrorCode;
+
 /**
  * NIO 连接器，用于连接对方Sever
  * 
@@ -99,7 +101,15 @@ public final class NIOConnector extends Thread {
 				c.setId(ConnectIdGenerator.getINSTNCE().getId());
 				System.out.println("----------------ConnectIdGenerator.getINSTNCE().getId()-----------------"
 						+ ConnectIdGenerator.getINSTNCE().getId());
-				NIOReactor reactor = reactorPool.getNextReactor();
+				NIOReactor reactor=null;
+				String reactorName=(String)c.getAttachement();
+				if(reactorName!=null)
+				{
+					reactor=reactorPool.getSpecialActor(reactorName);
+				}else
+				{
+					reactor = reactorPool.getNextReactor();
+				}
 				reactor.postRegister(c);
 
 			}
@@ -107,7 +117,7 @@ public final class NIOConnector extends Thread {
 			LOGGER.warn("caught err ",e);
 			clearSelectionKey(key);
 			c.close(e.toString());
-			c.getHandler().onConnectFailed(c, e);
+			c.getHandler().onConnectFailed(c ,new ConnectionException(ErrorCode.ERR_FOUND_EXCEPION,e.toString()));
 
 		}
 	}

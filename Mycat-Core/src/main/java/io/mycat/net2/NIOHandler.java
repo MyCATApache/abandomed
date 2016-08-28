@@ -25,7 +25,7 @@ public interface NIOHandler<T extends Connection> {
 	 * @param e
 	 *            连接异常
 	 */
-	public void onConnectFailed(T con, Throwable e);
+	public void onConnectFailed(T con, ConnectionException e);
 	
 	/**
 	 * 连接关闭通知
@@ -41,5 +41,12 @@ public interface NIOHandler<T extends Connection> {
 	 *            当前连接
 	 */
 	void handleReadEvent(T con) throws IOException;
+	
+	/**
+	 * 数据处理过程中发生意外错误
+	 * @param con
+	 * @param e
+	 */
+	void onHandlerError(T con,Exception e);
 
 }

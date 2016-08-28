@@ -2,14 +2,14 @@ package io.mycat.net2.mysql.response;
 
 import java.nio.ByteBuffer;
 
-import io.mycat.net2.mysql.connection.front.MySQLFrontendConnection;
-import io.mycat.net2.mysql.packet.EOFPacket;
-import io.mycat.net2.mysql.packet.FieldPacket;
-import io.mycat.net2.mysql.packet.ResultSetHeaderPacket;
-import io.mycat.net2.mysql.packet.RowDataPacket;
+import io.mycat.mysql.MySQLConnection;
+import io.mycat.mysql.packet.EOFPacket;
+import io.mycat.mysql.packet.FieldPacket;
+import io.mycat.mysql.packet.ResultSetHeaderPacket;
+import io.mycat.mysql.packet.RowDataPacket;
 
 public final class FakeResultSet {
-    public static void response(MySQLFrontendConnection c) {
+    public static void response(MySQLConnection c) {
     	ByteBuffer byteBuf= c.getWriteDataBuffer().beginWrite(1024*10);
         byte packedId = 1;
         ResultSetHeaderPacket rshp = new ResultSetHeaderPacket();

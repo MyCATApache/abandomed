@@ -21,28 +21,50 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2;
+package io.mycat.mysql.packet;
 
-public interface ClosableConnection {
-	
-	/**
-	 * 关闭连接
-	 */
-	void close(String reason);
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
 
-	boolean isClosed();
+import io.mycat.mysql.util.BufferUtil;
+import io.mycat.mysql.util.StreamUtil;
 
-	public void idleCheck();
+/**
+ * @author mycat
+ */
+public class Reply323Packet extends MySQLPacket {
 
-	long getStartupTime();
+    public byte[] seed;
 
-	String getHost();
+    public void write(OutputStream out) throws IOException {
+        StreamUtil.writeUB3(out, calcPacketSize());
+        StreamUtil.write(out, packetId);
+        if (seed == null) {
+            StreamUtil.write(out, (byte) 0);
+        } else {
+            StreamUtil.writeWithNull(out, seed);
+        }
+    }
 
-	int getPort();
+    public void write(ByteBuffer  buffer,int pkgSize) {
+        BufferUtil.writeUB3(buffer, pkgSize);
+        buffer.put(packetId);
+        if (seed == null) {
+            buffer.put((byte) 0);
+        } else {
+            BufferUtil.writeWithNull(buffer, seed);
+        }
+    }
 
-	int getLocalPort();
+    @Override
+    public int calcPacketSize() {
+        return seed == null ? 1 : seed.length + 1;
+    }
 
-	long getNetInBytes();
+    @Override
+    protected String getPacketInfo() {
+        return "MySQL Auth323 Packet";
+    }
 
-	long getNetOutBytes();
 }

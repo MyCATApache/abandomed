@@ -26,7 +26,7 @@ package io.mycat.net2.mysql.config;
 import java.io.File;
 import java.io.IOException;
 
-import io.mycat.net2.mysql.definination.Isolations;
+import io.mycat.mysql.Isolations;
 
 /**
  * 系统基础配置项

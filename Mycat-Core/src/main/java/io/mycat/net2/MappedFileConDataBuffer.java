@@ -13,11 +13,12 @@ import java.nio.channels.SocketChannel;
 public class MappedFileConDataBuffer implements ConDataBuffer {
 	private FileChannel channel;
 	private MappedByteBuffer mapBuf;
+	private RandomAccessFile randomFile;
 	private int readPos;
 	private int totalSize;
 	public MappedFileConDataBuffer(String fileName) throws IOException
 	{
-		RandomAccessFile randomFile = new RandomAccessFile(fileName, "rw");
+		randomFile = new RandomAccessFile(fileName, "rw");
 		totalSize=1024*1024*5;
 		randomFile.setLength(totalSize);
 		channel = randomFile.getChannel();
@@ -36,6 +37,10 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 	public void putBytes(ByteBuffer buf) throws IOException {
 		int position=mapBuf.position();
 		int writed=channel.write(buf, position);
+		if(buf.hasRemaining())
+		{
+			throw new IOException("can't write whole buf ,writed "+writed+" remains "+buf.remaining());
+		}
 		mapBuf.position(position+writed);
 		
 	}
@@ -94,6 +99,11 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 	@Override
 	public void recycle() {
 		System.out.println("warining ,not implemented recyled ,Leader.us tell you :please fix it ");
+		try {
+			randomFile.close();
+		} catch (IOException e) {
+			 
+		}
 	}
 	@Override
 	public byte getByte(int index) {

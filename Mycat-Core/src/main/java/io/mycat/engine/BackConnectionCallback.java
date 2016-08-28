@@ -21,28 +21,48 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2;
+package io.mycat.engine;
 
-public interface ClosableConnection {
-	
-	/**
-	 * 关闭连接
-	 */
-	void close(String reason);
+import java.io.IOException;
 
-	boolean isClosed();
+import io.mycat.net2.ConDataBuffer;
+import io.mycat.net2.ConnectionException;
+/**
+ * 后端数据库的事件处理回调接口
+ * @author wuzhihui
+ *
+ */
+public interface BackConnectionCallback<T extends BackendConnection> {
 
-	public void idleCheck();
+    /**
+     * 无法获取连接
+     * 
+     * @param e
+     * @param conn
+     */
+     void connectionError(ConnectionException e, T conn);
 
-	long getStartupTime();
+    /**
+     * 已获得有效连接的响应处理
+     */
+    void connectionAcquired(T conn);
 
-	String getHost();
+    /**
+     * 收到数据包的响应处理
+     */
+    void handleResponse(T conn,ConDataBuffer dataBuffer,byte packageType,int pkgStartPos,int pkgLen) throws IOException ;
 
-	int getPort();
+    /**
+     * on connetion close event
+     */
+    void connectionClose(T conn, String reason);
+    
+    /**
+     * 处理数据的过程中发生错误
+     * @param e
+     * @param conn
+     */
+    void handlerError(Exception e,T conn);
+ 
 
-	int getLocalPort();
-
-	long getNetInBytes();
-
-	long getNetOutBytes();
 }

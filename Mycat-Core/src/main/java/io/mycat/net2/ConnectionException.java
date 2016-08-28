@@ -14,6 +14,14 @@ public class ConnectionException extends RuntimeException {
 		this.msg = msg;
 	}
 
+	public int getCode() {
+		return code;
+	}
+
+	public String getMsg() {
+		return msg;
+	}
+
 	@Override
 	public String toString() {
 		return "ConnectionException [code=" + code + ", msg=" + msg + "]";

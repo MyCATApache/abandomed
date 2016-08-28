@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.nio.channels.CancelledKeyException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
+import java.util.Arrays;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,14 +27,30 @@ public final class NIOReactor {
 	public NIOReactor(String name, SharedBufferPool shearedBufferPool) throws IOException {
 		this.name = name;
 		this.shearedBufferPool = shearedBufferPool;
-		this.reactorR = new RWThread();
+		this.reactorR = new RWThread(name+"-RW");
+	}
+	public String getName()
+	{
+		return name;
 	}
 
 	final void startup() {
-		new Thread(reactorR, name + "-RW").start();
+		reactorR.start();
 	}
-
+	 public void ensureInActorThread()
+	    {
+	    	if(Thread.currentThread().getId()!=reactorR.getId())
+	    	{
+	    		//System.out.println("thread "+Thread.currentThread().getId()+ ","+reactorR.getId());
+	    		throw new RuntimeException("must called in actor thread ,connection.invokeLater(...) ,cur thread: "+Thread.currentThread().getName() +" should in thread: "+reactorR.getName());
+	    	}
+	    }
+	public void invokeLater(Runnable e)
+	{
+		reactorR.events.add(e);
+	}
 	final void postRegister(Connection c) {
+		c.setNIOReactor(this);
 		reactorR.registerQueue.offer(c);
 		reactorR.selector.wakeup();
 	}
@@ -50,8 +68,9 @@ public final class NIOReactor {
 		private final ConcurrentLinkedQueue<Connection> registerQueue;
 		private long reactCount;
 		private final ReactorBufferPool myBufferPool;
-
-		private RWThread() throws IOException {
+        private java.util.concurrent.CopyOnWriteArrayList<Runnable> events=new CopyOnWriteArrayList<Runnable>();
+		private RWThread(String name) throws IOException {
+			this.setName(name);
 			this.selector = Selector.open();
 			myBufferPool = new ReactorBufferPool(shearedBufferPool, this, 1000);
 			this.registerQueue = new ConcurrentLinkedQueue<Connection>();
@@ -61,11 +80,16 @@ public final class NIOReactor {
 		public void run() {
 			final Selector selector = this.selector;
 			Set<SelectionKey> keys = null;
+			int readys=0;
 			for (;;) {
 				++reactCount;
 				try {
-					selector.select(500L);
-					register(selector);
+					readys=selector.select(400/(readys+1));
+					if(readys==0)
+					{
+						handlerEvents(selector);
+						continue;
+					}
 					keys = selector.selectedKeys();
 					for (SelectionKey key : keys) {
 						Connection con = null;
@@ -102,6 +126,7 @@ public final class NIOReactor {
 						}
 
 					}
+					
 				} catch (Throwable e) {
 					LOGGER.warn(name, e);
 				} finally {
@@ -109,9 +134,38 @@ public final class NIOReactor {
 						keys.clear();
 					}
 				}
+				//handler other events
+				handlerEvents(selector);
 			}
 		}
 
+		private void processEvents() {
+			if(events.isEmpty())
+			{
+				return;
+			}
+			Object[] objs=events.toArray();
+			if(objs.length>0)
+			{
+			for(Object obj:objs)
+			{
+				((Runnable)obj).run();
+			}
+			events.removeAll(Arrays.asList(objs));
+			}			
+		}
+
+		private void handlerEvents(Selector selector)
+		{
+			try
+			{
+			processEvents();
+			register(selector);
+			}catch(Exception e)
+			{
+				LOGGER.warn("caught user event err:",e);
+			}
+		}
 		private void register(Selector selector) {
 
 			if (registerQueue.isEmpty()) {

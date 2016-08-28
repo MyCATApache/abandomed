@@ -43,30 +43,9 @@ public final class SystemConfig {
 	private int frontSocketNoDelay = 1; // 0=false
 	private int backSocketNoDelay = 1; // 1=true
 
-	private long processorBufferPool;
-	private int processorBufferChunk;
-
-	private int packetHeaderSize = 4;
-	private int maxPacketSize = 16 * 1024 * 1024;
 
 	public SystemConfig() {
 
-	}
-
-	public int getPacketHeaderSize() {
-		return packetHeaderSize;
-	}
-
-	public void setPacketHeaderSize(int packetHeaderSize) {
-		this.packetHeaderSize = packetHeaderSize;
-	}
-
-	public int getMaxPacketSize() {
-		return maxPacketSize;
-	}
-
-	public void setMaxPacketSize(int maxPacketSize) {
-		this.maxPacketSize = maxPacketSize;
 	}
 
 	public static String getHomePath() {
@@ -120,22 +99,7 @@ public final class SystemConfig {
 		return backSocketSoSndbuf;
 	}
 
-	public long getProcessorBufferPool() {
-		return processorBufferPool;
-	}
-
-	public void setProcessorBufferPool(long processorBufferPool) {
-		this.processorBufferPool = processorBufferPool;
-	}
-
-	public int getProcessorBufferChunk() {
-		return processorBufferChunk;
-	}
-
-	public void setProcessorBufferChunk(int processorBufferChunk) {
-		this.processorBufferChunk = processorBufferChunk;
-	}
-
+	
 	public int getFrontSocketSoRcvbuf() {
 		return frontSocketSoRcvbuf;
 	}

@@ -21,28 +21,29 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2;
+package io.mycat.mysql.back;
 
-public interface ClosableConnection {
-	
-	/**
-	 * 关闭连接
-	 */
-	void close(String reason);
+import java.io.IOException;
 
-	boolean isClosed();
+import io.mycat.engine.BackendConnection;
+import io.mycat.net2.mysql.config.DBHostConfig;
 
-	public void idleCheck();
+/**
+ * @author mycat
+ */
+public class MySQLDataSource extends PhysicalDatasource {
 
-	long getStartupTime();
+    private final MySQLBackendConnectionFactory factory;
 
-	String getHost();
+    public MySQLDataSource(DBHostConfig config, boolean isReadNode) {
+        super(config, isReadNode);
+        this.factory = new MySQLBackendConnectionFactory();
 
-	int getPort();
+    }
 
-	int getLocalPort();
+    @Override
+    public BackendConnection createNewConnectionOnReactor(String reactor,String schema) throws IOException {
+        return factory.make(this, reactor,schema);
+    }
 
-	long getNetInBytes();
-
-	long getNetOutBytes();
 }

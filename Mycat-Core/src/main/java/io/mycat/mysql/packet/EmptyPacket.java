@@ -21,28 +21,22 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2;
+package io.mycat.mysql.packet;
 
-public interface ClosableConnection {
-	
-	/**
-	 * 关闭连接
-	 */
-	void close(String reason);
+/**
+ * @author mycat暂时只发现在load data infile时用到
+ */
+public class EmptyPacket extends MySQLPacket {
+    public static final byte[] EMPTY = new byte[] { 0, 0, 0,3 };
 
-	boolean isClosed();
+    @Override
+    public int calcPacketSize() {
+        return 0;
+    }
 
-	public void idleCheck();
+    @Override
+    protected String getPacketInfo() {
+        return "MySQL Empty Packet";
+    }
 
-	long getStartupTime();
-
-	String getHost();
-
-	int getPort();
-
-	int getLocalPort();
-
-	long getNetInBytes();
-
-	long getNetOutBytes();
 }

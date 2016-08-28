@@ -21,28 +21,18 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2;
+package io.mycat.mysql;
 
-public interface ClosableConnection {
-	
-	/**
-	 * 关闭连接
-	 */
-	void close(String reason);
+/**
+ * 事务隔离级别定义
+ * 
+ * @author mycat
+ */
+public interface Isolations {
 
-	boolean isClosed();
+    public static final int READ_UNCOMMITTED = 1;
+    public static final int READ_COMMITTED = 2;
+    public static final int REPEATED_READ = 3;
+    public static final int SERIALIZABLE = 4;
 
-	public void idleCheck();
-
-	long getStartupTime();
-
-	String getHost();
-
-	int getPort();
-
-	int getLocalPort();
-
-	long getNetInBytes();
-
-	long getNetOutBytes();
 }

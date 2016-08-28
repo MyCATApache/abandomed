@@ -26,7 +26,7 @@ package io.mycat.net2.mysql.parser;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.mycat.net2.mysql.util.ParseUtil;
+import io.mycat.mysql.util.ParseUtil;
 
 /**
  * @author mycat

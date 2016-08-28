@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.net.StandardSocketOptions;
 import java.nio.channels.SocketChannel;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * @author wuzh
  */
@@ -41,50 +38,4 @@ public abstract class ConnectionFactory {
 		c.setHandler(getNIOHandler());
 		return c;
 	}
-}
-
-@SuppressWarnings("rawtypes")
-class NIOHandlerWrap implements NIOHandler {
-	protected static final Logger LOGGER = LoggerFactory
-			.getLogger(NIOHandlerWrap.class);
-	private final NIOHandler handler;
-
-	public NIOHandlerWrap(NIOHandler handler) {
-		super();
-		this.handler = handler;
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void onConnected(Connection con) throws IOException {
-		con.setState(Connection.State.connecting);
-		String info = con.getDirection() == Connection.Direction.in ? "remote peer connected to me "
-				+ con
-				: " connected to remote peer " + con;
-		LOGGER.info(info);
-		handler.onConnected(con);
-
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void onConnectFailed(Connection con, Throwable e) {
-		LOGGER.warn("connection failed: " + e + " con " + con);
-		handler.onConnectFailed(con, e);
-
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void handleReadEvent(Connection con) throws IOException {
-		handler.handleReadEvent(con);
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public void onClosed(Connection con, String reason) {
-		handler.onClosed(con, reason);
-
-	}
-
 }
