@@ -22,7 +22,7 @@
  *
  */
  
-package io.mycat.mysql;
+package io.mycat;
  
 import java.io.IOException;
 import java.util.HashMap;
@@ -31,7 +31,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.engine.SQLEngineCtx;
+import io.mycat.mysql.MySQLFrontendConnectionFactory;
 import io.mycat.mysql.back.MySQLDataSource;
 import io.mycat.mysql.back.PhysicalDBNode;
 import io.mycat.mysql.back.PhysicalDBPool;
@@ -51,8 +51,8 @@ import io.mycat.net2.mysql.config.DBHostConfig;
  * @author wuzhihui
  *
  */
-public class MockMySQLServer {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MockMySQLServer.class);
+public class MycatCore {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MycatCore.class);
     public static final int PORT = 8066;
 
     public static final String MOCK_HOSTNAME = "host1";
@@ -90,7 +90,7 @@ public class MockMySQLServer {
        
        
          MySQLFrontendConnectionFactory frontFactory = new MySQLFrontendConnectionFactory();
-        NIOAcceptor server = new NIOAcceptor("Server", "127.0.0.1", PORT, frontFactory, reactorPool);
+        NIOAcceptor server = new NIOAcceptor("Server", "0.0.0.0", PORT, frontFactory, reactorPool);
         server.start();
         // server started
         LOGGER.info(server.getName() + " is started and listening on " + server.getPort());

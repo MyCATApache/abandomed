@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.MycatCore;
 import io.mycat.engine.SQLCommandHandler;
 import io.mycat.mysql.back.DirectTransTofrontCallBack;
 import io.mycat.mysql.back.MySQLBackendConnection;
@@ -140,9 +141,8 @@ public class DefaultSQLCommandHandler implements  SQLCommandHandler<MySQLFrontCo
 	    }
 	    if (sql.equals("select @@version_comment limit 1")) {
 	        SelectHandler.handle(sql, frontCon, rs >>> 8);
-	        return;
+	       // return;
 	    }
-	       
 	        //直接透传（默认）
 	        final String db="mysql";
 	        MySQLBackendConnection existCon= (MySQLBackendConnection) frontCon.getSession().getBackendCons().get(db);
@@ -152,8 +152,8 @@ public class DefaultSQLCommandHandler implements  SQLCommandHandler<MySQLFrontCo
 	        	{
 	        		frontCon.removeBackCon(existCon);
 	        	}
-	        	final MySQLBackendConnection newCon= (MySQLBackendConnection) MockMySQLServer.mockDBNodes.get(MockMySQLServer.MOCK_HOSTNAME)
-	 	                .getConnection(frontCon.getReactor(),MockMySQLServer.MOCK_SCHEMA, true, null);
+	        	final MySQLBackendConnection newCon= (MySQLBackendConnection) MycatCore.mockDBNodes.get(io.mycat.MycatCore.MOCK_HOSTNAME)
+	 	                .getConnection(frontCon.getReactor(),MycatCore.MOCK_SCHEMA, true, null);
 	        	newCon.setAttachment(frontCon);//must in direct callback handler
 	        	newCon.setUserCallback(directTransCallback);
 	 	       frontCon.addTodoTask(()->

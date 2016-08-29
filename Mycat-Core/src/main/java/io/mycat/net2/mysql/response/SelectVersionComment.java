@@ -23,18 +23,19 @@
  */
 package io.mycat.net2.mysql.response;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import io.mycat.mysql.Fields;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.EOFPacket;
 import io.mycat.mysql.packet.FieldPacket;
-import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.mysql.packet.ResultSetHeaderPacket;
 import io.mycat.mysql.packet.RowDataPacket;
 import io.mycat.mysql.util.PacketUtil;
 
 /**
+ * wrong pakcage !!!!,please fix it
  * @author mycat
  */
 public final class SelectVersionComment {
@@ -56,8 +57,8 @@ public final class SelectVersionComment {
         eof.packetId = ++packetId;
     }
 
-    public static void response(MySQLConnection c) {
-    	ByteBuffer byteBuf= c.getWriteDataBuffer().beginWrite(1024);
+    public static void response(MySQLConnection c) throws IOException {
+    	ByteBuffer byteBuf= c.getWriteDataBuffer().beginWrite(1024*3);
         // write header
         header.write(byteBuf,header.calcPacketSize());
 

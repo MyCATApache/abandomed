@@ -23,6 +23,7 @@
  */
 package io.mycat.mysql.back;
 
+import java.io.IOException;
 import java.nio.channels.SocketChannel;
 import java.security.NoSuchAlgorithmException;
 
@@ -222,7 +223,7 @@ public class MySQLBackendConnection extends MySQLConnection implements BackendCo
         this.authenticated = authenticated;
     }
 
-    public void authenticate() {
+    public void authenticate() throws IOException {
         AuthPacket packet = new AuthPacket();
         packet.packetId = 1;
         packet.clientFlags = clientFlags;

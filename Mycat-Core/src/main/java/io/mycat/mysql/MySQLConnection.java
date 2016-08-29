@@ -76,8 +76,9 @@ public  class MySQLConnection extends Connection {
 	 * @param position
 	 *			buffer已读位置偏移量
 	 * @return 报文长度(Header长度+内容长度)
+	 * @throws IOException 
 	 */
-	public static final int getPacketLength(ConDataBuffer buffer, int offset) {
+	public static final int getPacketLength(ConDataBuffer buffer, int offset) throws IOException {
 		int length = buffer.getByte(offset) & 0xff;
 		length |= (buffer.getByte(++offset) & 0xff) << 8;
 		length |= (buffer.getByte(++offset) & 0xff) << 16;
@@ -206,13 +207,17 @@ public  class MySQLConnection extends Connection {
 	       // this.asynRead();
 	    }
 
-		 public void failure(int errno, String info) {
+		 public void failure(int errno, String info){
 		        LOGGER.error(toString() + info);
-		        writeErrMessage(errno, info);
+		        try {
+					writeErrMessage(errno, info);
+				} catch (IOException e) {
+					this.close(e.toString());
+				}
 		    }
 
   
-	public void writeMsqlPackage(MySQLPacket pkg)
+	public void writeMsqlPackage(MySQLPacket pkg) throws IOException
 	{
 		int pkgSize=pkg.calcPacketSize();
 		ByteBuffer buf=getWriteDataBuffer().beginWrite(pkgSize+MySQLPacket.packetHeaderSize);
@@ -221,7 +226,7 @@ public  class MySQLConnection extends Connection {
 		this.enableWrite(true);
 	}
     
-    public void writeErrMessage(int errno, String info) {
+    public void writeErrMessage(int errno, String info) throws IOException {
         ErrorPacket err = new ErrorPacket();
         err.packetId = 1;
         err.errno = errno;

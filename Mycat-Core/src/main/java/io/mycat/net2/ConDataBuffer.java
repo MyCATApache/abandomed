@@ -36,19 +36,20 @@ public interface ConDataBuffer {
 	 * @param length
 	 * @return
 	 */
-	public ByteBuffer beginWrite(int length);
+	public ByteBuffer beginWrite(int length) throws IOException;
 	
 	 /**
 	  * end write ,must with beginWrite
 	  * @param buffer
+	 * @throws IOException 
 	  */
-	public void endWrite(ByteBuffer buffer);
+	public void endWrite(ByteBuffer buffer) throws IOException;
 	/**
 	 * read one byte from inner buffer
 	 * @param index
 	 * @return
 	 */
-	public byte getByte(int index);
+	public byte getByte(int index) throws IOException;
 	/**
 	 * read bytes from inner buffer
 	 * 
@@ -65,8 +66,9 @@ public interface ConDataBuffer {
 	/**
 	 * cur writing start pos  (valid writeble data is from  writing pos -> totalSize)
 	 * @return
+	 * @throws IOException 
 	 */
-	public int writingPos();
+	public int writingPos() throws IOException;
 	/**
 	 * cur reading start pos ,(valid readable data is from readPos -> writing pos)
 	 * @return
@@ -78,11 +80,11 @@ public interface ConDataBuffer {
 	 */
 	public int totalSize();
 	
-	public void setWritingPos(int writingPos);
+	public void setWritingPos(int writingPos) throws IOException;
 	
 	public void seReadingPos(int readingPos);
 	
-	public boolean isFull();
+	public boolean isFull() throws IOException;
 	
 	public void recycle();
 	

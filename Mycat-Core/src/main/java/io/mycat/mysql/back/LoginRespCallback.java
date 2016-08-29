@@ -128,7 +128,7 @@ public class LoginRespCallback implements BackConnectionCallback<MySQLBackendCon
 	         }
 	    }
 
-	    private static void auth323(MySQLBackendConnection source, byte packetId) {
+	    private static void auth323(MySQLBackendConnection source, byte packetId) throws IOException {
 	        // 发送323响应认证数据包
 	        Reply323Packet r323 = new Reply323Packet();
 	        r323.packetId = ++packetId;

@@ -25,7 +25,6 @@ package io.mycat.net2;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 /**
@@ -33,44 +32,48 @@ import java.nio.channels.SocketChannel;
  * @author wuzhihui
  *
  */
-public class MappedFileConDataBuffer implements ConDataBuffer {
+public class MappedFileConDataBuffer2 implements ConDataBuffer {
 	private FileChannel channel;
-	private MappedByteBuffer mapBuf;
 	private RandomAccessFile randomFile;
 	private int readPos;
 	private int totalSize;
-	public MappedFileConDataBuffer(String fileName) throws IOException
+	public MappedFileConDataBuffer2(String fileName) throws IOException
 	{
 		randomFile = new RandomAccessFile(fileName, "rw");
 		totalSize=1024*1024*5;
 		randomFile.setLength(totalSize);
+		if(!fileName.startsWith("/dev/null"))
+		{
+			randomFile.setLength(totalSize);	
+		}
 		channel = randomFile.getChannel();
-		mapBuf=channel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
 		
 	}
 	@Override
 	public int transferFrom(SocketChannel socketChanel) throws IOException {
-		int position=mapBuf.position();
+		int position=(int) this.channel.position();
 		int tranfered=(int) channel.transferFrom(socketChanel,position,totalSize-position);
-		mapBuf.position(position+tranfered);
+		channel.position(position+tranfered);
 		return tranfered;
 	}
 
 	@Override
 	public void putBytes(ByteBuffer buf) throws IOException {
-		int position=mapBuf.position();
-		int writed=channel.write(buf, position);
-		if(buf.hasRemaining())
+		//buf.flip();
+		int writed=channel.write(buf);
+		if(buf.hasRemaining()||writed==0)
 		{
 			throw new IOException("can't write whole buf ,writed "+writed+" remains "+buf.remaining());
 		}
-		mapBuf.position(position+writed);
-		
+	
 	}
 	@Override
 	public void putBytes(byte[] buf) throws IOException {
-		this.mapBuf.put(buf);
-		
+		int writed=channel.write(ByteBuffer.wrap(buf));
+		if(writed!=buf.length)
+		{
+			throw new java.lang.RuntimeException("not write complete ");
+		}
 	}
 
 	@Override
@@ -85,7 +88,7 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 //		mapBuf.position(oldPos);
 //		mapBuf.limit(oldLimit);
 //		this.readPos+=writed;
-    int writeEnd=mapBuf.position();
+		int writeEnd=(int) this.channel.position();
 	int writed=(int) channel.transferTo(readPos, writeEnd-readPos, socketChanel);
 	this.readPos+=writed;
 	//System.out.println("transferTo ,writed  "+writed+" read "+readPos+" pos " + "writepos "+writeEnd);
@@ -94,7 +97,13 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 
 	@Override
 	public int writingPos() {
-		return mapBuf.position();
+		try {
+			return (int) channel.position();
+		} catch (IOException e) {
+			 
+			e.printStackTrace();
+		}
+		return -1;
 	}
 
 	@Override
@@ -108,8 +117,8 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 	}
 
 	@Override
-	public void setWritingPos(int writingPos) {
-		mapBuf.position(writingPos);
+	public void setWritingPos(int writingPos) throws IOException {
+		this.channel.position(writingPos);
 	}
 
 	@Override
@@ -117,8 +126,8 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 		this.readPos=readingPos;
 	}
 	@Override
-	public boolean isFull() {
-		return mapBuf.position()==this.totalSize;
+	public boolean isFull() throws IOException {
+		return channel.position()==this.totalSize;
 	}
 	@Override
 	public void recycle() {
@@ -130,30 +139,38 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 		}
 	}
 	@Override
-	public byte getByte(int index) {
-		return mapBuf.get(index);
+	public byte getByte(int index) throws IOException {
+		ByteBuffer dst=ByteBuffer.allocate(1);
+		this.channel.read(dst, index);
+		return dst.get(0);
 	}
 	@Override
 	public ByteBuffer getBytes(int index,int length) throws IOException {
-		int oldPos=mapBuf.position();
-		mapBuf.position(index);
-		ByteBuffer copyBuf=mapBuf.slice();
-		copyBuf.limit(length);
-		mapBuf.position(oldPos);
-		return copyBuf;
+		ByteBuffer dst=ByteBuffer.allocate(length);
+		channel.read(dst,index);
+		dst.flip();
+		return dst;
 		
 	}
 	@Override
 	public ByteBuffer beginWrite(int length) {
-		ByteBuffer copyBuf=mapBuf.slice();
-		copyBuf.limit(length);
+		ByteBuffer copyBuf=ByteBuffer.allocate(length);
+		//copyBuf.limit(length);
 		return copyBuf;
 	}
 	
 	@Override
-	public void endWrite(ByteBuffer buffer) {
-		 mapBuf.position(mapBuf.position()+buffer.position());
-		//System.out.println("end write ,total "+buffer.limit()+" writePos "+mapBuf.position()+" read pos "+this.readPos);
+	public void endWrite(ByteBuffer buffer) throws IOException {
+ 
+			//System.out.println("end write 1 ,buf[ "+buffer.position()+","+buffer.limit()+"] writePos "+channel.position()+" read pos "+this.readPos);
+			buffer.flip();
+			//int writed=channel.write(buffer);
+			channel.write(buffer);
+			//System.out.println("end write 2,total "+writed+" writePos "+channel.position()+" read pos "+this.readPos);
+		 
+		
+		 
+		
 	}
 	
 

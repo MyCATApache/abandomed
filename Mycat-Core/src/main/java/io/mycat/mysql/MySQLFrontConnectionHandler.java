@@ -101,10 +101,9 @@ public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnect
 
 
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void onHandlerError(MySQLFrontConnection con, Exception e) {
-		 con.getHandler().onHandlerError(con, e);
+		 con.close(e.toString());
 		
 	}
 

@@ -279,8 +279,14 @@ public abstract class Connection implements ClosableConnection {
     public void register(Selector selector, ReactorBufferPool myBufferPool) throws IOException {
         processKey = channel.register(selector, SelectionKey.OP_READ, this);
         NetSystem.getInstance().addConnection(this);
-        this.readDataBuffer =new MappedFileConDataBuffer(id+".rtmp");
-        writeDataBuffer=new MappedFileConDataBuffer(id+".wtmp");
+       // boolean isLinux=GenelUtil.isLinuxSystem();
+        //String maprFileName=isLinux? "/dev/zero":id+".rtmp";
+        //String mapwFileName=isLinux? "/dev/zero":id+".wtmp";
+        String maprFileName=id+".rtmp";
+        String mapwFileName=id+".wtmp";
+        LOGGER.info("connection bytebuffer mapped "+maprFileName);
+        this.readDataBuffer =new MappedFileConDataBuffer(maprFileName); // 2 ,3 
+        writeDataBuffer=new MappedFileConDataBuffer3(mapwFileName);
         this.handler.onConnected(this);
 
     }
