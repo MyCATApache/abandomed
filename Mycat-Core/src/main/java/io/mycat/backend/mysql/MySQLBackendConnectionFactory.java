@@ -21,30 +21,31 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.mysql.back;
+package io.mycat.backend.mysql;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 
+import io.mycat.beans.DataHostConfig;
 import io.mycat.net2.NetSystem;
-import io.mycat.net2.mysql.config.DBHostConfig;
 /**
  * bakcend mysql connection factory
  * @author wuzhihui
  *
  */
 public class MySQLBackendConnectionFactory {
+ 
     private final MySQLBackendConnectionHandler nioHandler = new MySQLBackendConnectionHandler();
 
     public MySQLBackendConnection make(MySQLDataSource pool,String reactor, String schema) throws IOException {
 
-        DBHostConfig dsc = pool.getConfig();
+       DataHostConfig dsc = pool.getConfig();
         SocketChannel channel = SocketChannel.open();
         channel.configureBlocking(false);
 
-        MySQLBackendConnection c = new MySQLBackendConnection(pool,channel, pool.isReadNode());
+        MySQLBackendConnection c = new MySQLBackendConnection(pool,channel);
         NetSystem.getInstance().setSocketParams(c, false);
-        // 设置NIOHandler
+        // 设置NIOHandlers
         c.setHandler(nioHandler);
         c.setHost(dsc.getIp());
         c.setPort(dsc.getPort());

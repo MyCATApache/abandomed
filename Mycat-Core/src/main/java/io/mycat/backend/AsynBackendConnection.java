@@ -21,7 +21,7 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.engine;
+package io.mycat.backend;
 
 public interface AsynBackendConnection {
 

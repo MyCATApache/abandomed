@@ -75,16 +75,6 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 
 	@Override
 	public int transferTo(SocketChannel socketChanel) throws IOException {
-//		int oldPos=mapBuf.position();
-//		int oldLimit=mapBuf.limit();
-//		//int writed=(int) channel.transferTo(readPos, position-readPos, socketChanel);
-//		mapBuf.position(readPos);
-//		mapBuf.limit(oldPos);
-//		
-//		int writed=socketChanel.write(this.mapBuf);
-//		mapBuf.position(oldPos);
-//		mapBuf.limit(oldLimit);
-//		this.readPos+=writed;
     int writeEnd=mapBuf.position();
 	int writed=(int) channel.transferTo(readPos, writeEnd-readPos, socketChanel);
 	this.readPos+=writed;

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.mycat.engine.SQLEngineCtx;
+import io.mycat.SQLEngineCtx;
 
 public class NIOReactorPool {
 	private final NIOReactor[] reactors;
@@ -20,9 +20,13 @@ public class NIOReactorPool {
 			reactorMap.put(reactor.getName(), reactor);
 			 
 		}
-		SQLEngineCtx.INSTANCE().initReactorMap(reactorMap);
+		
 	}
 
+	public NIOReactor[] getAllReactors()
+	{
+		return reactors;
+	}
 	public NIOReactor getSpecialActor(String name)
 	{
 		for(NIOReactor reactor:reactors)

@@ -25,9 +25,9 @@ package io.mycat.mysql.packet;
 
 import java.nio.ByteBuffer;
 
-import io.mycat.mysql.util.BufferUtil;
 import io.mycat.net2.ByteBufferArray;
 import io.mycat.net2.Connection;
+import io.mycat.util.BufferUtil;
 
 /**
  * From server to client in response to command, if error.

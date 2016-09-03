@@ -21,40 +21,52 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2.mysql.config;
+package io.mycat.beans;
 
+import io.mycat.SystemConfig;
 
-public class DBHostConfig {
+/**
+ * 代表一个数据存储节点的配置信息
+ * @author wuzhihui
+ *
+ */
+public class DataHostConfig {
     private String hostName;
     private String ip;
     private int port;
     private String url;
     private String user;
     private String password;
+    private String defaultSchema;
     private long idleTimeout = SystemConfig.DEFAULT_IDLE_TIMEOUT; // 连接池中连接空闲超时时间
     private int maxCon;
     private int minCon;
     private String dbType;
-    private String filters = "mergeStat";   
-    private long logTime = 300000;
     private int weight;				
 
-    public DBHostConfig() {
+    public DataHostConfig() {
         super();
     }
 
-    public DBHostConfig(String hostName, String ip, int port, String url,
-                        String user, String password) {
+    public DataHostConfig(String hostName, String ip, int port, String user, String password,String defaultSchema) {
         super();
         this.hostName = hostName;
         this.ip = ip;
         this.port = port;
-        this.url = url;
         this.user = user;
         this.password = password;
+        this.defaultSchema=defaultSchema;
     }
 
-    public String getDbType() {
+    public String getDefaultSchema() {
+		return defaultSchema;
+	}
+
+	public void setDefaultSchema(String defaultSchema) {
+		this.defaultSchema = defaultSchema;
+	}
+
+	public String getDbType() {
         return dbType;
     }
 
@@ -126,13 +138,6 @@ public class DBHostConfig {
         this.user = user;
     }
 
-    public String getFilters() {
-        return filters;
-    }
-
-    public void setFilters(String filters) {
-        this.filters = filters;
-    }
 
     public String getPassword() {
         return password;
@@ -142,14 +147,6 @@ public class DBHostConfig {
         this.password = password;
     }
 
-    public long getLogTime() {
-        return logTime;
-    }
-
-    public void setLogTime(long logTime) {
-        this.logTime = logTime;
-    }
-    
 	public int getWeight() {
 		return weight;
 	}
@@ -158,9 +155,13 @@ public class DBHostConfig {
 		this.weight = weight;
 	}
 
-    @Override
-    public String toString() {
-        return "DBHostConfig [hostName=" + hostName + ", url=" + url + "]";
-    }
+	@Override
+	public String toString() {
+		return "DataHostConfig [hostName=" + hostName + ", ip=" + ip + ", port=" + port + ", url=" + url + ", user="
+				+ user + ", password=" + password + ", defaultSchema=" + defaultSchema + ", idleTimeout=" + idleTimeout
+				+ ", maxCon=" + maxCon + ", minCon=" + minCon + ", dbType=" + dbType + ", weight=" + weight + "]";
+	}
+
+  
 
 }

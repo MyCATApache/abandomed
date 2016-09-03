@@ -25,17 +25,17 @@
 package io.mycat;
  
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.backend.DHSource;
+import io.mycat.backend.mysql.MySQLBackendConnectionFactory;
+import io.mycat.backend.mysql.MySQLDataSource;
+import io.mycat.backend.mysql.MySQLMSReplicatSet;
+import io.mycat.beans.DataHostConfig;
+import io.mycat.mysql.DefaultSQLCommandHandler;
 import io.mycat.mysql.MySQLFrontendConnectionFactory;
-import io.mycat.mysql.back.MySQLDataSource;
-import io.mycat.mysql.back.PhysicalDBNode;
-import io.mycat.mysql.back.PhysicalDBPool;
-import io.mycat.mysql.back.PhysicalDatasource;
 import io.mycat.net2.ExecutorUtil;
 import io.mycat.net2.NIOAcceptor;
 import io.mycat.net2.NIOConnector;
@@ -45,7 +45,6 @@ import io.mycat.net2.NamebleScheduledExecutor;
 import io.mycat.net2.NetSystem;
 import io.mycat.net2.SharedBufferPool;
 import io.mycat.net2.SystemConfig;
-import io.mycat.net2.mysql.config.DBHostConfig;
 /**
  * 
  * @author wuzhihui
@@ -59,40 +58,47 @@ public class MycatCore {
 
     public static final String MOCK_SCHEMA = "mysql";
 
-    public static final Map<String, PhysicalDBNode> mockDBNodes;
 
     static {
-        mockDBNodes = new HashMap<>();
-        DBHostConfig config = new DBHostConfig("host1", "127.0.0.1", 3306, "mysql", "root", "123456");
-        config.setMaxCon(10);
-        PhysicalDatasource dbSource = new MySQLDataSource(config, false);
-        PhysicalDBPool dbPool = new PhysicalDBPool("host1", new PhysicalDatasource[] { dbSource }, new HashMap<>());
-        PhysicalDBNode dbNode = new PhysicalDBNode("host1", "mysql", dbPool);
-        mockDBNodes.put("host1", dbNode);
+       
     }
 
+    private void init()
+    {
+    	
+         
+    }
     public static void main(String[] args) throws IOException {
         // Business Executor ，用来执行那些耗时的任务
         NameableExecutor businessExecutor = ExecutorUtil.create("BusinessExecutor", 10);
         // 定时器Executor，用来执行定时任务
         NamebleScheduledExecutor timerExecutor = ExecutorUtil.createSheduledExecute("Timer", 5);
 
+        
         SharedBufferPool sharedPool = new SharedBufferPool(1024 * 1024 * 100, 1024);
         new NetSystem(sharedPool, businessExecutor, timerExecutor);
         // Reactor pool
         NIOReactorPool reactorPool = new NIOReactorPool("Reactor Pool", 5, sharedPool);
-       
+        SQLEngineCtx.INSTANCE().initReactorMap(reactorPool.getAllReactors());
         NIOConnector connector = new NIOConnector("NIOConnector", reactorPool);
         connector.start();
         NetSystem.getInstance().setConnector(connector);
         NetSystem.getInstance().setNetConfig(new SystemConfig());
-        //SQLEngineCtx enginCtx=new SQLEngineCtx();
-       
-       
-         MySQLFrontendConnectionFactory frontFactory = new MySQLFrontendConnectionFactory();
+        MySQLBackendConnectionFactory bakcMySQLFactory=new MySQLBackendConnectionFactory();
+        SQLEngineCtx.INSTANCE().setBackendMySQLConFactory(bakcMySQLFactory);
+        MySQLFrontendConnectionFactory frontFactory = new MySQLFrontendConnectionFactory();
         NIOAcceptor server = new NIOAcceptor("Server", "0.0.0.0", PORT, frontFactory, reactorPool);
         server.start();
         // server started
+        
         LOGGER.info(server.getName() + " is started and listening on " + server.getPort());
+        DefaultSQLCommandHandler defaultCmdHandler=new DefaultSQLCommandHandler();
+    	SQLEngineCtx.INSTANCE().setDefaultMySQLCmdHandler(defaultCmdHandler);
+    	
+        DataHostConfig config = new  DataHostConfig("host1", "127.0.0.1", 3306,  "root", "123456","mysql");
+        config.setMaxCon(10);
+        DataHostConfig[] configs={config};
+        MySQLMSReplicatSet mysqlRepSet=new MySQLMSReplicatSet("mysql1",configs);
+        SQLEngineCtx.INSTANCE().addDHReplicatSet(mysqlRepSet);
     }
 }

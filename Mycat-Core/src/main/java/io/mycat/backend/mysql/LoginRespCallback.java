@@ -21,25 +21,25 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.mysql.back;
+package io.mycat.backend.mysql;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.slf4j.Logger;
 
-import io.mycat.engine.BackConnectionCallback;
+import io.mycat.backend.BackConnectionCallback;
 import io.mycat.engine.ErrorCode;
 import io.mycat.mysql.packet.EOFPacket;
 import io.mycat.mysql.packet.ErrorPacket;
 import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.mysql.packet.OkPacket;
 import io.mycat.mysql.packet.Reply323Packet;
-import io.mycat.mysql.util.CharsetUtil;
-import io.mycat.mysql.util.SecurityUtil;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.Connection;
 import io.mycat.net2.ConnectionException;
+import io.mycat.util.CharsetUtil;
+import io.mycat.util.SecurityUtil;
 /**
  * used for backend mysql login
  * @author wuzhihui

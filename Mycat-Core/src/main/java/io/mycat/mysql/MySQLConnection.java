@@ -30,10 +30,10 @@ import java.nio.channels.SocketChannel;
 import io.mycat.mysql.packet.ErrorPacket;
 import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.mysql.util.CharsetUtil;
-import io.mycat.mysql.util.RandomUtil;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.Connection;
+import io.mycat.util.CharsetUtil;
+import io.mycat.util.RandomUtil;
 /**
  * Mysql connection 
  * @author wuzhihui

@@ -21,14 +21,14 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.mysql.back;
+package io.mycat.backend.mysql;
 
 import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.engine.BackConnectionCallback;
+import io.mycat.backend.BackConnectionCallback;
 import io.mycat.engine.ErrorCode;
 import io.mycat.mysql.MySQLFrontConnection;
 import io.mycat.net2.ConDataBuffer;

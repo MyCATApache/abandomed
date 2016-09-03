@@ -25,8 +25,8 @@ package io.mycat.mysql.packet;
 
 import java.nio.ByteBuffer;
 
-import io.mycat.mysql.util.BufferUtil;
 import io.mycat.net2.NetSystem;
+import io.mycat.util.BufferUtil;
 
 /**
  * From server to client in response to command, if no error and no result set.

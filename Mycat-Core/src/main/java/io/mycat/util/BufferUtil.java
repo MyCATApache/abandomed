@@ -21,7 +21,7 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.mysql.util;
+package io.mycat.util;
 
 import java.nio.ByteBuffer;
 

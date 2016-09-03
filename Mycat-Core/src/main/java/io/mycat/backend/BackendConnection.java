@@ -21,9 +21,8 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.engine;
+package io.mycat.backend;
 
-import io.mycat.mysql.back.PhysicalDatasource;
 import io.mycat.net2.ClosableConnection;
 /**
  * backed connection
@@ -36,7 +35,7 @@ public interface BackendConnection extends ClosableConnection {
 
     public  boolean isBorrowed();
 
-    public  PhysicalDatasource getPool();
+    public  DHSource getPool();
 
     public  void borrow();
 

@@ -21,7 +21,7 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.mysql.back;
+package io.mycat.backend.mysql;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
@@ -30,15 +30,16 @@ import java.security.NoSuchAlgorithmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.engine.BackConnectionCallback;
-import io.mycat.engine.BackendConnection;
+import io.mycat.backend.BackConnectionCallback;
+import io.mycat.backend.BackendConnection;
+import io.mycat.backend.DHSource;
 import io.mycat.mysql.Capabilities;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.AuthPacket;
 import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.mysql.util.SecurityUtil;
 import io.mycat.net2.Connection;
+import io.mycat.util.SecurityUtil;
 /**
  * backend mysql connection
  * @author wuzhihui
@@ -49,14 +50,11 @@ public class MySQLBackendConnection extends MySQLConnection implements BackendCo
 
     public static final Logger LOGGER = LoggerFactory.getLogger(MySQLBackendConnection.class);
 
- 
-    private final boolean readNode;
-
     private String user;
     private String password;
     private String schema;
     private BackConnectionCallback<MySQLBackendConnection> userCallback;
-    private PhysicalDatasource pool;
+    private DHSource pool;
 
     private HandshakePacket handshake;
 
@@ -68,13 +66,12 @@ public class MySQLBackendConnection extends MySQLConnection implements BackendCo
 
     private int charsetIndex;
 
-    private PhysicalDatasource datasource;
+    private DHSource datasource;
     
     private Object attachment;
 
-    public MySQLBackendConnection(PhysicalDatasource datasource,SocketChannel channel, boolean readNode) {
+    public MySQLBackendConnection(DHSource datasource,SocketChannel channel) {
         super(channel);
-        this.readNode = readNode;
         this.datasource=datasource;
         this.clientFlags = initClientFlags();
     }
@@ -195,18 +192,15 @@ public class MySQLBackendConnection extends MySQLConnection implements BackendCo
         this.userCallback = conCallback;
     }
 
-    public PhysicalDatasource getPool() {
+    public DHSource getPool() {
         return pool;
     }
 
-    public void setPool(PhysicalDatasource pool) {
+    public void setPool(DHSource pool) {
         this.pool = pool;
     }
 
-    public boolean isReadNode() {
-        return readNode;
-    }
-
+   
     public HandshakePacket getHandshake() {
         return handshake;
     }
@@ -267,11 +261,11 @@ public class MySQLBackendConnection extends MySQLConnection implements BackendCo
         return false;
     }
 
-    public PhysicalDatasource getDatasource() {
+    public DHSource getDatasource() {
         return datasource;
     }
 
-    public void setDatasource(PhysicalDatasource datasource) {
+    public void setDatasource(DHSource datasource) {
         this.datasource = datasource;
     }
 

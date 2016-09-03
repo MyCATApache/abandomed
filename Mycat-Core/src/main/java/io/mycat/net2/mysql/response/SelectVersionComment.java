@@ -32,7 +32,7 @@ import io.mycat.mysql.packet.EOFPacket;
 import io.mycat.mysql.packet.FieldPacket;
 import io.mycat.mysql.packet.ResultSetHeaderPacket;
 import io.mycat.mysql.packet.RowDataPacket;
-import io.mycat.mysql.util.PacketUtil;
+import io.mycat.util.PacketUtil;
 
 /**
  * wrong pakcage !!!!,please fix it

@@ -27,8 +27,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import io.mycat.mysql.util.BufferUtil;
-import io.mycat.mysql.util.StreamUtil;
+import io.mycat.util.BufferUtil;
+import io.mycat.util.StreamUtil;
 
 /**
  * @author mycat

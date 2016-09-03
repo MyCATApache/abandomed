@@ -21,82 +21,50 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.mysql.back;
+package io.mycat.backend;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.engine.BackendConnection;
-import io.mycat.net2.mysql.config.DBHostConfig;
-
-public abstract class PhysicalDatasource {
-    public static final Logger LOGGER = LoggerFactory.getLogger(PhysicalDatasource.class);
-
+import io.mycat.SQLEngineCtx;
+import io.mycat.beans.DataHostConfig;
+/**
+ * 数据节点（数据库）的连接池
+ * @author wuzhihui
+ *
+ */
+public abstract class DHSource {
+    public static final Logger LOGGER = LoggerFactory.getLogger(DHSource.class);
     private final String name;
     private final int size;
-    private final DBHostConfig config;
+    private final DataHostConfig config;
     private final ConMap conMap = new ConMap();
-    private final boolean readNode;
     private volatile long heartbeatRecoveryTime;
-    private PhysicalDBPool dbPool;
 
-    public PhysicalDatasource(DBHostConfig config, // DataHostConfig hostConfig,
-            boolean isReadNode) {
+    public DHSource(DataHostConfig config) {
         this.size = config.getMaxCon();
         this.config = config;
         this.name = config.getHostName();
-        this.readNode = isReadNode;
+       
     }
 
     public boolean isMyConnection(BackendConnection con) {
         return (con.getPool() == this);
     }
 
-    public boolean isReadNode() {
-        return readNode;
-    }
-
-    public int getSize() {
+       public int getSize() {
         return size;
     }
-
-    public void setDbPool(PhysicalDBPool dbPool) {
-        this.dbPool = dbPool;
-    }
-
-    public PhysicalDBPool getDbPool() {
-        return dbPool;
-    }
-
-    // public abstract DBHeartbeat createHeartBeat();
 
     public String getName() {
         return name;
     }
 
-    public int getIndex() {
-        int currentIndex = 0;
-        for (int i = 0; i < dbPool.getSources().length; i++) {
-            PhysicalDatasource writeHostDatasource = dbPool.getSources()[i];
-            if (writeHostDatasource.getName().equals(getName())) {
-                currentIndex = i;
-                break;
-            }
-        }
-        return currentIndex;
-    }
-
-    public boolean isSalveOrRead() {
-        int currentIndex = getIndex();
-        if (currentIndex != dbPool.activedIndex || this.readNode) {
-            return true;
-        }
-        return false;
-    }
-
-    public long getExecuteCount() {
+   public long getExecuteCount() {
         long executeCount = 0;
         for (ConQueue queue : conMap.getAllConQueue()) {
             executeCount += queue.getExecuteCount();
@@ -120,49 +88,30 @@ public abstract class PhysicalDatasource {
         return total;
     }
 
-    // private boolean validSchema(String schema) {
-    // String theSchema = schema;
-    // return theSchema != null & !"".equals(theSchema) &&
-    // !"snyn...".equals(theSchema);
-    // }
-    //
-    // private void closeByIdleMany(int ildeCloseCount) {
-    // LOGGER.info("too many ilde cons ,close some for datasouce " + name);
-    // List<BackendConnection> readyCloseCons = new
-    // ArrayList<BackendConnection>(ildeCloseCount);
-    // for (ConQueue queue : conMap.getAllConQueue()) {
-    // readyCloseCons.addAll(queue.getIdleConsToClose(ildeCloseCount));
-    // if (readyCloseCons.size() >= ildeCloseCount) {
-    // break;
-    // }
-    // }
-    //
-    // for (BackendConnection idleCon : readyCloseCons) {
-    // if (idleCon.isBorrowed()) {
-    // LOGGER.warn("find idle con is using " + idleCon);
-    // }
-    // idleCon.close("too many idle con");
-    // }
-    // }
+    public boolean initSource() {
+        int initSize = this.config.getMinCon();
+        LOGGER.info("init backend myqsl source ,create connections total " + initSize + " for " + config);
 
-    // private void createByIdleLitte(int idleCons, int createCount) {
-    // LOGGER.info("create connections ,because idle connection not enough ,cur
-    // is " + idleCons + ", for " + name);
-    // final String[] schemas = dbPool.getSchemas();
-    // for (int i = 0; i < createCount; i++) {
-    // if (this.getActiveCount() + this.getIdleCount() >= size) {
-    // break;
-    // }
-    // try {
-    // // creat new connection
-    // this.createNewConnection(null, schemas[i % schemas.length]);
-    // } catch (IOException e) {
-    // LOGGER.warn("create connection err " + e);
-    // }
-    //
-    // }
-    // }
-
+        // long start=System.currentTimeMillis();
+        // long timeOut=start+5000*1000L;
+        Set<String> reactos= SQLEngineCtx.INSTANCE().getReactorMap().keySet();
+        Iterator<String> itor=reactos.iterator();
+        for (int i = 0; i < initSize; i++) {
+            try {
+            	String actorName=null;
+            	if(!itor.hasNext())
+            	{
+            		itor=reactos.iterator();
+            	}
+            	actorName=itor.next();
+            	this.createNewConnection(actorName, this.config.getDefaultSchema());
+            } catch (Exception e) {
+                LOGGER.warn(" init connection error.", e);
+            }
+        }
+        LOGGER.info("init source finished");
+        return true;
+    }
     public int getActiveCount() {
         return this.conMap.getActiveCountForDs(this);
     }
@@ -252,7 +201,7 @@ public abstract class PhysicalDatasource {
         this.heartbeatRecoveryTime = heartbeatRecoveryTime;
     }
 
-    public DBHostConfig getConfig() {
+    public DataHostConfig getConfig() {
         return config;
     }
 }

@@ -21,48 +21,31 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.engine;
+package io.mycat.backend.mysql;
 
 import java.io.IOException;
 
-import io.mycat.net2.ConDataBuffer;
-import io.mycat.net2.ConnectionException;
+import io.mycat.backend.BackendConnection;
+import io.mycat.backend.DHSource;
+import io.mycat.beans.DataHostConfig;
+
 /**
- * 后端数据库的事件处理回调接口
- * @author wuzhihui
- *
+ * @author mycat
  */
-public interface BackConnectionCallback<T extends BackendConnection> {
+public class MySQLDataSource extends DHSource {
 
-    /**
-     * 无法获取连接
-     * 
-     * @param e
-     * @param conn
-     */
-     void connectionError(ConnectionException e, T conn);
+    private final MySQLBackendConnectionFactory factory;
 
-    /**
-     * 已获得有效连接的响应处理
-     */
-    void connectionAcquired(T conn);
+    public MySQLDataSource(MySQLBackendConnectionFactory factory,DataHostConfig config) {
+        super(config);
+        this.factory=factory;
+       
 
-    /**
-     * 收到数据包的响应处理
-     */
-    void handleResponse(T conn,ConDataBuffer dataBuffer,byte packageType,int pkgStartPos,int pkgLen) throws IOException ;
+    }
 
-    /**
-     * on connetion close event
-     */
-    void connectionClose(T conn, String reason);
-    
-    /**
-     * 处理数据的过程中发生错误
-     * @param e
-     * @param conn
-     */
-    void handlerError(Exception e,T conn);
- 
+    @Override
+    public BackendConnection createNewConnectionOnReactor(String reactor,String schema) throws IOException {
+        return factory.make(this, reactor,schema);
+    }
 
 }

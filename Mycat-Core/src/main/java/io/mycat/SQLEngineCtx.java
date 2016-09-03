@@ -21,10 +21,14 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.engine;
+package io.mycat;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import io.mycat.backend.DHReplicatSet;
+import io.mycat.backend.mysql.MySQLBackendConnectionFactory;
+import io.mycat.engine.SQLCommandHandler;
 import io.mycat.net2.NIOReactor;
 
 /**
@@ -38,17 +42,34 @@ public class SQLEngineCtx {
 	{
 	instance=new SQLEngineCtx();
 	}
+	/**
+	 * 默认的SQL命令处理器
+	 */
 private SQLCommandHandler<?> defaultMySQLCmdHandler;
-private Map<String,NIOReactor> reactorMap;
+
+private  MySQLBackendConnectionFactory backendMySQLConFactory;
+/**
+ * 系统中所有的NIO Reactor
+ */
+private Map<String,NIOReactor> reactorMap=new HashMap<String,NIOReactor>();
+
+/**
+ * 系统中所有DHReplicatSet的Map
+ */
+private Map<String,DHReplicatSet> dhRepSetMap=new HashMap<String,DHReplicatSet>();
+
 @SuppressWarnings({"rawtypes" })
 public  SQLCommandHandler getDefaultMySQLCmdHandler()
 {
 	return defaultMySQLCmdHandler;
 	
 }
-public void initReactorMap(Map<String,NIOReactor> reactorMap)
+protected void initReactorMap(NIOReactor[] reactors)
 {
-	this.reactorMap=reactorMap;
+	for(NIOReactor r:reactors)
+	{
+		reactorMap.put(r.getName(), r);
+	}
 }
 public NIOReactor findReactor(String name)
 {
@@ -57,7 +78,7 @@ public NIOReactor findReactor(String name)
 public Map<String, NIOReactor> getReactorMap() {
 	return reactorMap;
 }
-public void setDefaultMySQLCmdHandler(SQLCommandHandler<?> mySQLCmdHandler)
+protected void setDefaultMySQLCmdHandler(SQLCommandHandler<?> mySQLCmdHandler)
 {
 	this.defaultMySQLCmdHandler=mySQLCmdHandler;
 }
@@ -66,4 +87,19 @@ public static SQLEngineCtx INSTANCE()
 	return instance;
 }
 
+public DHReplicatSet getDHReplicatSet(String repsetName)
+{
+	return dhRepSetMap.get(repsetName);
+}
+public MySQLBackendConnectionFactory getBackendMySQLConFactory() {
+	return backendMySQLConFactory;
+}
+protected void setBackendMySQLConFactory(MySQLBackendConnectionFactory backendMySQLConFactory) {
+	this.backendMySQLConFactory = backendMySQLConFactory;
+}
+
+ protected void addDHReplicatSet(DHReplicatSet repSet)
+ {
+	 this.dhRepSetMap.put(repSet.getName(), repSet);
+ }
 }

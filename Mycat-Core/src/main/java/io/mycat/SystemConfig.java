@@ -21,7 +21,7 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2.mysql.config;
+package io.mycat;
 
 import java.io.File;
 import java.io.IOException;
@@ -86,13 +86,6 @@ public final class SystemConfig {
 	private long processorCheckPeriod;
 	private long dataNodeIdleCheckPeriod;
 	private long dataNodeHeartbeatPeriod;
-	private String clusterHeartbeatUser;
-	private String clusterHeartbeatPass;
-	private long clusterHeartbeatPeriod;
-	private long glableTableCheckPeriod;
-	private long clusterHeartbeatTimeout;
-	private int clusterHeartbeatRetry;
-	
 	private int txIsolation;
 	private int parserCommentVersion;
 	private int sqlRecordCount;
@@ -146,26 +139,13 @@ public final class SystemConfig {
 		this.processorCheckPeriod = DEFAULT_PROCESSOR_CHECK_PERIOD;
 		this.dataNodeIdleCheckPeriod = DEFAULT_DATANODE_IDLE_CHECK_PERIOD;
 		this.dataNodeHeartbeatPeriod = DEFAULT_DATANODE_HEARTBEAT_PERIOD;
-		this.clusterHeartbeatUser = DEFAULT_CLUSTER_HEARTBEAT_USER;
-		this.clusterHeartbeatPass = DEFAULT_CLUSTER_HEARTBEAT_PASS;
-		this.clusterHeartbeatPeriod = DEFAULT_CLUSTER_HEARTBEAT_PERIOD;
-		this.clusterHeartbeatTimeout = DEFAULT_CLUSTER_HEARTBEAT_TIMEOUT;
-		this.clusterHeartbeatRetry = DEFAULT_CLUSTER_HEARTBEAT_RETRY;
 		this.txIsolation = Isolations.REPEATED_READ;
 		this.parserCommentVersion = DEFAULT_PARSER_COMMENT_VERSION;
 		this.sqlRecordCount = DEFAULT_SQL_RECORD_COUNT;
-		this.glableTableCheckPeriod = DEFAULT_GLOBAL_TABLE_CHECK_PERIOD;
 
 	}
 	
-	public long getGlableTableCheckPeriod() {
-		return glableTableCheckPeriod;
-	}
-
-	public void setGlableTableCheckPeriod(long glableTableCheckPeriod) {
-		this.glableTableCheckPeriod = glableTableCheckPeriod;
-	}
-
+	
 	public String getSqlInterceptor() {
 		return sqlInterceptor;
 	}
@@ -363,13 +343,6 @@ public final class SystemConfig {
 		this.dataNodeHeartbeatPeriod = dataNodeHeartbeatPeriod;
 	}
 
-	public String getClusterHeartbeatUser() {
-		return clusterHeartbeatUser;
-	}
-
-	public void setClusterHeartbeatUser(String clusterHeartbeatUser) {
-		this.clusterHeartbeatUser = clusterHeartbeatUser;
-	}
 
 	public long getSqlExecuteTimeout() {
 		return sqlExecuteTimeout;
@@ -379,29 +352,6 @@ public final class SystemConfig {
 		this.sqlExecuteTimeout = sqlExecuteTimeout;
 	}
 
-	public String getClusterHeartbeatPass() {
-		return clusterHeartbeatPass;
-	}
-
-	public void setClusterHeartbeatPass(String clusterHeartbeatPass) {
-		this.clusterHeartbeatPass = clusterHeartbeatPass;
-	}
-
-	public long getClusterHeartbeatPeriod() {
-		return clusterHeartbeatPeriod;
-	}
-
-	public void setClusterHeartbeatPeriod(long clusterHeartbeatPeriod) {
-		this.clusterHeartbeatPeriod = clusterHeartbeatPeriod;
-	}
-
-	public long getClusterHeartbeatTimeout() {
-		return clusterHeartbeatTimeout;
-	}
-
-	public void setClusterHeartbeatTimeout(long clusterHeartbeatTimeout) {
-		this.clusterHeartbeatTimeout = clusterHeartbeatTimeout;
-	}
 
 	public int getFrontsocketsorcvbuf() {
 		return frontSocketSoRcvbuf;
@@ -419,13 +369,7 @@ public final class SystemConfig {
 		return backSocketSoSndbuf;
 	}
 
-	public int getClusterHeartbeatRetry() {
-		return clusterHeartbeatRetry;
-	}
-
-	public void setClusterHeartbeatRetry(int clusterHeartbeatRetry) {
-		this.clusterHeartbeatRetry = clusterHeartbeatRetry;
-	}
+	
 
 	public int getTxIsolation() {
 		return txIsolation;
@@ -609,13 +553,7 @@ public final class SystemConfig {
 				+ ", processorCheckPeriod=" + processorCheckPeriod
 				+ ", dataNodeIdleCheckPeriod=" + dataNodeIdleCheckPeriod
 				+ ", dataNodeHeartbeatPeriod=" + dataNodeHeartbeatPeriod
-				+ ", clusterHeartbeatUser=" + clusterHeartbeatUser
-				+ ", clusterHeartbeatPass=" + clusterHeartbeatPass
-				+ ", clusterHeartbeatPeriod=" + clusterHeartbeatPeriod
 				+ ", globalTableCheckSwitchOn=" + globalTableCheckSwitchOn
-				+ ", glableTableCheckPeriod=" + glableTableCheckPeriod
-				+ ", clusterHeartbeatTimeout=" + clusterHeartbeatTimeout
-				+ ", clusterHeartbeatRetry=" + clusterHeartbeatRetry
 				+ ", txIsolation=" + txIsolation + ", parserCommentVersion="
 				+ parserCommentVersion + ", sqlRecordCount=" + sqlRecordCount
 				+ ", processorBufferPool=" + processorBufferPool

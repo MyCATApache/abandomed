@@ -26,6 +26,7 @@ package io.mycat.engine;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.mycat.backend.BackendConnection;
 import io.mycat.net2.Connection;
 
 /**

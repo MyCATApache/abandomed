@@ -26,9 +26,8 @@ package io.mycat.net2.mysql.handler;
 import java.io.IOException;
 
 import io.mycat.mysql.MySQLConnection;
-import io.mycat.mysql.util.ParseUtil;
 import io.mycat.net2.mysql.parser.ServerParseSelect;
-import io.mycat.net2.mysql.response.SelectVersionComment;
+import io.mycat.util.ParseUtil;
 
 /**
  * @author mycat

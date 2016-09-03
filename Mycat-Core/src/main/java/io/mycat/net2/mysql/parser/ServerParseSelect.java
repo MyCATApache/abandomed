@@ -23,8 +23,8 @@
  */
 package io.mycat.net2.mysql.parser;
 
-import io.mycat.mysql.util.CharTypes;
-import io.mycat.mysql.util.ParseUtil;
+import io.mycat.util.CharTypes;
+import io.mycat.util.ParseUtil;
 
 /**
  * @author mycat

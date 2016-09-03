@@ -29,14 +29,14 @@ import java.nio.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.SQLEngineCtx;
 import io.mycat.engine.ErrorCode;
 import io.mycat.engine.SQLCommandHandler;
-import io.mycat.engine.SQLEngineCtx;
 import io.mycat.mysql.packet.AuthPacket;
 import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.mysql.util.CharsetUtil;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.Connection;
+import io.mycat.util.CharsetUtil;
 /**
  * Util class used for backend mysql connnection login
  * @author wuzhihui

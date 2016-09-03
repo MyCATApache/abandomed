@@ -26,7 +26,7 @@ package io.mycat.mysql;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 
-import io.mycat.engine.BackendConnection;
+import io.mycat.backend.BackendConnection;
 import io.mycat.engine.FrontConnection;
 import io.mycat.engine.NoneBlockTask;
 import io.mycat.engine.UserSession;
@@ -87,6 +87,7 @@ public void executePendingTask()
 	   }
 	   
    }
+   
    public void addBackCon(BackendConnection con)
    {
 	   this.ensureInActorThread();

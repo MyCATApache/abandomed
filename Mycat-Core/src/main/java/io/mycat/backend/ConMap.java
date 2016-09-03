@@ -1,11 +1,11 @@
-package io.mycat.mysql.back;
+package io.mycat.backend;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.mycat.engine.BackendConnection;
+import io.mycat.backend.mysql.MySQLBackendConnection;
 import io.mycat.net2.Connection;
 import io.mycat.net2.NetSystem;
 
@@ -57,7 +57,7 @@ public class ConMap {
         return items.values();
     }
 
-    public int getActiveCountForSchema(String schema, PhysicalDatasource dataSouce) {
+    public int getActiveCountForSchema(String schema, DHSource dataSouce) {
         int total = 0;
         for (Connection conn : NetSystem.getInstance().getAllConnectios().values()) {
             if (conn instanceof MySQLBackendConnection) {
@@ -73,7 +73,7 @@ public class ConMap {
         return total;
     }
 
-    public int getActiveCountForDs(PhysicalDatasource dataSouce) {
+    public int getActiveCountForDs(DHSource dataSouce) {
 
         int total = 0;
         for (Connection conn : NetSystem.getInstance().getAllConnectios().values()) {
@@ -90,7 +90,7 @@ public class ConMap {
         return total;
     }
 
-    public void clearConnections(String reason, PhysicalDatasource dataSouce) {
+    public void clearConnections(String reason, DHSource dataSouce) {
 
         Iterator<Entry<Long, Connection>> itor = NetSystem.getInstance().getAllConnectios().entrySet().iterator();
         while (itor.hasNext()) {

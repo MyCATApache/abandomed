@@ -25,7 +25,7 @@ package io.mycat.mysql.packet;
 
 import java.nio.ByteBuffer;
 
-import io.mycat.mysql.util.BufferUtil;
+import io.mycat.util.BufferUtil;
 
 /**
  * From Server To Client, at the end of a series of Field Packets, and at the

@@ -25,8 +25,8 @@ package io.mycat.mysql.packet;
 
 import java.nio.ByteBuffer;
 
-import io.mycat.mysql.util.BufferUtil;
 import io.mycat.net2.ByteBufferArray;
+import io.mycat.util.BufferUtil;
 
 /**
  * From Server To Client, part of Result Set Packets. One for each column in the

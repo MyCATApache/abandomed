@@ -23,6 +23,7 @@
  */
 package io.mycat.engine;
 
+import io.mycat.backend.BackendConnection;
 import io.mycat.net2.Connection;
 
 /**

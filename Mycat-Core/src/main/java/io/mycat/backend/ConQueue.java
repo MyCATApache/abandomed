@@ -1,9 +1,7 @@
-package io.mycat.mysql.back;
+package io.mycat.backend;
 
 import java.util.ArrayList;
 import java.util.concurrent.ConcurrentLinkedQueue;
-
-import io.mycat.engine.BackendConnection;
 
 public class ConQueue {
     private final ConcurrentLinkedQueue<BackendConnection> autoCommitCons = new ConcurrentLinkedQueue<BackendConnection>();

@@ -30,9 +30,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.MycatCore;
+import io.mycat.SQLEngineCtx;
+import io.mycat.backend.mysql.DirectTransTofrontCallBack;
+import io.mycat.backend.mysql.MySQLBackendConnection;
 import io.mycat.engine.SQLCommandHandler;
-import io.mycat.mysql.back.DirectTransTofrontCallBack;
-import io.mycat.mysql.back.MySQLBackendConnection;
 import io.mycat.mysql.packet.MySQLMessage;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.ConDataBuffer;
@@ -152,7 +153,7 @@ public class DefaultSQLCommandHandler implements  SQLCommandHandler<MySQLFrontCo
 	        	{
 	        		frontCon.removeBackCon(existCon);
 	        	}
-	        	final MySQLBackendConnection newCon= (MySQLBackendConnection) MycatCore.mockDBNodes.get(io.mycat.MycatCore.MOCK_HOSTNAME)
+	        	final MySQLBackendConnection newCon= (MySQLBackendConnection)SQLEngineCtx.INSTANCE().getDHReplicatSet("mysql1").getCurWriteDH()
 	 	                .getConnection(frontCon.getReactor(),MycatCore.MOCK_SCHEMA, true, null);
 	        	newCon.setAttachment(frontCon);//must in direct callback handler
 	        	newCon.setUserCallback(directTransCallback);

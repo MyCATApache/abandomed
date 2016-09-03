@@ -21,9 +21,7 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.mysql.back;
-
-import io.mycat.engine.BackendConnection;
+package io.mycat.backend;
 
 /**
  * connection metadata info

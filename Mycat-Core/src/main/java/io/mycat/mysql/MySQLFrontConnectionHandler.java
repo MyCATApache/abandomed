@@ -28,7 +28,6 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.engine.SQLEngineCtx;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.ConnectionException;
 import io.mycat.net2.NIOHandler;
@@ -41,13 +40,6 @@ public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnect
   
     private static final Logger LOGGER = LoggerFactory.getLogger(MySQLFrontConnectionHandler.class);
     private final CheckUserLoginResponseCallback loginCmdHandler=new CheckUserLoginResponseCallback();
-    public MySQLFrontConnectionHandler()
-    {
-    	DefaultSQLCommandHandler defaultCmdHandler=new DefaultSQLCommandHandler();
-    	SQLEngineCtx.INSTANCE().setDefaultMySQLCmdHandler(defaultCmdHandler);
-
-    }
-   
  
 
 	@Override

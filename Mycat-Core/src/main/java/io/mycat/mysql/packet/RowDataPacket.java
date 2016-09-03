@@ -27,7 +27,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.mycat.mysql.util.BufferUtil;
+import io.mycat.util.BufferUtil;
 
 /**
  * From server to client. One packet for each row in the result set.
