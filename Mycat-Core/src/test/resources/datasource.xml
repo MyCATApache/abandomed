@@ -1,0 +1,14 @@
+<datasources>
+<mysql-ds>
+<!--type=0表示普通主从，当前哪个节点为读节点，在另外的文件中保存-->
+<mysql-replica name="mysql1" type="0" switch-type="0">
+      <mysql ip="127.0.0.1" port="3306"  user="root" password="123456" />
+      <mysql ip="127.0.0.1" port="3308"  user="root" password="123456" />
+</mysql-replica>
+<!--type=1表示PXC或Galera 的集群结构，当前哪个节点为写节点，在另外的文件中保存-->
+<mysql-replica name="mysql2" type="1" switch-type="0">
+      <mysql ip="127.0.0.1" port="3306"  user="root" password="123456" />
+      <mysql ip="127.0.0.1" port="3308"  user="root" password="123456" />
+</mysql-replica>
+</mysql-ds>
+</datasources>

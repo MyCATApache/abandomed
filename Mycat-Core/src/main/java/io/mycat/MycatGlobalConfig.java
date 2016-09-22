@@ -33,7 +33,7 @@ import io.mycat.mysql.Isolations;
  * 
  * @author mycat
  */
-public final class SystemConfig {
+public final class MycatGlobalConfig {
 
 	public static final String SYS_HOME = "MYCAT_HOME";
 	private static final int DEFAULT_PORT = 8066;
@@ -122,7 +122,7 @@ public final class SystemConfig {
 		this.defaultSqlParser = defaultSqlParser;
 	}
 
-	public SystemConfig() {
+	public MycatGlobalConfig() {
 		this.serverPort = DEFAULT_PORT;
 		this.managerPort = DEFAULT_MANAGER_PORT;
 		this.charset = DEFAULT_CHARSET;
@@ -211,11 +211,11 @@ public final class SystemConfig {
 	}
 
 	public static String getHomePath() {
-		String home = System.getProperty(SystemConfig.SYS_HOME);
+		String home = System.getProperty(MycatGlobalConfig.SYS_HOME);
 		if (home != null) {
 			if (home.endsWith(File.pathSeparator)) {
 				home = home.substring(0, home.length() - 1);
-				System.setProperty(SystemConfig.SYS_HOME, home);
+				System.setProperty(MycatGlobalConfig.SYS_HOME, home);
 			}
 		}
 
@@ -237,7 +237,7 @@ public final class SystemConfig {
 				}
 
 				if (home != null) {
-					System.setProperty(SystemConfig.SYS_HOME, home);
+					System.setProperty(MycatGlobalConfig.SYS_HOME, home);
 				}
 			} catch (IOException e) {
 				// 如出错，则忽略。

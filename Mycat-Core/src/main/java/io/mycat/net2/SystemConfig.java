@@ -33,6 +33,7 @@ import java.io.IOException;
  */
 public final class SystemConfig {
 	public static  String SYS_HOME = "MYCAT_HOME";
+	private int conIdleTimeout=30;
 	public static final int DEFAULT_PROCESSORS = Runtime.getRuntime().availableProcessors();
 	private int frontSocketSoRcvbuf = 1024 * 1024;
 	private int frontSocketSoSndbuf = 4 * 1024 * 1024;
@@ -81,6 +82,14 @@ public final class SystemConfig {
 		}
 
 		return home;
+	}
+
+	public int getConIdleTimeout() {
+		return conIdleTimeout;
+	}
+
+	public void setConIdleTimeout(int conIdleTimeout) {
+		this.conIdleTimeout = conIdleTimeout;
 	}
 
 	public int getFrontsocketsorcvbuf() {

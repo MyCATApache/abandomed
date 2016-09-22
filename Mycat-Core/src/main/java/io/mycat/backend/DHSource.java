@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.SQLEngineCtx;
-import io.mycat.beans.DataHostConfig;
+import io.mycat.beans.MySQLBean;
 /**
  * 数据节点（数据库）的连接池
  * @author wuzhihui
@@ -41,13 +41,13 @@ public abstract class DHSource {
     public static final Logger LOGGER = LoggerFactory.getLogger(DHSource.class);
     private final String name;
     private final int size;
-    private final DataHostConfig config;
+    private final MySQLBean mysqlBean;
     private final ConMap conMap = new ConMap();
     private volatile long heartbeatRecoveryTime;
 
-    public DHSource(DataHostConfig config) {
+    public DHSource(MySQLBean config) {
         this.size = config.getMaxCon();
-        this.config = config;
+        this.mysqlBean = config;
         this.name = config.getHostName();
        
     }
@@ -89,8 +89,8 @@ public abstract class DHSource {
     }
 
     public boolean initSource() {
-        int initSize = this.config.getMinCon();
-        LOGGER.info("init backend myqsl source ,create connections total " + initSize + " for " + config);
+        int initSize = this.mysqlBean.getMinCon();
+        LOGGER.info("init backend myqsl source ,create connections total " + initSize + " for " + mysqlBean);
 
         // long start=System.currentTimeMillis();
         // long timeOut=start+5000*1000L;
@@ -104,7 +104,7 @@ public abstract class DHSource {
             		itor=reactos.iterator();
             	}
             	actorName=itor.next();
-            	this.createNewConnection(actorName, this.config.getDefaultSchema());
+            	this.createNewConnection(actorName, this.mysqlBean.getDefaultSchema());
             } catch (Exception e) {
                 LOGGER.warn(" init connection error.", e);
             }
@@ -201,7 +201,7 @@ public abstract class DHSource {
         this.heartbeatRecoveryTime = heartbeatRecoveryTime;
     }
 
-    public DataHostConfig getConfig() {
-        return config;
+    public MySQLBean getConfig() {
+        return mysqlBean;
     }
 }

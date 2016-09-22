@@ -26,7 +26,7 @@ package io.mycat.backend.mysql;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 
-import io.mycat.beans.DataHostConfig;
+import io.mycat.beans.MySQLBean;
 import io.mycat.net2.NetSystem;
 /**
  * bakcend mysql connection factory
@@ -36,10 +36,10 @@ import io.mycat.net2.NetSystem;
 public class MySQLBackendConnectionFactory {
  
     private final MySQLBackendConnectionHandler nioHandler = new MySQLBackendConnectionHandler();
-
+    private final DummyCallBack dummyCallBack=new DummyCallBack();
     public MySQLBackendConnection make(MySQLDataSource pool,String reactor, String schema) throws IOException {
 
-       DataHostConfig dsc = pool.getConfig();
+    	MySQLBean dsc = pool.getConfig();
         SocketChannel channel = SocketChannel.open();
         channel.configureBlocking(false);
 
@@ -54,7 +54,8 @@ public class MySQLBackendConnectionFactory {
         c.setSchema(schema);
         c.setPool(pool);
         c.setAttachement(reactor);
-        c.setIdleTimeout(pool.getConfig().getIdleTimeout());
+        c.setUserCallback(dummyCallBack);
+        c.setIdleTimeout(NetSystem.getInstance().getNetConfig().getConIdleTimeout()*60*1000L);
         NetSystem.getInstance().getConnector().postConnect(c);
         return c;
     }

@@ -21,8 +21,47 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.backend;
+package io.mycat.beans;
 
-public interface AsynBackendConnection {
+import java.util.Map;
+
+/**
+ * sharding rule bean
+ * @author wuzhihui
+ *
+ */
+public class ShardingRuleBean {
+private String name;
+private String algorithm;
+private Map<String,String> params;
+public ShardingRuleBean(String name, String algorithm, Map<String, String> params) {
+	super();
+	this.name = name;
+	this.algorithm = algorithm;
+	this.params = params;
+}
+public String getName() {
+	return name;
+}
+public void setName(String name) {
+	this.name = name;
+}
+public String getAlgorithm() {
+	return algorithm;
+}
+public void setAlgorithm(String algorithm) {
+	this.algorithm = algorithm;
+}
+public Map<String, String> getParams() {
+	return params;
+}
+public void setParams(Map<String, String> params) {
+	this.params = params;
+}
+@Override
+public String toString() {
+	return "ShardingRuleBean [name=" + name + ", algorithm=" + algorithm + ", params=" + params + "]";
+}
+	
 
 }

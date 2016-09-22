@@ -27,7 +27,7 @@ import java.io.IOException;
 
 import io.mycat.backend.BackendConnection;
 import io.mycat.backend.DHSource;
-import io.mycat.beans.DataHostConfig;
+import io.mycat.beans.MySQLBean;
 
 /**
  * @author mycat
@@ -36,7 +36,7 @@ public class MySQLDataSource extends DHSource {
 
     private final MySQLBackendConnectionFactory factory;
 
-    public MySQLDataSource(MySQLBackendConnectionFactory factory,DataHostConfig config) {
+    public MySQLDataSource(MySQLBackendConnectionFactory factory,MySQLBean config) {
         super(config);
         this.factory=factory;
        

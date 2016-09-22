@@ -23,12 +23,14 @@
  */
 package io.mycat.backend.mysql;
 
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.DHReplicatSet;
 import io.mycat.backend.DHSource;
-import io.mycat.beans.DataHostConfig;
+import io.mycat.beans.MySQLBean;
+import io.mycat.beans.MySQLRepBean;
 
 /**
  * MySQL主从的ReplicatSet 
@@ -38,12 +40,13 @@ import io.mycat.beans.DataHostConfig;
 public class MySQLMSReplicatSet extends DHReplicatSet {
 private int writeDHSourceIndex=0;	
 private DHSource[] dhSources;	
-public MySQLMSReplicatSet(String name,DataHostConfig[] masterAndSlaves) {
-		super(name);
-		dhSources=new DHSource[masterAndSlaves.length];
-		for(int i=0;i<masterAndSlaves.length;i++)
+public MySQLMSReplicatSet(MySQLRepBean repBean) {
+		super(repBean.getName());
+		 List<MySQLBean>  mysqlBeans=repBean.getMysqls();
+		dhSources=new DHSource[mysqlBeans.size()];
+		for(int i=0;i<dhSources.length;i++)
 		{
-			dhSources[i]=new MySQLDataSource(SQLEngineCtx.INSTANCE().getBackendMySQLConFactory(), masterAndSlaves[i]);
+			dhSources[i]=new MySQLDataSource(SQLEngineCtx.INSTANCE().getBackendMySQLConFactory(), mysqlBeans.get(i));
 			dhSources[i].initSource();
 		}
 		writeDHSourceIndex=0;

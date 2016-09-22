@@ -25,15 +25,15 @@
 package io.mycat;
  
 import java.io.IOException;
+import java.net.URL;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.backend.DHSource;
 import io.mycat.backend.mysql.MySQLBackendConnectionFactory;
-import io.mycat.backend.mysql.MySQLDataSource;
 import io.mycat.backend.mysql.MySQLMSReplicatSet;
-import io.mycat.beans.DataHostConfig;
+import io.mycat.beans.MySQLRepBean;
 import io.mycat.mysql.DefaultSQLCommandHandler;
 import io.mycat.mysql.MySQLFrontendConnectionFactory;
 import io.mycat.net2.ExecutorUtil;
@@ -63,11 +63,6 @@ public class MycatCore {
        
     }
 
-    private void init()
-    {
-    	
-         
-    }
     public static void main(String[] args) throws IOException {
         // Business Executor ，用来执行那些耗时的任务
         NameableExecutor businessExecutor = ExecutorUtil.create("BusinessExecutor", 10);
@@ -95,10 +90,13 @@ public class MycatCore {
         DefaultSQLCommandHandler defaultCmdHandler=new DefaultSQLCommandHandler();
     	SQLEngineCtx.INSTANCE().setDefaultMySQLCmdHandler(defaultCmdHandler);
     	
-        DataHostConfig config = new  DataHostConfig("host1", "127.0.0.1", 3306,  "root", "123456","mysql");
-        config.setMaxCon(10);
-        DataHostConfig[] configs={config};
-        MySQLMSReplicatSet mysqlRepSet=new MySQLMSReplicatSet("mysql1",configs);
-        SQLEngineCtx.INSTANCE().addDHReplicatSet(mysqlRepSet);
+    	URL datasourceURL=ConfigLoader.class.getResource("/datasource.xml");
+    	List<MySQLRepBean> mysqlRepBeans=ConfigLoader.loadMySQLRepBean(datasourceURL.toString());
+        for(MySQLRepBean repBean:mysqlRepBeans)
+        {
+        	MySQLMSReplicatSet mysqlRepSet=new MySQLMSReplicatSet(repBean);
+            SQLEngineCtx.INSTANCE().addDHReplicatSet(mysqlRepSet);	
+        }
+        
     }
 }
