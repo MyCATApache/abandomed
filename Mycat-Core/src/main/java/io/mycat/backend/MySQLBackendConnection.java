@@ -21,7 +21,7 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.backend.mysql;
+package io.mycat.backend;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
@@ -30,9 +30,6 @@ import java.security.NoSuchAlgorithmException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.backend.BackConnectionCallback;
-import io.mycat.backend.BackendConnection;
-import io.mycat.backend.DHSource;
 import io.mycat.mysql.Capabilities;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.AuthPacket;
@@ -46,16 +43,14 @@ import io.mycat.util.SecurityUtil;
  *
  */
 
-public class MySQLBackendConnection extends MySQLConnection implements BackendConnection {
+public class MySQLBackendConnection extends MySQLConnection {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(MySQLBackendConnection.class);
-
-    private String user;
-    private String password;
+    private final boolean fromSlaveDB;
+    private BackConnectionCallback  userCallback;
+    private MySQLDataSource dataSource;
+    private boolean borrowed;
     private String schema;
-    private BackConnectionCallback<MySQLBackendConnection> userCallback;
-    private DHSource pool;
-
     private HandshakePacket handshake;
 
     private boolean authenticated;
@@ -66,13 +61,12 @@ public class MySQLBackendConnection extends MySQLConnection implements BackendCo
 
     private int charsetIndex;
 
-    private DHSource datasource;
+    private MySQLDataSource datasource;
     
-    private Object attachment;
-
-    public MySQLBackendConnection(DHSource datasource,SocketChannel channel) {
+    public MySQLBackendConnection(MySQLDataSource datasource,SocketChannel channel) {
         super(channel);
         this.datasource=datasource;
+        this.fromSlaveDB=datasource.isSlaveNode();
         this.clientFlags = initClientFlags();
     }
 
@@ -159,45 +153,23 @@ public class MySQLBackendConnection extends MySQLConnection implements BackendCo
         }
     }
 
-    public String getUser() {
-        return user;
-    }
+  
 
-    public void setUser(String user) {
-        this.user = user;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getSchema() {
-        return schema;
-    }
-
-    public void setSchema(String schema) {
-        this.schema = schema;
-    }
-
-    public BackConnectionCallback<MySQLBackendConnection> getUserCallback() {
+    public BackConnectionCallback  getUserCallback() {
         return userCallback;
     }
 
-    @SuppressWarnings("unchecked")
-	public void setUserCallback(@SuppressWarnings("rawtypes") BackConnectionCallback conCallback) {
+
+	public void setUserCallback(BackConnectionCallback conCallback) {
         this.userCallback = conCallback;
     }
 
-    public DHSource getPool() {
-        return pool;
+    public MySQLDataSource getPool() {
+        return dataSource;
     }
 
-    public void setPool(DHSource pool) {
-        this.pool = pool;
+    public void setPool(MySQLDataSource pool) {
+        this.dataSource = pool;
     }
 
    
@@ -250,43 +222,40 @@ public class MySQLBackendConnection extends MySQLConnection implements BackendCo
         return SecurityUtil.scramble411(passwd, seed);
     }
 
-    @Override
+
     public boolean isBorrowed() {
         return false;
     }
 
 
-    @Override
+
     public boolean isFromSlaveDB() {
-        return false;
+        return this.fromSlaveDB;
     }
 
-    public DHSource getDatasource() {
+    public MySQLDataSource getDatasource() {
         return datasource;
     }
 
-    public void setDatasource(DHSource datasource) {
+    public void setDatasource(MySQLDataSource datasource) {
         this.datasource = datasource;
     }
 
     public void release() {
         this.datasource.releaseChannel(this);
+        this.borrowed=false;
     }
 
-	@Override
-	public void borrow() {
-		 
-		
+	public void setBorrowed(boolean borrowed) {
+		this.borrowed = borrowed;
 	}
+	 public String getSchema() {
+	        return schema;
+	    }
 
-	@Override
-	public void setAttachment(Object attachment) {
-		this.attachment=attachment;
-	}
-
-	@Override
-	public Object getAttachment() {
-		return this.attachment;
-	}
-
+	    public void setSchema(String schema) {
+	        this.schema = schema;
+	    }
+	 
+ 
 }

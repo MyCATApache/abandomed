@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, OpenCloudDB/MyCAT and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, OpenCloudDB/MyCAT and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software;Designed and Developed mainly by many Chinese
@@ -21,16 +21,39 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.engine;
+package io.mycat.engine.sqlparser;
 
 /**
- * front user connection
+ * 存放SQL解析的结果，重复使用
+ * 
  * @author wuzhihui
  *
  */
-public interface FrontConnection {
+public class SQLInfo {
+	/**
+	 * 上次解析的位置
+	 */
+	private int parsePos;
+	private String db;
 
-	
-	UserSession<? extends FrontConnection> getSession();
-	
+	public SQLInfo() {
+
+	}
+
+	public int getParsePos() {
+		return parsePos;
+	}
+
+	public void setParsePos(int parsePos) {
+		this.parsePos = parsePos;
+	}
+
+	public String getDb() {
+		return db;
+	}
+
+	public void setDb(String db) {
+		this.db = db;
+	}
+
 }

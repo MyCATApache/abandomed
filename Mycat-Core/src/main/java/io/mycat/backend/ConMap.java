@@ -5,7 +5,6 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.mycat.backend.mysql.MySQLBackendConnection;
 import io.mycat.net2.Connection;
 import io.mycat.net2.NetSystem;
 
@@ -23,9 +22,9 @@ public class ConMap {
         return queue;
     }
 
-    public BackendConnection tryTakeCon(String reactor,final String schema, boolean autoCommit) {
+    public MySQLBackendConnection tryTakeCon(String reactor,final String schema, boolean autoCommit) {
         final ConQueue queue = items.get(schema);
-        BackendConnection con = tryTakeCon(reactor,queue, autoCommit);
+        MySQLBackendConnection con = tryTakeCon(reactor,queue, autoCommit);
         if (con != null) {
             return con;
         } else {
@@ -42,9 +41,9 @@ public class ConMap {
 
     }
 
-    private BackendConnection tryTakeCon(String reacotr,ConQueue queue, boolean autoCommit) {
+    private MySQLBackendConnection tryTakeCon(String reacotr,ConQueue queue, boolean autoCommit) {
 
-        BackendConnection con = null;
+    	MySQLBackendConnection con = null;
         if (queue != null && ((con = queue.takeIdleCon(autoCommit)) != null) && ((Connection)con).belongsActor(reacotr)) {
             return con;
         } else {
@@ -57,11 +56,11 @@ public class ConMap {
         return items.values();
     }
 
-    public int getActiveCountForSchema(String schema, DHSource dataSouce) {
+    public int getActiveCountForSchema(String schema, MySQLDataSource dataSouce) {
         int total = 0;
         for (Connection conn : NetSystem.getInstance().getAllConnectios().values()) {
             if (conn instanceof MySQLBackendConnection) {
-                BackendConnection theCon = (BackendConnection) conn;
+            	MySQLBackendConnection theCon = (MySQLBackendConnection) conn;
                 if (theCon.getSchema().equals(schema) && theCon.getPool() == dataSouce) {
                     if (theCon.isBorrowed()) {
                         total++;
@@ -73,12 +72,12 @@ public class ConMap {
         return total;
     }
 
-    public int getActiveCountForDs(DHSource dataSouce) {
+    public int getActiveCountForDs(MySQLDataSource dataSouce) {
 
         int total = 0;
         for (Connection conn : NetSystem.getInstance().getAllConnectios().values()) {
-            if (conn instanceof BackendConnection) {
-                BackendConnection theCon = (BackendConnection) conn;
+            if (conn instanceof MySQLBackendConnection) {
+            	MySQLBackendConnection theCon = (MySQLBackendConnection) conn;
                 if (theCon.getPool() == dataSouce) {
                     if (theCon.isBorrowed()) {
                         total++;
@@ -90,14 +89,14 @@ public class ConMap {
         return total;
     }
 
-    public void clearConnections(String reason, DHSource dataSouce) {
+    public void clearConnections(String reason, MySQLDataSource dataSouce) {
 
         Iterator<Entry<Long, Connection>> itor = NetSystem.getInstance().getAllConnectios().entrySet().iterator();
         while (itor.hasNext()) {
             Entry<Long, Connection> entry = itor.next();
             Connection con = entry.getValue();
-            if (con instanceof BackendConnection) {
-                if (((BackendConnection) con).getPool() == dataSouce) {
+            if (con instanceof MySQLBackendConnection) {
+                if (((MySQLBackendConnection) con).getPool() == dataSouce) {
                     con.close(reason);
                     itor.remove();
                 }

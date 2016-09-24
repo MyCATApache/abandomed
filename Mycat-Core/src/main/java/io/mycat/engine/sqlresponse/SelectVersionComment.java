@@ -21,13 +21,13 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2.mysql.response;
+package io.mycat.engine.sqlresponse;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.Fields;
-import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.EOFPacket;
 import io.mycat.mysql.packet.FieldPacket;
 import io.mycat.mysql.packet.ResultSetHeaderPacket;
@@ -57,7 +57,7 @@ public final class SelectVersionComment {
         eof.packetId = ++packetId;
     }
 
-    public static void response(MySQLConnection c) throws IOException {
+    public static void response(MySQLFrontConnection c) throws IOException {
     	ByteBuffer byteBuf= c.getWriteDataBuffer().beginWrite(1024*3);
         // write header
         header.write(byteBuf,header.calcPacketSize());

@@ -22,7 +22,6 @@
  *
  */package io.mycat.beans;
 
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -32,22 +31,28 @@ import java.util.List;
  */
 
 public class SchemaBean {
+	
 private String name;
 private DNBean defaultDN;
-private int schemaType;
+/**
+ * 是否非分片的Schema，意味著沒有任何分片表的Schema
+ */
+private final boolean normalSchema;
 private List<TableDefBean> tableDefBeans;
 
-	public SchemaBean(String name, DNBean defaultDN, int schemaType,List<TableDefBean> tableDefBeans) {
+	public SchemaBean(String name, DNBean defaultDN, boolean normalSchema,List<TableDefBean> tableDefBeans) {
 	super();
 	this.name = name;
 	this.defaultDN = defaultDN;
-	this.schemaType = schemaType;
+	this.normalSchema = normalSchema;
 	this.tableDefBeans=tableDefBeans;
 }
+ 
 
-	public SchemaBean() {
-		
+	public boolean isNormalSchema() {
+		return normalSchema;
 	}
+
 
 	public String getName() {
 		return name;
@@ -65,10 +70,7 @@ private List<TableDefBean> tableDefBeans;
 		this.defaultDN = defaultDN;
 	}
 
-	public int getSchemaType() {
-		return schemaType;
-	}
-
+	 
 	
 	
 	public void setTableDefBeans(List<TableDefBean> tableDefBeans) {
@@ -79,13 +81,11 @@ private List<TableDefBean> tableDefBeans;
 		return tableDefBeans;
 	}
 
-	public void setSchemaType(int schemaType) {
-		this.schemaType = schemaType;
-	}
+	 
 
 	@Override
 	public String toString() {
-		return "SchemaBean [name=" + name + ", defaultDN=" + defaultDN + ", schemaType=" + schemaType
+		return "SchemaBean [name=" + name + ", defaultDN=" + defaultDN + ", normalSchema=" + normalSchema
 				+ ", tableDefBeans=" + tableDefBeans + "]";
 	}
 

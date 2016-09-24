@@ -21,11 +21,12 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.backend.mysql;
+package io.mycat.backend;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 
+import io.mycat.backend.callback.DummyCallBack;
 import io.mycat.beans.MySQLBean;
 import io.mycat.net2.NetSystem;
 /**
@@ -53,7 +54,7 @@ public class MySQLBackendConnectionFactory {
         c.setPassword(dsc.getPassword());
         c.setSchema(schema);
         c.setPool(pool);
-        c.setAttachement(reactor);
+        c.setNIOReactor(reactor);
         c.setUserCallback(dummyCallBack);
         c.setIdleTimeout(NetSystem.getInstance().getNetConfig().getConIdleTimeout()*60*1000L);
         NetSystem.getInstance().getConnector().postConnect(c);

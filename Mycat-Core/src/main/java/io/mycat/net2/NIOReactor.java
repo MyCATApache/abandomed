@@ -50,7 +50,7 @@ public final class NIOReactor {
 		reactorR.events.add(e);
 	}
 	final void postRegister(Connection c) {
-		c.setNIOReactor(this);
+		c.setNIOReactor(this.name);
 		reactorR.registerQueue.offer(c);
 		reactorR.selector.wakeup();
 	}

@@ -26,8 +26,9 @@ package io.mycat;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.mycat.backend.DHReplicatSet;
-import io.mycat.backend.mysql.MySQLBackendConnectionFactory;
+import io.mycat.backend.MySQLBackendConnectionFactory;
+import io.mycat.backend.MySQLReplicatSet;
+import io.mycat.beans.SchemaBean;
 import io.mycat.engine.SQLCommandHandler;
 import io.mycat.net2.NIOReactor;
 
@@ -43,9 +44,11 @@ public class SQLEngineCtx {
 	instance=new SQLEngineCtx();
 	}
 	/**
-	 * 默认的SQL命令处理器
+	 * 不分片的Schema對應的SQL处理器
 	 */
-private SQLCommandHandler<?> defaultMySQLCmdHandler;
+private SQLCommandHandler normalSchemaSQLCmdHandler;
+private SQLCommandHandler partionSchemaSQLCmdHandler;
+
 
 private  MySQLBackendConnectionFactory backendMySQLConFactory;
 /**
@@ -54,14 +57,24 @@ private  MySQLBackendConnectionFactory backendMySQLConFactory;
 private Map<String,NIOReactor> reactorMap=new HashMap<String,NIOReactor>();
 
 /**
- * 系统中所有DHReplicatSet的Map
+ * 系统中所有MySQLReplicatSet的Map
  */
-private Map<String,DHReplicatSet> dhRepSetMap=new HashMap<String,DHReplicatSet>();
+private Map<String,MySQLReplicatSet> msqlRepSetMap=new HashMap<String,MySQLReplicatSet>();
 
-@SuppressWarnings({"rawtypes" })
-public  SQLCommandHandler getDefaultMySQLCmdHandler()
+/**
+ * 系统中所有SchemaBean的Map
+ */
+private Map<String,SchemaBean> mycatSchemaMap=new HashMap<String,SchemaBean>();
+
+
+public  SQLCommandHandler getNomalSchemaSQLCmdHandler()
 {
-	return defaultMySQLCmdHandler;
+	return normalSchemaSQLCmdHandler;
+	
+}
+public  SQLCommandHandler getPartionSchemaSQLCmdHandler()
+{
+	return this.partionSchemaSQLCmdHandler;
 	
 }
 protected void initReactorMap(NIOReactor[] reactors)
@@ -78,18 +91,22 @@ public NIOReactor findReactor(String name)
 public Map<String, NIOReactor> getReactorMap() {
 	return reactorMap;
 }
-protected void setDefaultMySQLCmdHandler(SQLCommandHandler<?> mySQLCmdHandler)
-{
-	this.defaultMySQLCmdHandler=mySQLCmdHandler;
+
+
+protected void setNormalSchemaSQLCmdHandler(SQLCommandHandler normalSchemaSQLCmdHandler) {
+	this.normalSchemaSQLCmdHandler = normalSchemaSQLCmdHandler;
+}
+protected void setPartionSchemaSQLCmdHandler(SQLCommandHandler partionSchemaSQLCmdHandler) {
+	this.partionSchemaSQLCmdHandler = partionSchemaSQLCmdHandler;
 }
 public static SQLEngineCtx INSTANCE()
 {
 	return instance;
 }
 
-public DHReplicatSet getDHReplicatSet(String repsetName)
+public MySQLReplicatSet getMySQLReplicatSet(String repsetName)
 {
-	return dhRepSetMap.get(repsetName);
+	return this.msqlRepSetMap.get(repsetName);
 }
 public MySQLBackendConnectionFactory getBackendMySQLConFactory() {
 	return backendMySQLConFactory;
@@ -98,8 +115,18 @@ protected void setBackendMySQLConFactory(MySQLBackendConnectionFactory backendMy
 	this.backendMySQLConFactory = backendMySQLConFactory;
 }
 
- protected void addDHReplicatSet(DHReplicatSet repSet)
+ protected void addMySQLReplicatSet(MySQLReplicatSet repSet)
  {
-	 this.dhRepSetMap.put(repSet.getName(), repSet);
+	 this.msqlRepSetMap.put(repSet.getName(), repSet);
+ }
+ 
+ protected void addSchemaBean(SchemaBean schemaBean)
+ {
+	 this.mycatSchemaMap.put(schemaBean.getName(), schemaBean);
+ }
+ 
+ public SchemaBean getMycatSchema(String schema)
+ {
+ 	return this.mycatSchemaMap.get(schema);
  }
 }

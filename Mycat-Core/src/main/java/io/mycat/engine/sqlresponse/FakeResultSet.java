@@ -1,16 +1,16 @@
-package io.mycat.net2.mysql.response;
+package io.mycat.engine.sqlresponse;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-import io.mycat.mysql.MySQLConnection;
+import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.packet.EOFPacket;
 import io.mycat.mysql.packet.FieldPacket;
 import io.mycat.mysql.packet.ResultSetHeaderPacket;
 import io.mycat.mysql.packet.RowDataPacket;
 
 public final class FakeResultSet {
-    public static void response(MySQLConnection c) throws IOException {
+    public static void response(MySQLFrontConnection c) throws IOException {
     	ByteBuffer byteBuf= c.getWriteDataBuffer().beginWrite(1024*10);
         byte packedId = 1;
         ResultSetHeaderPacket rshp = new ResultSetHeaderPacket();

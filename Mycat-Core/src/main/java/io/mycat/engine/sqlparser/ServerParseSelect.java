@@ -21,7 +21,7 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2.mysql.parser;
+package io.mycat.engine.sqlparser;
 
 import io.mycat.util.CharTypes;
 import io.mycat.util.ParseUtil;

@@ -21,7 +21,7 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.mysql;
+package io.mycat.front;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;

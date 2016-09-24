@@ -21,7 +21,7 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.backend.mysql;
+package io.mycat.backend.callback;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -29,6 +29,7 @@ import java.nio.ByteBuffer;
 import org.slf4j.Logger;
 
 import io.mycat.backend.BackConnectionCallback;
+import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.engine.ErrorCode;
 import io.mycat.mysql.packet.EOFPacket;
 import io.mycat.mysql.packet.ErrorPacket;
@@ -45,10 +46,10 @@ import io.mycat.util.SecurityUtil;
  * @author wuzhihui
  *
  */
-public class LoginRespCallback implements BackConnectionCallback<MySQLBackendConnection>{
-   private 	  BackConnectionCallback<MySQLBackendConnection> userCallback;
+public class LoginRespCallback implements BackConnectionCallback{
+   private 	  BackConnectionCallback userCallback;
    private Logger LOGGER;
-	public LoginRespCallback(Logger LOGGER,BackConnectionCallback<MySQLBackendConnection> userCallback)
+	public LoginRespCallback(Logger LOGGER,BackConnectionCallback userCallback)
 	{
 		this.userCallback=userCallback;
 		this.LOGGER=LOGGER;
@@ -119,7 +120,7 @@ public class LoginRespCallback implements BackConnectionCallback<MySQLBackendCon
 	        int charsetIndex = (packet.serverCharsetIndex & 0xff);
 	        String charset = CharsetUtil.getCharset(charsetIndex);
 	         if (charset != null) {
-	         source.setCharset(charsetIndex);
+	         source.setCharset(charsetIndex,charset);
 	         } else {
 	        	 String errmsg="Unknown charsetIndex:" + charsetIndex+ " of "+source;
 	        	 LOGGER.warn(errmsg);

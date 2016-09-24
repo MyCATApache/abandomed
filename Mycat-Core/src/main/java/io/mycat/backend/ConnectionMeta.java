@@ -59,7 +59,7 @@ public class ConnectionMeta {
         return autocommit;
     }
 
-    public boolean isSameSchema(BackendConnection theCon) {
+    public boolean isSameSchema(MySQLBackendConnection theCon) {
         return theCon.getSchema().equals(schema);
     }
 
@@ -69,7 +69,7 @@ public class ConnectionMeta {
      * @param theCon
      * @return
      */
-    public int getMetaSimilarity(BackendConnection theCon) {
+    public int getMetaSimilarity(MySQLBackendConnection theCon) {
         int result = 0;
         if (schema == null || schema.equals(theCon.getSchema())) {
             result++;

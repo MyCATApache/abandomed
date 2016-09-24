@@ -32,7 +32,6 @@ import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.Connection;
-import io.mycat.util.CharsetUtil;
 import io.mycat.util.RandomUtil;
 /**
  * Mysql connection 
@@ -40,32 +39,27 @@ import io.mycat.util.RandomUtil;
  *
  */
 public  class MySQLConnection extends Connection {
-    public MySQLConnection(SocketChannel channel) {
-		super(channel);
-		
-	}
-
-	public static final int CMD_QUERY_STATUS = 11;
+	
+	
+	protected String user;
+	protected String password;
+	protected String charset;
+	protected int charsetIndex;
+ 	public static final int CMD_QUERY_STATUS = 11;
     public static final int RESULT_WAIT_STATUS = 21;
     public static final int RESULT_INIT_STATUS = 22;
     public static final int RESULT_FETCH_STATUS = 23;
     public static final int RESULT_HEADER_STATUS = 24;
     public static final int RESULT_FAIL_STATUS = 29;
-    
-    
-
-    
-      protected byte[] seed;
+    protected byte[] seed;
     public final static int msyql_packetHeaderSize = 4;
-
 	public final static int mysql_packetTypeSize = 1;
-
+	 public MySQLConnection(SocketChannel channel) {
+			super(channel);
+		}
 	public static final boolean validateHeader(long offset, long position) {
 		return offset + msyql_packetHeaderSize + mysql_packetTypeSize <= position;
 	}
-    private String charset;
-    private int charsetIndex;
-
 	/**
 	 * 获取报文长度
 	 * 
@@ -85,77 +79,7 @@ public  class MySQLConnection extends Connection {
 		return length + msyql_packetHeaderSize;
 	}
 
-
- 
-	
-	   public void setNextStatus(byte packetType) {
-           if (packetType == MySQLPacket.COM_QUIT) {
-               this.setState(STATE_CLOSING);
-           }
-           int status = this.getState();
-           switch (status) {
-           case STATE_IDLE:
-               if (packetType == MySQLPacket.COM_QUERY) {
-                   this.setState(CMD_QUERY_STATUS);
-               } else if (packetType == MySQLPacket.COM_QUIT) {
-                   this.setState(STATE_CLOSING);
-               }
-               break;
-           case CMD_QUERY_STATUS:
-               if (packetType == MySQLPacket.OK_PACKET) {
-                   this.setState(RESULT_INIT_STATUS);
-               } else if (packetType == MySQLPacket.ERROR_PACKET) {
-                   this.setState(STATE_IDLE);
-               }
-               break;
-           case RESULT_INIT_STATUS:
-               if (packetType == MySQLPacket.OK_PACKET) {
-                   this.setState(RESULT_FETCH_STATUS);
-               } else if (packetType == MySQLPacket.ERROR_PACKET) {
-                   this.setState(RESULT_FAIL_STATUS);
-               }
-               break;
-           case RESULT_FETCH_STATUS:
-               if (packetType == MySQLPacket.EOF_PACKET) {
-                   this.setState(STATE_IDLE);
-               } else if (packetType == MySQLPacket.ERROR_PACKET) {
-                   this.setState(RESULT_FAIL_STATUS);
-               }
-               break;
-           case RESULT_FAIL_STATUS:
-               if (packetType == MySQLPacket.EOF_PACKET) {
-                   this.setState(STATE_IDLE);
-               }
-               break;
-           default:
-               LOGGER.warn("Error connected status.", status);
-               break;
-           }
-       }
-
-
-	    public String getCharset() {
-	        return this.charset;
-	    }
-
-
-	    public void setCharset(int charsetIndex) {
-	    	 String charset = CharsetUtil.getCharset(charsetIndex);
-			this.charset = charset;
-			this.charsetIndex=charsetIndex;
-		}
-
-
-
-
-		public int getCharsetIndex() {
-			return charsetIndex;
-		}
-
-
-
-
-		protected int getServerCapabilities() {
+	protected int getServerCapabilities() {
 	        int flag = 0;
 	        flag |= Capabilities.CLIENT_LONG_PASSWORD;
 	        flag |= Capabilities.CLIENT_FOUND_ROWS;
@@ -232,5 +156,30 @@ public  class MySQLConnection extends Connection {
         err.errno = errno;
         err.message = info.getBytes();
        this.writeMsqlPackage(err);
+    }
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+   
+    public String getCharset() {
+		return charset;
+	}
+	public void setCharset(int charsetIndex,String charsetName)
+    {
+    	this.charsetIndex=charsetIndex;
+    	this.charset=charsetName;
     }
 }

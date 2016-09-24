@@ -37,22 +37,41 @@ import io.mycat.beans.MySQLBean;
  * @author wuzhihui
  *
  */
-public abstract class DHSource {
-    public static final Logger LOGGER = LoggerFactory.getLogger(DHSource.class);
+public class MySQLDataSource {
+    public static final Logger LOGGER = LoggerFactory.getLogger(MySQLDataSource.class);
     private final String name;
     private final int size;
     private final MySQLBean mysqlBean;
     private final ConMap conMap = new ConMap();
-    private volatile long heartbeatRecoveryTime;
-
-    public DHSource(MySQLBean config) {
+    private  long heartbeatRecoveryTime;
+    private boolean slaveNode;
+    private final MySQLBackendConnectionFactory factory;
+    public MySQLDataSource(MySQLBackendConnectionFactory factory,MySQLBean config,boolean islaveNode) {
         this.size = config.getMaxCon();
         this.mysqlBean = config;
         this.name = config.getHostName();
+        this.slaveNode=islaveNode;
+        this.factory=factory;
        
     }
+    
 
-    public boolean isMyConnection(BackendConnection con) {
+
+    
+    public MySQLBackendConnection createNewConnectionOnReactor(String reactor,String schema) throws IOException {
+    	MySQLBackendConnection con= factory.make(this, reactor,schema);
+        this.conMap.getSchemaConQueue(schema).getAutoCommitCons().add(con);
+        return con;
+    }
+    public boolean isSlaveNode() {
+		return slaveNode;
+	}
+
+	public void setSlaveNode(boolean slaveNode) {
+		this.slaveNode = slaveNode;
+	}
+
+	public boolean isMyConnection(MySQLBackendConnection con) {
         return (con.getPool() == this);
     }
 
@@ -104,7 +123,7 @@ public abstract class DHSource {
             		itor=reactos.iterator();
             	}
             	actorName=itor.next();
-            	this.createNewConnection(actorName, this.mysqlBean.getDefaultSchema());
+            	this.createNewConnectionOnReactor(actorName, this.mysqlBean.getDefaultSchema());
             } catch (Exception e) {
                 LOGGER.warn(" init connection error.", e);
             }
@@ -120,24 +139,17 @@ public abstract class DHSource {
         this.conMap.clearConnections(reason, this);
     }
 
-    private BackendConnection takeCon(BackendConnection conn, final Object attachment, String schema) {
+    private MySQLBackendConnection takeCon(MySQLBackendConnection conn, final Object attachment, String schema) {
 
-        conn.borrow();
+        conn.setBorrowed(true);
         ConQueue queue = conMap.getSchemaConQueue(schema);
         queue.incExecuteCount();
         return conn;
     }
 
-    private BackendConnection createNewConnection(String reactor, final String schema) throws IOException {
-        // aysn create connection
-        BackendConnection con = createNewConnectionOnReactor(reactor,schema);
-        this.conMap.getSchemaConQueue(schema).getAutoCommitCons().add(con);
-        return con;
-    }
-
-    public BackendConnection getConnection(String reactor,String schema, boolean autocommit, final Object attachment)
+    public MySQLBackendConnection getConnection(String reactor,String schema, boolean autocommit, final Object attachment)
             throws IOException {
-        BackendConnection con = this.conMap.tryTakeCon(reactor,schema, autocommit);
+    	MySQLBackendConnection con = this.conMap.tryTakeCon(reactor,schema, autocommit);
         if (con != null) {
             takeCon(con, // handler,
                     attachment, schema);
@@ -150,16 +162,15 @@ public abstract class DHSource {
             } else { // create connection
                 LOGGER.info(
                         "no ilde connection in pool,create new connection for " + this.name + " of schema " + schema);
-                return createNewConnection(// handler,
-                		reactor, schema);
+                return createNewConnectionOnReactor(reactor, schema);
             }
         }
 
     }
 
-    private void returnCon(BackendConnection c) {
-        // c.setAttachment(null);
-        c.borrow();
+    private void returnCon(MySQLBackendConnection c) {
+    
+        c.setBorrowed(false);
         // c.setLastTime(TimeUtil.currentTimeMillis());
         ConQueue queue = this.conMap.getSchemaConQueue(c.getSchema());
 
@@ -176,14 +187,14 @@ public abstract class DHSource {
         }
     }
 
-    public void releaseChannel(BackendConnection c) {
+    public void releaseChannel(MySQLBackendConnection c) {
         returnCon(c);
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("release channel " + c);
         }
     }
 
-    public void connectionClosed(BackendConnection conn) {
+    public void connectionClosed(MySQLBackendConnection conn) {
         ConQueue queue = this.conMap.getSchemaConQueue(conn.getSchema());
         if (queue != null) {
             queue.removeCon(conn);
@@ -191,9 +202,7 @@ public abstract class DHSource {
 
     }
 
-    public abstract BackendConnection createNewConnectionOnReactor(String reactor,String schema) throws IOException;
-
-    public long getHeartbeatRecoveryTime() {
+   public long getHeartbeatRecoveryTime() {
         return heartbeatRecoveryTime;
     }
 

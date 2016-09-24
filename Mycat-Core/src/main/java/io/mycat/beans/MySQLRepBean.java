@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * 
+ *表示一組MySQL Server复制集群，如主从或者多主
  * @author wuzhihui
  *
  */

@@ -21,7 +21,7 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.backend.mysql;
+package io.mycat.backend.callback;
 
 import java.io.IOException;
 
@@ -29,66 +29,47 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.backend.BackConnectionCallback;
-import io.mycat.engine.ErrorCode;
-import io.mycat.mysql.MySQLFrontConnection;
+import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.net2.ConDataBuffer;
-import io.mycat.net2.Connection;
 import io.mycat.net2.ConnectionException;
 /**
- * direct transfer bakend data to front connection
- * must attach (setAttachement) front connection on backend connection 
+ * callback witch do nothing 
  * @author wuzhihui
  *
  */
-public class DirectTransTofrontCallBack  implements BackConnectionCallback<MySQLBackendConnection>{
-	 private static final Logger LOGGER = LoggerFactory.getLogger(DirectTransTofrontCallBack.class);
+public class DummyCallBack  implements BackConnectionCallback{
+	 private static final Logger LOGGER = LoggerFactory.getLogger(DummyCallBack.class);
 	 
 	 
 	@Override
 	public void handleResponse(MySQLBackendConnection source, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos,
 			int pkgLen) throws IOException {
-		 LOGGER.debug("Direct Trans To front CallBack."+source);
-	        MySQLFrontConnection frontCon=getFrontCon(source);
-	        frontCon.getWriteDataBuffer().putBytes(dataBuffer.getBytes(pkgStartPos, pkgLen));
-        	frontCon.enableWrite(false);
-	        source.setNextStatus(packageType);
-	       
-	        if (source.getState()== Connection.STATE_IDLE)
-	        {
-	        	LOGGER.debug("realese bakend connedtion "+source);
-	        	source.release();
-	        }
+		LOGGER.warn("rereived not processed response  "+source);
 		
 	}
-	private MySQLFrontConnection getFrontCon(MySQLBackendConnection source)
-	{
-		return (MySQLFrontConnection) source.getAttachment();
-	}
+	
 
 	@Override
 	public void connectionError(ConnectionException e, MySQLBackendConnection conn) {
-	getFrontCon(conn).failure(e.getCode(), e.toString());
+		LOGGER.warn("connection error "+conn,e);
 		
 	}
 	@Override
 	public void connectionAcquired(MySQLBackendConnection conn) {
 		LOGGER.info("connection acquired "+conn);
-		//执行异步任务（如果有，比如發送SQL語句給後端）
-		getFrontCon(conn).executePendingTask();
+		 
 		
 	}
 	@Override
 	public void connectionClose(MySQLBackendConnection conn, String reason) {
-		LOGGER.info("connection closed "+conn);
-		if(conn.getState()!=Connection.STATE_CONNECTING)
-		{
-		getFrontCon(conn).removeBackCon(conn);
-		}
+		LOGGER.info("connection closed ,reason:"+reason+ "  "+conn);
+		 
 		
 	}
 	@Override
 	public void handlerError(Exception e, MySQLBackendConnection conn) {
-		getFrontCon(conn).failure(ErrorCode.ERR_FOUND_EXCEPION, e.toString());
+		LOGGER.warn("hanlder error "+conn,e);
+		 
 		
 	}
 

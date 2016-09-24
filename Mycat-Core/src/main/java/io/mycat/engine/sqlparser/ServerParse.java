@@ -21,7 +21,7 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2.mysql.parser;
+package io.mycat.engine.sqlparser;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,7 +59,7 @@ public final class ServerParse {
     public static final int DDL = 100;
     private static final  Pattern pattern = Pattern.compile("(load)+\\s+(data)+\\s+\\w*\\s*(infile)+",Pattern.CASE_INSENSITIVE);
 
-	public static int parse(String stmt) {
+	public static int parse(String stmt,SQLInfo sqlInf) {
 		int lenth = stmt.length();
 		for (int i = 0; i < lenth; ++i) {
 			switch (stmt.charAt(i)) {
@@ -111,7 +111,7 @@ public final class ServerParse {
 				return tCheck(stmt, i);
 			case 'U':
 			case 'u':
-				return uCheck(stmt, i);
+				return uCheck(sqlInf,stmt, i);
 			case 'K':
 			case 'k':
 				return killCheck(stmt, i);
@@ -659,7 +659,7 @@ public final class ServerParse {
 	}
 
 	// UPDATE' ' | USE' '
-	static int uCheck(String stmt, int offset) {
+	static int uCheck(SQLInfo sqlInf,String stmt, int offset) {
 		if (stmt.length() > ++offset) {
 			switch (stmt.charAt(offset)) {
 			case 'P':
@@ -686,7 +686,9 @@ public final class ServerParse {
 					char c2 = stmt.charAt(++offset);
 					if ((c1 == 'E' || c1 == 'e')
 							&& (c2 == ' ' || c2 == '\t' || c2 == '\r' || c2 == '\n')) {
-						return (offset << 8) | USE;
+						String db=stmt.substring(offset, stmt.length());
+						sqlInf.setDb(db);
+						return  USE;
 					}
 				}
 				break;

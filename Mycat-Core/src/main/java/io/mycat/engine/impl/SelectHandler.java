@@ -21,12 +21,12 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.net2.mysql.handler;
+package io.mycat.engine.impl;
 
 import java.io.IOException;
 
-import io.mycat.mysql.MySQLConnection;
-import io.mycat.net2.mysql.parser.ServerParseSelect;
+import io.mycat.engine.sqlparser.ServerParseSelect;
+import io.mycat.front.MySQLFrontConnection;
 import io.mycat.util.ParseUtil;
 
 /**
@@ -41,7 +41,7 @@ public final class SelectHandler {
 	 * @param offs
 	 * @throws IOException
 	 */
-    public static void handle(String stmt, MySQLConnection c, int offs) throws IOException {
+    public static void handle(String stmt, MySQLFrontConnection c, int offs) throws IOException {
         int offset = offs;
         switch (ServerParseSelect.parse(stmt, offs)) {
         case ServerParseSelect.VERSION_COMMENT:

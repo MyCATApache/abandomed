@@ -22,7 +22,7 @@ public abstract class Connection implements ClosableConnection {
     protected int port;
     protected int localPort;
     protected long id;
-    private NIOReactor reactor;
+    private String  reactor;
     private Object attachement;
     private int state = STATE_CONNECTING;
 
@@ -62,19 +62,7 @@ public abstract class Connection implements ClosableConnection {
         this.lastWriteTime = startupTime;
         this.lastPerfCollectTime = startupTime;
     }
-    /**
-     * 確保Connection，Session相关的属性值的改变在Reactor线程中完成，防止变量无法被Reactor线程看到
-     * @param r
-     */
-    public void invokeLater(Runnable r)
-    {
-    	reactor.invokeLater(r);
-    }
 
-    public void ensureInActorThread()
-    {
-    	reactor.ensureInActorThread();
-    }
     public void resetPerfCollectTime() {
         netInBytes = 0;
         netOutBytes = 0;
@@ -271,8 +259,8 @@ public abstract class Connection implements ClosableConnection {
 
 
 
-  	public void setNIOReactor(NIOReactor actorThreadId) {
-		this.reactor = actorThreadId;
+  	public void setNIOReactor(String reactorName) {
+		this.reactor = reactorName;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -469,10 +457,10 @@ public abstract class Connection implements ClosableConnection {
     }
     public String getReactor()
     {
-    	return this.reactor.getName();
+    	return this.reactor;
     }
 	public boolean belongsActor(String reacotr) {
-		return this.reactor.getName().equals(reacotr);
+		return reactor.equals(reacotr);
 	}
   
 }

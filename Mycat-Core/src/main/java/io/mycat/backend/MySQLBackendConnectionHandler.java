@@ -21,51 +21,39 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.mysql;
+package io.mycat.backend;
 
 import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.backend.callback.LoginRespCallback;
+import io.mycat.mysql.MySQLConnection;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.ConnectionException;
 import io.mycat.net2.NIOHandler;
 /**
- * front mysql connection handler (main NIO Handler)
+ * backend mysql NIO handler (only one for all backend mysql connections)
  * @author wuzhihui
  *
  */
-public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnection> {
-  
-    private static final Logger LOGGER = LoggerFactory.getLogger(MySQLFrontConnectionHandler.class);
-    private final CheckUserLoginResponseCallback loginCmdHandler=new CheckUserLoginResponseCallback();
- 
+public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendConnection> {
 
-	@Override
-    public void onConnected(MySQLFrontConnection con) throws IOException {
-        LOGGER.debug("onConnected", con);
-        con.getSession().changeCmdHandler(con, loginCmdHandler);
-        con.sendAuthPackge();
+    private static final Logger LOGGER = LoggerFactory.getLogger(MySQLBackendConnectionHandler.class);
+
+    @Override
+    public void onConnected(MySQLBackendConnection con) throws IOException {
+    	LoginRespCallback loginRepsCallback=new LoginRespCallback(LOGGER,con.getUserCallback());
+    	con.setUserCallback(loginRepsCallback);
+        // con.asynRead();
     }
 
     @Override
-    public void onConnectFailed(MySQLFrontConnection con, ConnectionException e) {
-        LOGGER.debug("onConnectFailed", con);
-    }
-
-    @Override
-    public void onClosed(MySQLFrontConnection con, String reason) {
-        LOGGER.debug("onClosed", con);
-    }
-
-	@Override
-    public void handleReadEvent(final MySQLFrontConnection fronCon) throws IOException{
-    	ConDataBuffer dataBuffer=fronCon.getReadDataBuffer();
-        LOGGER.debug("handle", fronCon);
+    public void handleReadEvent(MySQLBackendConnection con) throws IOException{
+    	ConDataBuffer dataBuffer=con.getReadDataBuffer();
         int offset = dataBuffer.readPos(), length = 0, limit = dataBuffer.writingPos();
-   	// 读取到了包头和长度
-		//是否讀完一個報文
+   	// 循环收到的报文处理
 		while(true)
 		{
 			if(!MySQLConnection.validateHeader(offset, limit))
@@ -80,28 +68,37 @@ public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnect
 			}
 			// 解析报文类型
 			byte packetType = dataBuffer.getByte(offset+MySQLConnection.msyql_packetHeaderSize);
+			 
 			int pkgStartPos=offset;
 			offset += length;
 			dataBuffer.seReadingPos(offset);
 			
-			LOGGER.info("received pkg ,offset: "+pkgStartPos+" length: "+length+" type: "+packetType+" cur total length: "+limit);
-			fronCon.getSession().getCurCmdHandler().processCmd(fronCon, dataBuffer, packetType, pkgStartPos, length);
+			LOGGER.info("received pkg ,length "+length+" type "+packetType+" cur total length "+limit);
+			con.getUserCallback().handleResponse(con, dataBuffer, packetType, pkgStartPos, length);
+	        }
 			
-		}
-		
+			
     }
 
+   
 
+    @Override
+    public void onClosed(MySQLBackendConnection source, String reason) {
+    	source.getUserCallback().connectionClose(source, reason);
+    }
+
+    
 
 	@Override
-	public void onHandlerError(MySQLFrontConnection con, Exception e) {
-		 con.close(e.toString());
+	public void onConnectFailed(MySQLBackendConnection con, ConnectionException e) {
+		con.getUserCallback().connectionError(e, con);
 		
 	}
 
-  
-   
+	@Override
+	public void onHandlerError(MySQLBackendConnection con, Exception e) {
+		con.getUserCallback().handlerError( e,con);
+		
+	}
 
-   
-
-}
+  }

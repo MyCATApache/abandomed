@@ -21,66 +21,50 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
-package io.mycat.engine;
+package io.mycat.engine.impl;
 
-import java.util.ArrayList;
+import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.front.MySQLFrontConnection;
+import io.mycat.net2.ConDataBuffer;
 
 /**
- * user session ,mean's a mysql client session or pg client session
+ * 不分片的Schema對應的 SQL Command Handler
+ * 
  * @author wuzhihui
  *
  */
-public class UserSession  {
-	 private static final Logger LOGGER = LoggerFactory.getLogger(UserSession.class);	
-private SQLCommandHandler curCmdHandler;	
-private ArrayList<MySQLBackendConnection> backConLst=new  ArrayList<MySQLBackendConnection>();
-public void changeCmdHandler(SQLCommandHandler newCmdHandler)
-{
+public class NormalSchemaSQLCommandHandler extends AbstractSchemaSQLCommandHandler {
+	private static final Logger LOGGER = LoggerFactory.getLogger(NormalSchemaSQLCommandHandler.class);
+
+	@Override
+	public void executeSetSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
+			int pkgStartPos, int pkgLen, String sql) throws IOException {
+		passThroughSQL(frontCon, dataBuffer, pkgStartPos, pkgLen);
+		
+	}
+
+	@Override
+	public void executeShowSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
+			int pkgStartPos, int pkgLen, String sql) throws IOException {
+		passThroughSQL(frontCon, dataBuffer, pkgStartPos, pkgLen);
+		
+	}
+
+	@Override
+	public void executeSelectSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
+			int pkgStartPos, int pkgLen, String sql) throws IOException {
+		passThroughSQL(frontCon, dataBuffer, pkgStartPos, pkgLen);
+		
+	}
 	
-	this.curCmdHandler=newCmdHandler;
-}
-
-public SQLCommandHandler getCurCmdHandler() {
-	return curCmdHandler;
-}
-
-
-
-
-public void removeBackCon(MySQLBackendConnection con)
-{
-	 if(this.backConLst.remove(con))
-	 {
-		 LOGGER.warn("remove back con ,but not found ! "+this); 
-	 }
-		 
-	   
-}
-
-public void addBackCon(MySQLBackendConnection con)
-{
-	 if(this.backConLst.contains(con))
-	 {
-		 throw new RuntimeException("add a duplicate back connection to session,schema: "+con.getSchema());
-	 }else
-	 {
-		 backConLst.add(con);
-	 }
-		   
-			   
-}
-
-public  ArrayList<MySQLBackendConnection> getBackendCons() {
-	return backConLst;
-}
-
 
 	
+		
+		
 	
 
 }

@@ -102,7 +102,7 @@ public final class NIOConnector extends Thread {
 				System.out.println("----------------ConnectIdGenerator.getINSTNCE().getId()-----------------"
 						+ ConnectIdGenerator.getINSTNCE().getId());
 				NIOReactor reactor=null;
-				String reactorName=(String)c.getAttachement();
+				String reactorName=c.getReactor();
 				if(reactorName!=null)
 				{
 					reactor=reactorPool.getSpecialActor(reactorName);

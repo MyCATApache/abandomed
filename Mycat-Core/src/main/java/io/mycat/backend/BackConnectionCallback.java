@@ -32,7 +32,7 @@ import io.mycat.net2.ConnectionException;
  * @author wuzhihui
  *
  */
-public interface BackConnectionCallback<T extends BackendConnection> {
+public interface BackConnectionCallback  {
 
     /**
      * 无法获取连接
@@ -40,29 +40,29 @@ public interface BackConnectionCallback<T extends BackendConnection> {
      * @param e
      * @param conn
      */
-     void connectionError(ConnectionException e, T conn);
+     void connectionError(ConnectionException e, MySQLBackendConnection conn);
 
     /**
      * 已获得有效连接的响应处理
      */
-    void connectionAcquired(T conn);
+    void connectionAcquired(MySQLBackendConnection conn);
 
     /**
      * 收到数据包的响应处理
      */
-    void handleResponse(T conn,ConDataBuffer dataBuffer,byte packageType,int pkgStartPos,int pkgLen) throws IOException ;
+    void handleResponse(MySQLBackendConnection conn,ConDataBuffer dataBuffer,byte packageType,int pkgStartPos,int pkgLen) throws IOException ;
 
     /**
      * on connetion close event
      */
-    void connectionClose(T conn, String reason);
+    void connectionClose(MySQLBackendConnection conn, String reason);
     
     /**
      * 处理数据的过程中发生错误
      * @param e
      * @param conn
      */
-    void handlerError(Exception e,T conn);
+    void handlerError(Exception e,MySQLBackendConnection conn);
  
 
 }
