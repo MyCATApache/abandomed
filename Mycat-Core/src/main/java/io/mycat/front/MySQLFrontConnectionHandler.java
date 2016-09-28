@@ -83,7 +83,7 @@ public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnect
 			byte packetType = dataBuffer.getByte(offset+MySQLConnection.msyql_packetHeaderSize);
 			int pkgStartPos=offset;
 			offset += length;
-			dataBuffer.seReadingPos(offset);
+			dataBuffer.setReadingPos(offset);
 			
 			LOGGER.info("received pkg ,offset: "+pkgStartPos+" length: "+length+" type: "+packetType+" cur total length: "+limit);
 			fronCon.getSession().getCurCmdHandler().processCmd(fronCon, dataBuffer, packetType, pkgStartPos, length);
