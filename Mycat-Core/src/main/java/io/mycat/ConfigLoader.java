@@ -51,14 +51,16 @@ import io.mycat.beans.TableDefBean;
  *
  */
 public class ConfigLoader {
-	 private static final Logger LOGGER = LoggerFactory.getLogger(ConfigLoader.class);
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConfigLoader.class);
+	
 	public ConfigLoader() {
-		// TODO Auto-generated constructor stub
+		
 	}
+	
 	 public static List<SchemaBean> loadSheamBeans(String schemaBeanuri){ 
 		 List<SchemaBean>  list=new LinkedList<SchemaBean>();  
 		 try{    
-             
 	            NodeList nodeList=loadXmlDoc(schemaBeanuri).getElementsByTagName("schema");    
 	            for(int i=0;i<nodeList.getLength();i++){   
 	            	Node curRuleNode=nodeList.item(i);
@@ -80,7 +82,7 @@ public class ConfigLoader {
 	            		TableDefBean tbBean=new TableDefBean(tName,tType,tKey,tRule);
 	            		tableLst.add(tbBean);});
 	            	SchemaBean sBean=new SchemaBean(name,dnBean,("true".equalsIgnoreCase(schemaType)),tableLst);
-	            	System.out.println(sBean);
+	            	LOGGER.debug("schema-bean: {}", sBean);
 	            	list.add(sBean);
 	            }    
 	        }catch(Exception e){    
@@ -122,7 +124,7 @@ public class ConfigLoader {
 	 * @param datasourceuri
 	 * @return
 	 */
-    public static List<MySQLRepBean> loadMySQLRepBean(String datasourceuri){    
+    public static List<MySQLRepBean> loadMySQLRepBean(String datasourceuri){ 
     	 List<MySQLRepBean>  list=new LinkedList<MySQLRepBean>();  
         try{    
               
@@ -147,7 +149,6 @@ public class ConfigLoader {
         		 return mysql;}).collect(Collectors.toList()) ;
                  repBean.setMysqls(allMysqls);
                  list.add(repBean);
-            	 //System.out.println(repBean);  
             }    
         }catch(Exception e){    
         	LOGGER.warn("loadMySQLRepBean err "+e );

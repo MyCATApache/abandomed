@@ -393,11 +393,18 @@ public abstract class Connection implements ClosableConnection {
      */
     @SuppressWarnings("unchecked")
 	protected void asynRead() throws IOException {
-        if (this.isClosed) {
+    	final ConDataBuffer buffer = readDataBuffer;
+    	if(LOGGER.isDebugEnabled()){
+    		LOGGER.debug("C#{}B#{} ready to read data", getId(), buffer.hashCode());
+    	}
+        if (isClosed()) {
+        	LOGGER.debug("Connection closed: ignore");
             return;
         }
-        final ConDataBuffer buffer = readDataBuffer;
         final int got =  buffer.transferFrom(channel);
+        if(LOGGER.isDebugEnabled()){
+        	LOGGER.debug("C#{}B#{} can read {} bytes", getId(), buffer.hashCode(), got);
+        }
         switch (got) {
             case 0: {
                 // 如果空间不够了，继续分配空间读取
@@ -407,7 +414,7 @@ public abstract class Connection implements ClosableConnection {
                 break;
             }
             case -1: {
-            	// @todo 连接资源清理
+            	close("client closed");
                 break;
             }
             default: {// readed some bytes

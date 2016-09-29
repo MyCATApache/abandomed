@@ -26,6 +26,9 @@ package io.mycat;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.mycat.backend.MySQLBackendConnectionFactory;
 import io.mycat.backend.MySQLReplicatSet;
 import io.mycat.beans.SchemaBean;
@@ -38,23 +41,26 @@ import io.mycat.net2.NIOReactor;
  *
  */
 public class SQLEngineCtx {
-	static SQLEngineCtx instance;
-	static
-	{
-	instance=new SQLEngineCtx();
+	
+	protected final static Logger LOGGER = LoggerFactory.getLogger(SQLEngineCtx.class);
+	
+	final static SQLEngineCtx instance;
+	static {
+		instance = new SQLEngineCtx();
 	}
+	
 	/**
 	 * 不分片的Schema對應的SQL处理器
 	 */
-private SQLCommandHandler normalSchemaSQLCmdHandler;
-private SQLCommandHandler partionSchemaSQLCmdHandler;
-
-
-private  MySQLBackendConnectionFactory backendMySQLConFactory;
-/**
- * 系统中所有的NIO Reactor
- */
-private Map<String,NIOReactor> reactorMap=new HashMap<String,NIOReactor>();
+	private SQLCommandHandler normalSchemaSQLCmdHandler;
+	private SQLCommandHandler partionSchemaSQLCmdHandler;
+	
+	private  MySQLBackendConnectionFactory backendMySQLConFactory;
+	
+	/**
+	 * 系统中所有的NIO Reactor
+	 */
+	private Map<String,NIOReactor> reactorMap=new HashMap<String,NIOReactor>();
 
 /**
  * 系统中所有MySQLReplicatSet的Map
@@ -115,10 +121,11 @@ protected void setBackendMySQLConFactory(MySQLBackendConnectionFactory backendMy
 	this.backendMySQLConFactory = backendMySQLConFactory;
 }
 
- protected void addMySQLReplicatSet(MySQLReplicatSet repSet)
- {
-	 this.msqlRepSetMap.put(repSet.getName(), repSet);
- }
+ 	protected void addMySQLReplicatSet(final MySQLReplicatSet repSet) {
+ 		final String repSetName = repSet.getName();
+ 		LOGGER.debug("add MySQL replicatSet: {} = {}", repSetName, repSet);
+ 		this.msqlRepSetMap.put(repSetName, repSet);
+ 	}
  
  protected void addSchemaBean(SchemaBean schemaBean)
  {

@@ -77,19 +77,22 @@ public class CheckUserLoginResponseCallback implements SQLCommandHandler {
 	}
 
 	private void success(MySQLFrontConnection con, AuthPacket auth) throws IOException {
-		LOGGER.debug("Login success.");
+		LOGGER.debug("Login success");
 		// 设置字符集编码
 		int charsetIndex = (auth.charsetIndex & 0xff);
-		String charset = CharsetUtil.getCharset(charsetIndex);
+		final String charset = CharsetUtil.getCharset(charsetIndex);
 		if (charset == null) {
-			String errmsg = "Unknown charsetIndex:" + charsetIndex;
+			final String errmsg = "Unknown charsetIndex:" + charsetIndex;
 			LOGGER.warn(errmsg);
 			con.writeErrMessage(ErrorCode.ER_UNKNOWN_CHARACTER_SET, errmsg);
 			return;
 		}
+		LOGGER.debug("charset = {}, charsetIndex = {}", charset, charsetIndex);
 		con.setCharset(charsetIndex, charset);
 		if (!con.setFrontSchema(auth.database)) {
-			con.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "No Mycat Schema defined :" + auth.database);
+			final String errmsg = "No Mycat Schema defined: " + auth.database;
+			LOGGER.debug(errmsg);
+			con.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, errmsg);
 		} else {
 			con.write(AUTH_OK);
 		}

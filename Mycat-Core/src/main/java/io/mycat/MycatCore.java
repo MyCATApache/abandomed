@@ -93,11 +93,11 @@ public class MycatCore {
     	SQLEngineCtx.INSTANCE().setNormalSchemaSQLCmdHandler(normalSchemaSQLCmdHandler);
     	PartionSchemaSQLCommandHandler partionSchemaSQLCmdHandler=new PartionSchemaSQLCommandHandler();
     	SQLEngineCtx.INSTANCE().setPartionSchemaSQLCmdHandler(partionSchemaSQLCmdHandler);
-    	URL datasourceURL=ConfigLoader.class.getResource("/datasource.xml");
-    	List<MySQLRepBean> mysqlRepBeans=ConfigLoader.loadMySQLRepBean(datasourceURL.toString());
-        for(MySQLRepBean repBean:mysqlRepBeans)
+    	URL datasourceURL = ConfigLoader.class.getResource("/datasource.xml");
+    	List<MySQLRepBean> mysqlRepBeans = ConfigLoader.loadMySQLRepBean(datasourceURL.toString());
+        for(final MySQLRepBean repBean : mysqlRepBeans)
         {
-        	MySQLReplicatSet mysqlRepSet=new MySQLReplicatSet(repBean,0);
+        	MySQLReplicatSet mysqlRepSet = new MySQLReplicatSet(repBean,0);
             SQLEngineCtx.INSTANCE().addMySQLReplicatSet(mysqlRepSet);	
         }
         URL schemaURL=ConfigLoader.class.getResource("/schema.xml");

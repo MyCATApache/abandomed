@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.backend.MySQLDataSource;
+import io.mycat.backend.MySQLReplicatSet;
 import io.mycat.backend.callback.DirectTransTofrontCallBack;
 import io.mycat.beans.DNBean;
 import io.mycat.beans.SchemaBean;
@@ -63,6 +65,11 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			LOGGER.info("Client quit.");
 			frontCon.close("quit packet");
 			break;
+		case MySQLPacket.COM_INIT_DB:
+			// Implementation: use database;
+			// @author little-pan
+			// @since 2016-09-29
+			
 		default:
 			doSQLCommand(frontCon, dataBuffer, packageType, pkgStartPos, pkgLen);
 		}
@@ -167,10 +174,14 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			if (existCon != null) {
 				session.removeBackCon(existCon);
 			}
-			DNBean dnBean =frontCon.getMycatSchema().getDefaultDN();
-			final MySQLBackendConnection newCon = (MySQLBackendConnection) SQLEngineCtx.INSTANCE()
-					.getMySQLReplicatSet(dnBean.getMysqlReplica()).getCurWriteDH()
-					.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, null);
+			final DNBean dnBean = frontCon.getMycatSchema().getDefaultDN();
+			final String replica   = dnBean.getMysqlReplica();
+			final SQLEngineCtx ctx = SQLEngineCtx.INSTANCE();
+			LOGGER.debug("select a replica: {}", replica);
+			final MySQLReplicatSet repSet = ctx.getMySQLReplicatSet(replica);
+			final MySQLDataSource datas   = repSet.getCurWriteDH();
+			final MySQLBackendConnection newCon = 
+					datas.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, null);
 			newCon.setAttachement(frontCon);
 			newCon.setUserCallback(directTransCallback);
 			frontCon.addTodoTask(() -> {
