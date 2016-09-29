@@ -314,12 +314,21 @@ public abstract class Connection implements ClosableConnection {
     }
 
     private boolean write0() throws IOException {
-    	int written =this.writeDataBuffer.transferTo(this.channel);
-    	System.out.println("writed  "+written);
-		 netOutBytes += written;
-        NetSystem.getInstance().addNetOutBytes(written);
-       return (writeDataBuffer.readPos()==writeDataBuffer.writingPos());
-       
+    	final NetSystem nets = NetSystem.getInstance();
+    	final ConDataBuffer buffer = this.writeDataBuffer;
+    	final int written = buffer.transferTo(this.channel);
+    	final int remains = buffer.writingPos() - buffer.readPos();
+    	netOutBytes += written;
+		nets.addNetOutBytes(written);
+    	// trace-protocol
+    	// @author little-pan
+    	// @since 2016-09-29
+    	if(nets.getNetConfig().isTraceProtocol()){
+    		final String hexs = StringUtil.dumpAsHex(buffer, buffer.readPos() - written, written);
+    		LOGGER.info("C#{}B#{}: last writed = {} bytes, remain to write = {} bytes, written bytes\n{}", 
+    			getId(), buffer.hashCode(), written, remains, hexs);
+    	}
+    	return (remains == 0);
     }
 
     private void disableWrite() {
@@ -329,7 +338,6 @@ public abstract class Connection implements ClosableConnection {
         } catch (Exception e) {
             LOGGER.warn("can't disable write " + e + " con " + this);
         }
-
     }
 
     public void enableWrite(boolean wakeup) {
