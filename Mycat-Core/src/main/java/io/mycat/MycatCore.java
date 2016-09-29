@@ -78,7 +78,9 @@ public class MycatCore {
         NIOConnector connector = new NIOConnector("NIOConnector", reactorPool);
         connector.start();
         NetSystem.getInstance().setConnector(connector);
-        NetSystem.getInstance().setNetConfig(new SystemConfig());
+        final SystemConfig sysconfig = new SystemConfig();
+        sysconfig.setTraceProtocol(true);
+        NetSystem.getInstance().setNetConfig(sysconfig);
         MySQLBackendConnectionFactory bakcMySQLFactory=new MySQLBackendConnectionFactory();
         SQLEngineCtx.INSTANCE().setBackendMySQLConFactory(bakcMySQLFactory);
         MySQLFrontendConnectionFactory frontFactory = new MySQLFrontendConnectionFactory();
@@ -104,7 +106,5 @@ public class MycatCore {
         {
         	SQLEngineCtx.INSTANCE().addSchemaBean(schemaBean);
         }
-        
-        
     }
 }

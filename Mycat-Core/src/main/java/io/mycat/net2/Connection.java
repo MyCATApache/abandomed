@@ -1,5 +1,7 @@
 package io.mycat.net2;
 
+import io.mycat.util.StringUtil;
+
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -386,26 +388,34 @@ public abstract class Connection implements ClosableConnection {
         if (this.isClosed) {
             return;
         }
-        int got =  (int) readDataBuffer.transferFrom(channel);
-            switch (got) {
+        final ConDataBuffer buffer = readDataBuffer;
+        final int got =  buffer.transferFrom(channel);
+        switch (got) {
             case 0: {
                 // 如果空间不够了，继续分配空间读取
                 if (readDataBuffer.isFull()) {
-                    //todo extends
+                    // @todo extends
                 }
                 break;
             }
             case -1: {
+            	// @todo 连接资源清理
                 break;
             }
             default: {// readed some bytes
-
+            	// trace network protocol stream
+            	final NetSystem nets = NetSystem.getInstance();
+            	if(nets.getNetConfig().isTraceProtocol()){
+            		final int offset = buffer.readPos(), length = buffer.writingPos() - offset;
+            		final String hexs= StringUtil.dumpAsHex(buffer, offset, length);
+            		LOGGER.info("cnxn-{} asyn-read: last readed = {} bytes, total readed = {} bytes, buffer bytes\n{}", 
+            			getId(), got, length, hexs);
+            	}
                 // 子类负责解析报文并处理
-            	LOGGER.info("readed "+got);
                 handler.handleReadEvent(this);
             }
-            }
-           }
+     	}
+ 	}
 
         private void closeSocket() {
 
