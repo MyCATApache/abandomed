@@ -3,6 +3,9 @@ package io.mycat.util;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.mycat.net2.ConDataBuffer;
 
 /**
@@ -13,6 +16,8 @@ import io.mycat.net2.ConDataBuffer;
  *
  */
 public final class StringUtil {
+	
+	final static Logger LOGGER = LoggerFactory.getLogger(StringUtil.class);
 	
 	private StringUtil(){
 		
@@ -103,11 +108,12 @@ public final class StringUtil {
      */
     public final static String dumpAsHex(final ByteGetable g, final int offset, final int length) {
         final StringBuilder out = new StringBuilder(length * 4);
-        int p = offset;
+        final int end = offset + length;
+        int p    = offset;
         int rows = length / 8;
 
         // rows
-        for (int i = 0; (i < rows) && (p < length); i++) {
+        for (int i = 0; (i < rows) && (p < end); i++) {
             // - hex string in a line
             for (int j = 0, k = p; j < 8; j++, k++) {
                 final String hexs = Integer.toHexString(g.get(k) & 0xff);
@@ -132,19 +138,21 @@ public final class StringUtil {
 
         // remain bytes
         int n = 0;
-        for (int i = p; i < length; i++, n++) {
+        for (int i = p; i < end; i++, n++) {
             final String hexs = Integer.toHexString(g.get(i) & 0xff);
             if (hexs.length() == 1) {
             	out.append('0');
             }
             out.append(hexs).append(' ');
         }
+        LOGGER.debug("offset = {}, length = {}, end = {}, n = {}", offset, length, end, n);
+        // padding hex string in line
         for (int i = n; i < 8; i++) {
         	out.append("   ");
         }
         out.append("    ");
         
-        for (int i = p; i < length; i++) {
+        for (int i = p; i < end; i++) {
             final int b = 0xff & g.get(i);
             if (b > 32 && b < 127) {
             	out.append((char) b);
@@ -153,7 +161,7 @@ public final class StringUtil {
             }
             out.append(' ');
         }
-        if(p < length){
+        if(p < end){
         	out.append('\n');
         }
         

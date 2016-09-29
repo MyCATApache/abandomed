@@ -408,8 +408,8 @@ public abstract class Connection implements ClosableConnection {
             	if(nets.getNetConfig().isTraceProtocol()){
             		final int offset = buffer.readPos(), length = buffer.writingPos() - offset;
             		final String hexs= StringUtil.dumpAsHex(buffer, offset, length);
-            		LOGGER.info("cnxn-{} asyn-read: last readed = {} bytes, total readed = {} bytes, buffer bytes\n{}", 
-            			getId(), got, length, hexs);
+            		LOGGER.info("C#{}B#{}: last readed = {} bytes, total readed = {} bytes, buffer bytes\n{}", 
+            			getId(), buffer.hashCode(), got, length, hexs);
             	}
                 // 子类负责解析报文并处理
                 handler.handleReadEvent(this);
