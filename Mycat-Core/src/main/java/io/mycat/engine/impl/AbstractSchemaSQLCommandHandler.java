@@ -69,12 +69,31 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			// Implementation: use database;
 			// @author little-pan
 			// @since 2016-09-29
-			
+			final ByteBuffer byteBuff = dataBuffer.getBytes(pkgStartPos, pkgLen);
+			initDb(frontCon, byteBuff);
+			break;
 		default:
 			doSQLCommand(frontCon, dataBuffer, packageType, pkgStartPos, pkgLen);
 		}
 	}
 
+	private void initDb(final MySQLFrontConnection frontCon, final ByteBuffer byteBuffer) throws IOException {
+		final MySQLMessage mm = new MySQLMessage(byteBuffer);
+		mm.position(5);
+		final String db = mm.readString();
+		// 1. check access etc
+		LOGGER.debug("check access to schema: {}", db);
+		// 2. set schema
+		if (frontCon.setFrontSchema(db) == false) {
+			frontCon.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "No schema defined: " + db);
+			return;
+		}
+		frontCon.write(OkPacket.OK);
+		if(LOGGER.isDebugEnabled()){
+			LOGGER.debug("C#{}B#{} init-db ok: schema = {}", frontCon.getId(), byteBuffer.hashCode(), db);
+		}
+	}
+	
 	private void doSQLCommand(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
 			int pkgStartPos, int pkgLen) throws IOException {
 		{
