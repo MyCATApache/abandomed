@@ -20,7 +20,6 @@ public interface ConDataBuffer {
 	
 	/**
 	 * put bytes to inner datas from buf
-	 * @param index ,from where to put
 	 * @param buf
 	 */
 	public void putBytes(ByteBuffer buf) throws IOException;
@@ -82,7 +81,7 @@ public interface ConDataBuffer {
 	
 	public void setWritingPos(int writingPos) throws IOException;
 	
-	public void seReadingPos(int readingPos);
+	public void setReadingPos(int readingPos);
 	
 	public boolean isFull() throws IOException;
 	
