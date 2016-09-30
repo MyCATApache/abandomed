@@ -60,7 +60,8 @@ public class CharsetUtil {
         String charset= INDEX_TO_CHARSET.get(index);
         if(charset==null)
         {
-        	System.out.println("warning ,not loaded from server ,please fix it !!");
+        	//System.out.println("warning charset is null ,not loaded from server ,please fix it !!");
+        	logger.warn("charset is null ,not loaded from server ,please fix it !!");
         	return "UTF-8";
         }
         return charset;
