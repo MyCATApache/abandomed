@@ -167,6 +167,11 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			if (existCon != null) {
 				session.removeBackCon(existCon);
 			}
+			if (frontCon.getMycatSchema()==null){
+				frontCon.writeErrMessage(1450,"No schema selected");
+				LOGGER.error("No schema selected");
+				return ;
+			}
 			DNBean dnBean =frontCon.getMycatSchema().getDefaultDN();
 			final MySQLBackendConnection newCon = (MySQLBackendConnection) SQLEngineCtx.INSTANCE()
 					.getMySQLReplicatSet(dnBean.getMysqlReplica()).getCurWriteDH()
