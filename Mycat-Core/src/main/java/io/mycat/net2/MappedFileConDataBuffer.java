@@ -114,7 +114,7 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 	}
 
 	@Override
-	public void seReadingPos(int readingPos) {
+	public void setReadingPos(int readingPos) {
 		this.readPos=readingPos;
 	}
 	@Override

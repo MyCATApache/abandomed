@@ -71,7 +71,7 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
 			 
 			int pkgStartPos=offset;
 			offset += length;
-			dataBuffer.seReadingPos(offset);
+			dataBuffer.setReadingPos(offset);
 			
 			LOGGER.info("received pkg ,length "+length+" type "+packetType+" cur total length "+limit);
 			con.getUserCallback().handleResponse(con, dataBuffer, packetType, pkgStartPos, length);
