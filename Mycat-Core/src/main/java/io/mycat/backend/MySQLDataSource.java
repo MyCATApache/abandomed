@@ -213,4 +213,17 @@ public class MySQLDataSource {
     public MySQLBean getConfig() {
         return mysqlBean;
     }
+    
+    @Override
+    public String toString(){
+    	final StringBuilder sbuf = new StringBuilder("MySQLDataSource[")
+    	.append("name=").append(name).append(',')
+    	.append("size=").append(size).append(',')
+    	.append("heartbeatRecoveryTime=").append(heartbeatRecoveryTime).append(',')
+    	.append("slaveNode=").append(slaveNode).append(',')
+    	.append("mysqlBean=").append(mysqlBean)
+    	.append(']');
+    	return (sbuf.toString());
+    }
+    
 }

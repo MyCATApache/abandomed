@@ -78,7 +78,9 @@ public class MycatCore {
         NIOConnector connector = new NIOConnector("NIOConnector", reactorPool);
         connector.start();
         NetSystem.getInstance().setConnector(connector);
-        NetSystem.getInstance().setNetConfig(new SystemConfig());
+        final SystemConfig sysconfig = new SystemConfig();
+        sysconfig.setTraceProtocol(true);
+        NetSystem.getInstance().setNetConfig(sysconfig);
         MySQLBackendConnectionFactory bakcMySQLFactory=new MySQLBackendConnectionFactory();
         SQLEngineCtx.INSTANCE().setBackendMySQLConFactory(bakcMySQLFactory);
         MySQLFrontendConnectionFactory frontFactory = new MySQLFrontendConnectionFactory();
@@ -91,11 +93,11 @@ public class MycatCore {
     	SQLEngineCtx.INSTANCE().setNormalSchemaSQLCmdHandler(normalSchemaSQLCmdHandler);
     	PartionSchemaSQLCommandHandler partionSchemaSQLCmdHandler=new PartionSchemaSQLCommandHandler();
     	SQLEngineCtx.INSTANCE().setPartionSchemaSQLCmdHandler(partionSchemaSQLCmdHandler);
-    	URL datasourceURL=ConfigLoader.class.getResource("/datasource.xml");
-    	List<MySQLRepBean> mysqlRepBeans=ConfigLoader.loadMySQLRepBean(datasourceURL.toString());
-        for(MySQLRepBean repBean:mysqlRepBeans)
+    	URL datasourceURL = ConfigLoader.class.getResource("/datasource.xml");
+    	List<MySQLRepBean> mysqlRepBeans = ConfigLoader.loadMySQLRepBean(datasourceURL.toString());
+        for(final MySQLRepBean repBean : mysqlRepBeans)
         {
-        	MySQLReplicatSet mysqlRepSet=new MySQLReplicatSet(repBean,0);
+        	MySQLReplicatSet mysqlRepSet = new MySQLReplicatSet(repBean,0);
             SQLEngineCtx.INSTANCE().addMySQLReplicatSet(mysqlRepSet);	
         }
         URL schemaURL=ConfigLoader.class.getResource("/schema.xml");
@@ -104,7 +106,5 @@ public class MycatCore {
         {
         	SQLEngineCtx.INSTANCE().addSchemaBean(schemaBean);
         }
-        
-        
     }
 }

@@ -35,34 +35,35 @@ import io.mycat.beans.MySQLRepBean;
  *
  */
 public class MySQLReplicatSet {
-public static final int M_S_REP=0;
-public static final int M_M_REP=1;
-private int repType;
+	
+	public static final int M_S_REP = 0;
+	public static final int M_M_REP = 1;
+	
+	private int repType;
     private final String name;
-    private int switchType=0;
-    
+    private int switchType = 0;
+    private int writeIndex = 0;	
+	private MySQLDataSource[] dhSources;
+	
+	public MySQLReplicatSet(final MySQLRepBean repBean, final int curWriteIndex) {
+		this.name = repBean.getName();
+		this.writeIndex = curWriteIndex;
+		final List<MySQLBean>  mysqlBeans = repBean.getMysqls();
+		dhSources = new MySQLDataSource[mysqlBeans.size()];
+		final MySQLBackendConnectionFactory bcFactory = SQLEngineCtx.INSTANCE().getBackendMySQLConFactory();
+		for(int i = 0;i < dhSources.length; i++) {
+			dhSources[i] = new MySQLDataSource(bcFactory, mysqlBeans.get(i), writeIndex!=i);
+			dhSources[i].initSource();
+		}
+	}
+
 	public String getName() {
 		return name;
 	}
 
 	public int getRepType() {
-	return repType;
-}
-	private int writeIndex=0;	
-	private MySQLDataSource[] dhSources;	
-	public MySQLReplicatSet(MySQLRepBean repBean,int curWriteIndex) {
-			this.name=repBean.getName();
-			this.writeIndex=curWriteIndex;
-			 List<MySQLBean>  mysqlBeans=repBean.getMysqls();
-			dhSources=new MySQLDataSource[mysqlBeans.size()];
-			for(int i=0;i<dhSources.length;i++)
-			{
-				dhSources[i]=new MySQLDataSource(SQLEngineCtx.INSTANCE().getBackendMySQLConFactory(), mysqlBeans.get(i),writeIndex!=i);
-				dhSources[i].initSource();
-			}
-		}
-
-	
+		return repType;
+	}
 
 	/**
 	 * 是否支持主宕机后的自动切换能力
@@ -90,8 +91,21 @@ private int repType;
 			return 	dhSources[ThreadLocalRandom.current().nextInt()/dhSources.length];
 		}
 
-
-	
-	 
+		@Override
+		public String toString(){
+			final StringBuilder sbuf = new StringBuilder("MySQLReplicatSet[")
+			.append("name=").append(name).append(',')
+			.append("repType=").append(repType).append(',')
+			.append("switchType=").append(switchType).append(',')
+			.append("writeIndex=").append(writeIndex).append(',')
+			.append("dhSources=").append('[');
+			for(int i = 0, size = dhSources.length; i < size; ++i){
+				final MySQLDataSource ds = dhSources[i];
+				sbuf.append(i == 0 ? "" : ',').append(ds);
+			}
+			sbuf.append(']')
+			.append(']');
+			return (sbuf.toString());
+		}
 
 }

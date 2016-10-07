@@ -2,13 +2,13 @@
 <Configuration status="info">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{YYYY-MM-dd HH:mm:ss.SSS} %5p %c{1}:%L - %m%n"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] [%thread] %logger{36}.%M:%L - %m%n"/>
         </Console>
 
         <RollingFile name="RollingFile" fileName="logs/mycat.log"
                      filePattern="logs/$${date:yyyy-MM}/mycat-%d{MM-dd}-%i.log.gz">
             <PatternLayout>
-                <Pattern>%d{YYYY-MM-dd HH:mm:ss.SSS} %5p [%t] (%l) - %m%n</Pattern>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] [%thread] %logger{36}.%M:%L - %m%n</Pattern>
             </PatternLayout>
             <Policies>
                 <OnStartupTriggeringPolicy/>

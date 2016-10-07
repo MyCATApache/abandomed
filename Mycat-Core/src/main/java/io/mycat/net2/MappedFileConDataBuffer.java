@@ -39,6 +39,7 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 	private RandomAccessFile randomFile;
 	private int readPos;
 	private int totalSize;
+	
 	public MappedFileConDataBuffer(String fileName) throws IOException
 	{
 		randomFile = new RandomAccessFile(fileName, "rw");
@@ -48,11 +49,21 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 		mapBuf=channel.map(FileChannel.MapMode.READ_WRITE, 0, totalSize);
 		
 	}
+	
 	@Override
-	public int transferFrom(SocketChannel socketChanel) throws IOException {
-		int position=mapBuf.position();
-		int tranfered=(int) channel.transferFrom(socketChanel,position,totalSize-position);
-		mapBuf.position(position+tranfered);
+	public int transferFrom(final SocketChannel socketChanel) throws IOException {
+		final int position = mapBuf.position();
+		final int count    = totalSize - position;
+		final int tranfered= (int) channel.transferFrom(socketChanel, position, count);
+		mapBuf.position(position + tranfered);
+		// fixbug: transferFrom() always return 0 when client closed abnormally!
+		// --------------------------------------------------------------------
+		// So decide whether the connection closed or not by read()! 
+		// @author little-pan
+		// @since 2016-09-29
+		if(tranfered == 0 && count > 0){
+			return (socketChanel.read(mapBuf));
+		}
 		return tranfered;
 	}
 

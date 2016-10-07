@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.backend.MySQLDataSource;
+import io.mycat.backend.MySQLReplicatSet;
 import io.mycat.backend.callback.DirectTransTofrontCallBack;
 import io.mycat.beans.DNBean;
 import io.mycat.beans.SchemaBean;
@@ -63,11 +65,35 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			LOGGER.info("Client quit.");
 			frontCon.close("quit packet");
 			break;
+		case MySQLPacket.COM_INIT_DB:
+			// Implementation: use database;
+			// @author little-pan
+			// @since 2016-09-29
+			final ByteBuffer byteBuff = dataBuffer.getBytes(pkgStartPos, pkgLen);
+			initDb(frontCon, byteBuff);
+			break;
 		default:
 			doSQLCommand(frontCon, dataBuffer, packageType, pkgStartPos, pkgLen);
 		}
 	}
 
+	private void initDb(final MySQLFrontConnection frontCon, final ByteBuffer byteBuffer) throws IOException {
+		final MySQLMessage mm = new MySQLMessage(byteBuffer);
+		mm.position(5);
+		final String db = mm.readString();
+		// 1. check access etc
+		LOGGER.debug("check access to schema: {}", db);
+		// 2. set schema
+		if (frontCon.setFrontSchema(db) == false) {
+			frontCon.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "No schema defined: " + db);
+			return;
+		}
+		frontCon.write(OkPacket.OK);
+		if(LOGGER.isDebugEnabled()){
+			LOGGER.debug("C#{}B#{} init-db ok: schema = {}", frontCon.getId(), byteBuffer.hashCode(), db);
+		}
+	}
+	
 	private void doSQLCommand(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
 			int pkgStartPos, int pkgLen) throws IOException {
 		{
@@ -167,15 +193,19 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			if (existCon != null) {
 				session.removeBackCon(existCon);
 			}
-			if (frontCon.getMycatSchema()==null){
-				frontCon.writeErrMessage(1450,"No schema selected");
+			if (frontCon.getMycatSchema() == null){
+				frontCon.writeErrMessage(1450, "No schema selected");
 				LOGGER.error("No schema selected");
 				return ;
 			}
-			DNBean dnBean =frontCon.getMycatSchema().getDefaultDN();
-			final MySQLBackendConnection newCon = (MySQLBackendConnection) SQLEngineCtx.INSTANCE()
-					.getMySQLReplicatSet(dnBean.getMysqlReplica()).getCurWriteDH()
-					.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, null);
+			final DNBean dnBean = frontCon.getMycatSchema().getDefaultDN();
+			final String replica   = dnBean.getMysqlReplica();
+			final SQLEngineCtx ctx = SQLEngineCtx.INSTANCE();
+			LOGGER.debug("select a replica: {}", replica);
+			final MySQLReplicatSet repSet = ctx.getMySQLReplicatSet(replica);
+			final MySQLDataSource datas   = repSet.getCurWriteDH();
+			final MySQLBackendConnection newCon = 
+					datas.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, null);
 			newCon.setAttachement(frontCon);
 			newCon.setUserCallback(directTransCallback);
 			frontCon.addTodoTask(() -> {

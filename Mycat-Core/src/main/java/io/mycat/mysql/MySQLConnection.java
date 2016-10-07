@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.mycat.mysql.packet.ErrorPacket;
 import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.mysql.packet.MySQLPacket;
@@ -40,26 +43,37 @@ import io.mycat.util.RandomUtil;
  */
 public  class MySQLConnection extends Connection {
 	
+	protected final static Logger LOGGER = LoggerFactory.getLogger(MySQLConnection.class);
+	
+	public static final int CMD_QUERY_STATUS 	 = 11;
+    public static final int RESULT_WAIT_STATUS 	 = 21;
+    public static final int RESULT_INIT_STATUS 	 = 22;
+    public static final int RESULT_FETCH_STATUS	 = 23;
+    public static final int RESULT_HEADER_STATUS = 24;
+    public static final int RESULT_FAIL_STATUS 	 = 29;
+    
+    public final static int msyql_packetHeaderSize = 4;
+	public final static int mysql_packetTypeSize   = 1;
 	
 	protected String user;
 	protected String password;
 	protected String charset;
-	protected int charsetIndex;
- 	public static final int CMD_QUERY_STATUS = 11;
-    public static final int RESULT_WAIT_STATUS = 21;
-    public static final int RESULT_INIT_STATUS = 22;
-    public static final int RESULT_FETCH_STATUS = 23;
-    public static final int RESULT_HEADER_STATUS = 24;
-    public static final int RESULT_FAIL_STATUS = 29;
+	protected int 	 charsetIndex;
     protected byte[] seed;
-    public final static int msyql_packetHeaderSize = 4;
-	public final static int mysql_packetTypeSize = 1;
-	 public MySQLConnection(SocketChannel channel) {
-			super(channel);
-		}
-	public static final boolean validateHeader(long offset, long position) {
-		return offset + msyql_packetHeaderSize + mysql_packetTypeSize <= position;
+    
+	public MySQLConnection(SocketChannel channel) {
+		super(channel);
 	}
+	
+	public static final boolean validateHeader(final long offset, final long position) {
+		//return offset + msyql_packetHeaderSize + mysql_packetTypeSize <= position;
+		// ------------------------------------------------------------------------
+		// fixbug: can't pass when an empty packet comes, so we should exclude "mysql_packetTypeSize"
+		// @author little-pan
+		// @since 2016-09-29
+		return (position >= (offset + msyql_packetHeaderSize));
+	}
+	
 	/**
 	 * 获取报文长度
 	 * 
@@ -131,14 +145,14 @@ public  class MySQLConnection extends Connection {
 	       // this.asynRead();
 	    }
 
-		 public void failure(int errno, String info){
-		        LOGGER.error(toString() + info);
-		        try {
-					writeErrMessage(errno, info);
-				} catch (IOException e) {
-					this.close(e.toString());
-				}
-		    }
+	public void failure(final int errno, final String info){
+		try {
+			LOGGER.warn("errno = {}, info = {}, {}", errno, info, this);
+			writeErrMessage(errno, info);
+		} catch (final IOException e) {
+			this.close(e.toString());
+		}
+	}
 
   
 	public void writeMsqlPackage(MySQLPacket pkg) throws IOException

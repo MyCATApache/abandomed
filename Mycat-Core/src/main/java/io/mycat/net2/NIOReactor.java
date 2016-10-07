@@ -91,10 +91,11 @@ public final class NIOReactor {
 						continue;
 					}
 					keys = selector.selectedKeys();
-					for (SelectionKey key : keys) {
+					for (final SelectionKey key : keys) {
 						Connection con = null;
 						try {
-							Object att = key.attachment();
+							final Object att = key.attachment();
+							LOGGER.debug("select-key-readyOps = {}, attachment = {}", key.readyOps(), att);
 							if (att != null && key.isValid()) {
 								con = (Connection) att;
 								if (key.isReadable()) {
@@ -108,13 +109,20 @@ public final class NIOReactor {
 										continue;
 									}
 								}
+								// "key" may be cancelled in asynRead()!
+								// @author little-pan
+								// @since 2016-09-29
+								if(key.isValid() == false){
+									LOGGER.debug("select-key cancelled");
+									continue;
+								}
 								if (key.isWritable()) {
 									con.doWriteQueue();
 								}
 							} else {
 								key.cancel();
 							}
-						} catch (Throwable e) {
+						} catch (final Throwable e) {
 							if (e instanceof CancelledKeyException) {
 								if (LOGGER.isDebugEnabled()) {
 									LOGGER.debug(con + " socket key canceled");
