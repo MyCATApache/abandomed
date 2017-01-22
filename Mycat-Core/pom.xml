@@ -72,6 +72,12 @@
 			<version>2.3</version>
 		</dependency>
 		
+		<!-- https://mvnrepository.com/artifact/io.netty/netty-buffer -->
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-buffer</artifactId>
+			<version>4.1.7.Final</version>
+		</dependency>
 	</dependencies>
 
 
