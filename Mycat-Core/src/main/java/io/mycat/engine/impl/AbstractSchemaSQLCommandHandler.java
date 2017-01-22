@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import io.mycat.sqlcache.HintSQLInfo;
+import io.mycat.sqlcache.HintSQLParser;
+import io.mycat.sqlcache.SQLResultsCacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -101,9 +104,28 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			ByteBuffer byteBuff = dataBuffer.getBytes(pkgStartPos, pkgLen);
 			MySQLMessage mm = new MySQLMessage(byteBuff);
 			mm.position(5);
-			String sql = null;
-			sql = mm.readString(frontCon.getCharset());
-			LOGGER.debug("received sql "+sql);
+			String sql = mm.readString(frontCon.getCharset());
+			/**
+			 * parser hit sql
+			 * 需要改写sql语句，去掉前面的注释即可
+			 * 首先判断是否
+			 */
+			HintSQLInfo hintSQL = HintSQLParser.parserHintSQL(sql);
+			if (hintSQL != null && hintSQL.isCache()){
+				/**
+				 * 0.判断是select语句
+				 * 1.改写sql语句，去掉前面的注释
+				 * 2.发送sql语句到后端执行。做好backend connection的Handler设置工作
+				 * 3.解析sql的结果集，决定是否异步缓存，一部分直接发送给您前端。
+				 * 4.如果当前sql的结果集已经缓存了。直接从本地缓存中拉去结果集即可
+				 */
+
+				if (!SQLResultsCacheService.getInstance().processHintSQL(frontCon,hintSQL,mm)){
+					frontCon.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "cache no implementation");
+				}
+
+				return;
+			}
 			// 执行查询
 			SQLInfo sqlInf=new SQLInfo();
 			int rs = ServerParse.parse(sql,sqlInf);
