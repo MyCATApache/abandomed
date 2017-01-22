@@ -62,6 +62,7 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
 			}
 
 			length = MySQLConnection.getPacketLength(dataBuffer, offset);
+
 			if(length+offset>limit)
 			{
 				 LOGGER.info("Not whole package :length "+length+" cur total length "+limit);
@@ -72,11 +73,12 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
 			 
 			int pkgStartPos=offset;
 
+
 			LOGGER.info("received pkg ,length "+length+" type "+packetType+" cur total length "+limit);
 			con.getUserCallback().handleResponse(con, dataBuffer, packetType, pkgStartPos, length);
+			offset += length;
+			dataBuffer.setReadingPos(offset);
 
-				offset += length;
-				dataBuffer.setReadingPos(offset);
 	        }
 			
 			

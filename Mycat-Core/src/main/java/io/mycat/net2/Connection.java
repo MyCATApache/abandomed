@@ -286,11 +286,11 @@ public abstract class Connection implements ClosableConnection {
 
         //TODO
         /**使用MyCatMemoryAllocator分配Direct Buffer,再进行SocketChannel通信时候，
-         * NIO读写都会减少一次数据的拷贝,而使用FileChanel与SocketChannel数据交换时
+         * 网络读写都会减少一次数据的拷贝,而使用FileChanel与SocketChannel数据交换时
          * 底层最终还是生成一个临时的Direct Buffer，用临时Direct Buffer写入或者读SocketChannel中
          * 后面考虑会使用netty中ByteBuf中的DirectBuffer进行网络IO通信。效率更高
          * */
-        this.readDataBuffer =new MappedFileConDataBuffer3(maprFileName); // 2 ,3
+        this.readDataBuffer =new MappedFileConDataBuffer(maprFileName); // 2 ,3
         this.writeDataBuffer=new MappedFileConDataBuffer3(mapwFileName);
         //存在bug暂不启用，以后统一是ByteBuf作为buffer进行NIO网络通信。
        // this.readDataBuffer = new  ByteBufConDataBuffer(4096,16*1024*1024);

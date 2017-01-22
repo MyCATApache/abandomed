@@ -89,6 +89,8 @@ public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnect
 			final byte packetType = buffer.getByte(offset + MySQLConnection.msyql_packetHeaderSize);
 			final int pkgStartPos = offset;
 
+
+
 			// trace-protocol-packet
 			// @author little-pan
 			// @since 2016-09-29
@@ -102,6 +104,8 @@ public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnect
 
 			offset += length;
 			buffer.setReadingPos(offset);
+
+
 		}
     }
 	

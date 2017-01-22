@@ -31,6 +31,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
 
+import io.mycat.memalloc.MyCatMemoryAllocator;
 import sun.misc.Unsafe;
 import sun.nio.ch.FileChannelImpl;
 /**
@@ -168,7 +169,9 @@ public class MappedFileConDataBuffer3 implements ConDataBuffer {
 	}
 	@Override
 	public ByteBuffer beginWrite(int length) {
-		ByteBuffer copyBuf=ByteBuffer.allocate(length);
+		//TODO
+		//ByteBuffer copyBuf=ByteBuffer.allocate(length);
+		ByteBuffer copyBuf = MyCatMemoryAllocator.getINSTANCE().directBuffer(length).nioBuffer(0,length);
 		return copyBuf;
 	}
 	
