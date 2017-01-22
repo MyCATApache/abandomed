@@ -44,7 +44,7 @@ public class HintSQLParser {
                 if (function.countTokens()==2){
                     String kName = function.nextToken();
                     String vValue = function.nextToken();
-                    if (kName.equalsIgnoreCase("cachable") && vValue.equals("true")){
+                    if (kName.equalsIgnoreCase("cacheable") && vValue.equals("true")){
                         hintSQLInfo.setFunctionName(kName);
                         hintSQLInfo.setCache(true);
                     }
@@ -59,7 +59,7 @@ public class HintSQLParser {
                     StringTokenizer t = new StringTokenizer(token.nextToken(), HINT_KV_SPLIT);
 
                     if (t.countTokens() == 2) {
-                        /**TODO 限制hintSQL中kv中k具体命名 */
+                        /**TODO 限制hintSQL中kv中k具体命名必须在{cacheable, cache-time,auto-refresh, access-count}*/
                         hintKv.put(t.nextToken(),t.nextToken());
                     }else { /**KV*/
                         LOGGER.error(sql + "注解中的KV属性不对");
