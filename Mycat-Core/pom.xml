@@ -86,6 +86,11 @@
 			<version>21.0</version>
 		</dependency>
 
+		<dependency>
+			<groupId>io.mycat.bigmem</groupId>
+			<artifactId>mycat-bigmemory</artifactId>
+			<version>0.0.1-RELEASE</version>
+		</dependency>
 	</dependencies>
 
 

@@ -1,5 +1,8 @@
 package io.mycat.sqlcache;
 
+import io.mycat.bigmem.sqlcache.BigSQLResult;
+import io.mycat.bigmem.sqlcache.IRemoveKeyListener;
+
 /**
  * HintSQL 结果集被移除时回调类
  *
@@ -7,7 +10,7 @@ package io.mycat.sqlcache;
  * @create 2017-01-20 15:14
  */
 
-public class HintSQLRemoveKeyListener<K,V extends BigSQLResult> implements IRemoveKeyListener<K,V>{
+public class HintSQLRemoveKeyListener<K,V extends BigSQLResult> implements IRemoveKeyListener<K,V> {
     /**
      * key 失效，做清理工作
      *

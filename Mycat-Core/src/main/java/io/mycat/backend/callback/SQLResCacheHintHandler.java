@@ -2,6 +2,9 @@ package io.mycat.backend.callback;
 
 import io.mycat.backend.BackConnectionCallback;
 import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.bigmem.sqlcache.BigSQLResult;
+import io.mycat.bigmem.sqlcache.IDataLoader;
+import io.mycat.bigmem.sqlcache.IRemoveKeyListener;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.ConDataBuffer;

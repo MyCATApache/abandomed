@@ -1,7 +1,10 @@
 package io.mycat.sqlcache;
 
 import com.google.common.util.concurrent.*;
-
+import io.mycat.bigmem.sqlcache.BigSQLResult;
+import io.mycat.bigmem.sqlcache.IDataLoader;
+import io.mycat.bigmem.sqlcache.Keyer;
+import io.mycat.bigmem.console.LocatePolicy;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
@@ -14,7 +17,7 @@ import static com.google.common.hash.Hashing.murmur3_32;
  * @create 2017-01-20 15:13
  */
 
-public class HintSQLDataLoader<K,V extends BigSQLResult> implements IDataLoader<K,V>{
+public class HintSQLDataLoader<K,V extends BigSQLResult> implements IDataLoader<K,V> {
     /**
      * 根据sql,异步从后台DB reload数据，替换旧值
      * @param keyer

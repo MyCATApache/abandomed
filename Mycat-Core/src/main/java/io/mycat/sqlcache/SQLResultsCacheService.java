@@ -6,6 +6,8 @@ import io.mycat.backend.MySQLDataSource;
 import io.mycat.backend.MySQLReplicatSet;
 import io.mycat.backend.callback.SQLResCacheHintHandler;
 import io.mycat.beans.DNBean;
+import io.mycat.bigmem.sqlcache.*;
+import io.mycat.bigmem.console.LocatePolicy;
 import io.mycat.engine.UserSession;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.MySQLConnection;
@@ -62,7 +64,7 @@ public class SQLResultsCacheService {
         keyer.setValue(bigSQLResult);
         keyer.setCacheTTL(Integer.valueOf(hintSQLInfo.getParamsKv().get("cache-time")));
         keyer.setAccessCount(Integer.valueOf(hintSQLInfo.getParamsKv().get("access-count")));
-        keyer.setAutoRefresh(Boolean.valueOf(hintSQLInfo.getParamsKv().get("auto-refresh")));
+       // keyer.setAutoRefresh(Boolean.valueOf(hintSQLInfo.getParamsKv().get("auto-refresh")));
         keyer.setRemoveKeyListener(listener);
         keyer.setiDataLoader(loader);
         sqlResultCacheImp.put(key,bigSQLResult,keyer);
