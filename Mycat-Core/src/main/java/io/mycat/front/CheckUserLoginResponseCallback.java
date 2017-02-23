@@ -89,6 +89,9 @@ public class CheckUserLoginResponseCallback implements SQLCommandHandler {
 		}
 		LOGGER.debug("charset = {}, charsetIndex = {}", charset, charsetIndex);
 		con.setCharset(charsetIndex, charset);
+
+		//认证成功后，修改changeCmdHandler，由CheckUserLoginResponseCallback改用
+		// AbstractSchemaSQLCommandHandler处理
 		if (!con.setFrontSchema(auth.database)) {
 			final String errmsg = "No Mycat Schema defined: " + auth.database;
 			LOGGER.debug(errmsg);

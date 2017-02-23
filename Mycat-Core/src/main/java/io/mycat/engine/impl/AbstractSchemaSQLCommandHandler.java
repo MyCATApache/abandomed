@@ -27,6 +27,9 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import io.mycat.sqlcache.HintSQLInfo;
+import io.mycat.sqlcache.HintSQLParser;
+import io.mycat.sqlcache.SQLResultsCacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,13 +100,33 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 	private void doSQLCommand(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
 			int pkgStartPos, int pkgLen) throws IOException {
 		{
-			// 取得语句
+			//取得语句
 			ByteBuffer byteBuff = dataBuffer.getBytes(pkgStartPos, pkgLen);
 			MySQLMessage mm = new MySQLMessage(byteBuff);
 			mm.position(5);
-			String sql = null;
-			sql = mm.readString(frontCon.getCharset());
-			LOGGER.debug("received sql "+sql);
+			String sql = mm.readString(frontCon.getCharset());
+			/**
+			 * parser hit sql
+			 * 需要改写sql语句，去掉前面的注释即可
+			 * 首先判断是否
+			 */
+			HintSQLInfo hintSQL = HintSQLParser.parserHintSQL(sql);
+			if (hintSQL != null && hintSQL.isCache()){
+				/**
+				 * 0.判断是select语句
+				 * 1.改写sql语句，去掉前面的注释
+				 * 2.发送sql语句到后端执行。做好backend connection的Handler设置工作
+				 * 3.解析sql的结果集，决定是否异步缓存，一部分直接发送给您前端。
+				 * 4.如果当前sql的结果集已经缓存了。直接从本地缓存中拉去结果集即可
+				 */
+
+				if (!SQLResultsCacheService.getInstance().processHintSQL(frontCon,hintSQL,mm)){
+					frontCon.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "cache no implementation");
+				}
+
+				return;
+			}
+
 			// 执行查询
 			SQLInfo sqlInf=new SQLInfo();
 			int rs = ServerParse.parse(sql,sqlInf);
@@ -127,7 +150,9 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 					frontCon.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "No database selected");
 					return;
 				}
+
 				executeSelectSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,sql);
+
 				// SelectHandler.handle(sql, con, rs >>> 8);
 				break;
 			case ServerParse.START:
@@ -182,7 +207,7 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 	}
 	public void passThroughSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, int pkgStartPos, int pkgLen)
 			throws IOException {
-		// 直接透传（默认）
+		// 直接透传（默认）获取连接池
 		MySQLBackendConnection existCon = null;
 		UserSession session=frontCon.getSession();
 		ArrayList<MySQLBackendConnection> allBackCons = session.getBackendCons();
@@ -198,24 +223,47 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 				LOGGER.error("No schema selected");
 				return ;
 			}
+
 			final DNBean dnBean = frontCon.getMycatSchema().getDefaultDN();
 			final String replica   = dnBean.getMysqlReplica();
 			final SQLEngineCtx ctx = SQLEngineCtx.INSTANCE();
 			LOGGER.debug("select a replica: {}", replica);
 			final MySQLReplicatSet repSet = ctx.getMySQLReplicatSet(replica);
 			final MySQLDataSource datas   = repSet.getCurWriteDH();
+
+			/**
+			 * 如果该sql对应后端db，没有连接池，则创建连接池部分
+			 */
 			final MySQLBackendConnection newCon = 
 					datas.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, null);
+
+			/**很关键的设置前端front 与 backend session*/
 			newCon.setAttachement(frontCon);
+
+			/**设置后端连接池结果集处理handler*/
 			newCon.setUserCallback(directTransCallback);
+
+			/**
+			 * 执行sql语句
+			 */
 			frontCon.addTodoTask(() -> {
-				newCon.getWriteDataBuffer().putBytes(dataBuffer.getBytes(pkgStartPos, pkgLen));
+				/**
+				 * 将数据写到后端连接池中
+				 */
+				newCon.getWriteDataBuffer().putBytes(dataBuffer.getBytes(pkgStartPos,pkgLen));
 				newCon.enableWrite(false);
+				/**
+				 * 新建立的连接放到连接池中
+				 */
 				session.addBackCon(newCon);
 			});
 		} else {
+			/**
+			 * 否则直接写到后端即可
+			 */
 			existCon.getWriteDataBuffer().putBytes(dataBuffer.getBytes(pkgStartPos, pkgLen));
 			existCon.enableWrite(false);
+			existCon.setUserCallback(directTransCallback);
 		}
 	}
 	
