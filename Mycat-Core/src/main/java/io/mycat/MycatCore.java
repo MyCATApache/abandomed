@@ -79,7 +79,7 @@ public class MycatCore {
         connector.start();
         NetSystem.getInstance().setConnector(connector);
         final SystemConfig sysconfig = new SystemConfig();
-        sysconfig.setTraceProtocol(true);
+        sysconfig.setTraceProtocol(false);
         NetSystem.getInstance().setNetConfig(sysconfig);
         MySQLBackendConnectionFactory bakcMySQLFactory=new MySQLBackendConnectionFactory();
         SQLEngineCtx.INSTANCE().setBackendMySQLConFactory(bakcMySQLFactory);
