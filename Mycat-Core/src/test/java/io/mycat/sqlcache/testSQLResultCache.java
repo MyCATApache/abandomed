@@ -1,6 +1,8 @@
 package io.mycat.sqlcache;
 
 
+import io.mycat.bigmem.console.LocatePolicy;
+import io.mycat.bigmem.sqlcache.BigSQLResult;
 import io.mycat.util.Utils;
 import org.junit.After;
 import org.junit.Assert;

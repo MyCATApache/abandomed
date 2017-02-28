@@ -1,8 +1,9 @@
 package io.mycat.sqlcache;
 
 import com.google.common.util.concurrent.*;
+import io.mycat.bigmem.sqlcache.*;
 import io.mycat.util.Utils;
-
+import io.mycat.bigmem.console.LocatePolicy;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -38,7 +39,7 @@ public class MyCatBigSqlResultsCache {
      * @param listener key被移除时，调用的接口
      */
     public void cacheSQLResult(String sql, BigSQLResult bigSQLResult, long cache, long accesCount,
-                                IDataLoader<String,BigSQLResult> loader, IRemoveKeyListener<String,BigSQLResult> listener){
+                               IDataLoader<String,BigSQLResult> loader, IRemoveKeyListener<String,BigSQLResult> listener){
         /**
          * TODO
          */
