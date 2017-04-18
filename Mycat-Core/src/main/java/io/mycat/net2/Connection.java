@@ -246,13 +246,21 @@ public abstract class Connection implements ClosableConnection {
     	// 清理资源占用
         if(readDataBuffer!=null)
         {
-        	 readDataBuffer.recycle();
-        	 readDataBuffer=null;
+            try {
+                readDataBuffer.recycle();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            readDataBuffer=null;
         }
         if(this.writeDataBuffer!=null)
         {
-        	 writeDataBuffer.recycle();
-        	 writeDataBuffer=null;
+            try {
+                writeDataBuffer.recycle();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            writeDataBuffer=null;
         }
        
        
@@ -275,8 +283,19 @@ public abstract class Connection implements ClosableConnection {
         String maprFileName=id+".rtmp";
         String mapwFileName=id+".wtmp";
         LOGGER.info("connection bytebuffer mapped "+maprFileName);
-        this.readDataBuffer =new MappedFileConDataBuffer(maprFileName); // 2 ,3 
-        writeDataBuffer=new MappedFileConDataBuffer3(mapwFileName);
+
+        //TODO
+        /**使用MyCatMemoryAllocator分配Direct Buffer,再进行SocketChannel通信时候，
+         * 网络读写都会减少一次数据的拷贝,而使用FileChanel与SocketChannel数据交换时
+         * 底层最终还是生成一个临时的Direct Buffer，用临时Direct Buffer写入或者读SocketChannel中
+         * 后面考虑会使用netty中ByteBuf中的DirectBuffer进行网络IO通信。效率更高
+         * */
+        this.readDataBuffer =new MappedFileConDataBuffer(maprFileName); // 2 ,3
+        this.writeDataBuffer=new MappedFileConDataBuffer3(mapwFileName);
+        //存在bug暂不启用，以后统一是ByteBuf作为buffer进行NIO网络通信。
+       // this.readDataBuffer = new  ByteBufConDataBuffer(4096,16*1024*1024);
+       // this.writeDataBuffer = new ByteBufConDataBuffer(4096,16*1024*1024);
+        //新的client进来后，处理Server发送Client的handshake init packet
         this.handler.onConnected(this);
 
     }

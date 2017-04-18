@@ -91,7 +91,7 @@ public class LoginRespCallback implements BackConnectionCallback{
              packet = source.getHandshake();
              if (packet == null) {
              	byteBuff=dataBuffer.getBytes(pkgStartPos, pkgLen);
-                 processHandShakePacket(source, byteBuff);
+				 processHandShakePacket(source, byteBuff);
                  // 发送认证数据包
                  source.authenticate();
                  break;
