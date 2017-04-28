@@ -27,13 +27,13 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import io.mycat.*;
 import io.mycat.sqlcache.HintSQLInfo;
 import io.mycat.sqlcache.HintSQLParser;
 import io.mycat.sqlcache.SQLResultsCacheService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.backend.MySQLDataSource;
 import io.mycat.backend.MySQLReplicatSet;
@@ -60,6 +60,8 @@ import io.mycat.net2.ConDataBuffer;
 public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandler {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractSchemaSQLCommandHandler.class);
 	protected final DirectTransTofrontCallBack directTransCallback = new DirectTransTofrontCallBack();
+	private final NewSQLParser parser = new NewSQLParser();
+	protected final NewSQLContext context = new NewSQLContext();
 	@Override
 	public void processCmd(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos,
 			int pkgLen) throws IOException {
@@ -105,13 +107,9 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			MySQLMessage mm = new MySQLMessage(byteBuff);
 			mm.position(5);
 			String sql = mm.readString(frontCon.getCharset());
-			/**
-			 * parser hit sql
-			 * 需要改写sql语句，去掉前面的注释即可
-			 * 首先判断是否
-			 */
-			HintSQLInfo hintSQL = HintSQLParser.parserHintSQL(sql);
-			if (hintSQL != null && hintSQL.isCache()){
+            LOGGER.info("EXECUTE SQL = "+sql);
+			parser.parse(sql.getBytes(), context);
+			if (context.hasAnnotation() && context.getAnnotationType()==NewSQLContext.ANNOTATION_SQL_CACHE){
 				/**
 				 * 0.判断是select语句
 				 * 1.改写sql语句，去掉前面的注释
@@ -120,7 +118,7 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 				 * 4.如果当前sql的结果集已经缓存了。直接从本地缓存中拉去结果集即可
 				 */
 
-				if (!SQLResultsCacheService.getInstance().processHintSQL(frontCon,hintSQL,mm)){
+				if (!SQLResultsCacheService.getInstance().processHintSQL(frontCon,context,mm)){
 					frontCon.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "cache no implementation");
 				}
 
@@ -128,74 +126,73 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			}
 
 			// 执行查询
-			SQLInfo sqlInf=new SQLInfo();
-			int rs = ServerParse.parse(sql,sqlInf);
-			int sqlType = rs & 0xff;
-			switch (sqlType) {
-			case ServerParse.EXPLAIN:
+			// 如果要支持批量处理，需要先 context.getSQLCount() 获取条数后，再使用 context.getSQLType(sqlIdx) 遍历
+			// 但批量处理需要后端链接支持
+			String exeSQL = context.getRealSQL(0);
+			switch (context.getSQLType()) {
+			case NewSQLContext.EXPLAIN_SQL:
 				LOGGER.debug("EXPLAIN");
 				break;
-			case ServerParse.SET:
+			case NewSQLContext.SET_SQL:
 				LOGGER.debug("SET");
-				executeSetSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,sql);
+				executeSetSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,exeSQL);
 				break;
-			case ServerParse.SHOW:
+			case NewSQLContext.SHOW_SQL:
 				LOGGER.debug("SHOW");
-				executeShowSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,sql);
+				executeShowSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,exeSQL);
 				break;
-			case ServerParse.SELECT:
-				LOGGER.debug("SELECT");
+			case NewSQLContext.SELECT_SQL:
+				LOGGER.debug("SELECT : "+exeSQL);
 				SchemaBean mycatSchema = frontCon.getMycatSchema();
 				if (mycatSchema == null) {
 					frontCon.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "No database selected");
 					return;
 				}
 
-				executeSelectSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,sql);
+				executeSelectSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,exeSQL);
 
 				// SelectHandler.handle(sql, con, rs >>> 8);
 				break;
-			case ServerParse.START:
+			case NewSQLContext.START_SQL:
 				LOGGER.debug("START");
 				break;
-			case ServerParse.BEGIN:
+			case NewSQLContext.BEGIN_SQL:
 				LOGGER.debug("BEGIN");
 				break;
-			case ServerParse.SAVEPOINT:
+			case NewSQLContext.SAVEPOINT_SQL:
 				LOGGER.debug("SAVEPOINT");
 				break;
-			case ServerParse.KILL:
+			case NewSQLContext.KILL_SQL:
 				LOGGER.debug("KILL");
 				break;
-			case ServerParse.KILL_QUERY:
+			case NewSQLContext.KILL_QUERY_SQL:
 				LOGGER.debug("KILL_QUERY");
 				break;
-			case ServerParse.USE:
+			case NewSQLContext.USE_SQL:
 				LOGGER.debug("USE");
-				String schema=sqlInf.getDb();
+				String schema=context.getSchemaName(0);
 				if (!frontCon.setFrontSchema(schema)) {
 					frontCon.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "No Mycat Schema defined :" +schema);
 				} else {
 					frontCon.write(OkPacket.OK);
 				}
-
 				return;
-			case ServerParse.COMMIT:
+			case NewSQLContext.COMMIT_SQL:
 				LOGGER.debug("COMMIT");
 				break;
-			case ServerParse.ROLLBACK:
+			case NewSQLContext.ROLLBACK_SQL:
 				LOGGER.debug("ROLLBACK");
 				break;
-			case ServerParse.HELP:
+			case NewSQLContext.HELP_SQL:
 				LOGGER.debug("HELP");
 				break;
-			case ServerParse.MYSQL_CMD_COMMENT:
+			/*case NewSQLContext.MYSQL_CMD_COMMENT:
 				LOGGER.debug("MYSQL_CMD_COMMENT");
 				break;
-			case ServerParse.MYSQL_COMMENT:
+			case NewSQLContext.MYSQL_COMMENT:
 				LOGGER.debug("MYSQL_COMMENT");
-				break;
-			case ServerParse.LOAD_DATA_INFILE_SQL:
+				break;*/
+			case NewSQLContext.LOAD_SQL:
 				LOGGER.debug("LOAD_DATA_INFILE_SQL");
 				break;
 			default:

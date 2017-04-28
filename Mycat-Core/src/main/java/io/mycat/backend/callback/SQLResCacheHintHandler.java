@@ -1,5 +1,6 @@
 package io.mycat.backend.callback;
 
+import io.mycat.NewSQLContext;
 import io.mycat.backend.BackConnectionCallback;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.bigmem.sqlcache.BigSQLResult;
@@ -32,9 +33,9 @@ public class SQLResCacheHintHandler implements BackConnectionCallback,HintHandle
     private int filedCount = 0;
     private IDataLoader<String,BigSQLResult> loader;
     private IRemoveKeyListener<String,BigSQLResult> listener;
-    private HintSQLInfo hintSQLInfo;
-    public SQLResCacheHintHandler(HintSQLInfo hintSQLInfo, BigSQLResult sqlResultCache){
-        this.hintSQLInfo = hintSQLInfo;
+    private NewSQLContext sqlContext;
+    public SQLResCacheHintHandler(NewSQLContext sqlContext, BigSQLResult sqlResultCache){
+        this.sqlContext = sqlContext;
         this.sqlResultCache = sqlResultCache;
         this.listener = new HintSQLRemoveKeyListener<>();
         this.loader = new HintSQLDataLoader<>();
@@ -113,7 +114,7 @@ public class SQLResCacheHintHandler implements BackConnectionCallback,HintHandle
                     sqlResultCache.put(rowDataEof);
                     /**将sqlResultCache插入CacheService中*/
                     SQLResultsCacheService.getInstance().
-                            cacheSQLResult(hintSQLInfo,sqlResultCache,loader,listener);
+                            cacheSQLResult(sqlContext,sqlResultCache,loader,listener);
 
                     conn.setState(Connection.STATE_IDLE);
                 } else if (packetType == MySQLPacket.ERROR_PACKET) {

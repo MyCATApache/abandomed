@@ -91,6 +91,12 @@
 			<artifactId>mycat-bigmemory</artifactId>
 			<version>0.0.1-RELEASE</version>
 		</dependency>
+
+		<dependency>
+			<groupId>io.mycat</groupId>
+			<artifactId>SQLParser</artifactId>
+			<version>1.4-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 

@@ -1,5 +1,7 @@
 package io.mycat.sqlcache;
 
+import io.mycat.NewSQLContext;
+import io.mycat.SQLContext;
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.backend.MySQLDataSource;
@@ -46,25 +48,26 @@ public class SQLResultsCacheService {
     /**
      * 将sql结果集缓存起来
      *
-     * @param hintSQLInfo  Hint SQL相关信息
+     * @param sqlContext  Hint SQL相关信息
      * @param bigSQLResult  sql结果集缓存
      * @param loader  结果集load or reload 接口
      * @param listener key被移除时，调用的接口
      */
-    public void cacheSQLResult(HintSQLInfo hintSQLInfo,BigSQLResult bigSQLResult,IDataLoader<String,BigSQLResult> loader,
+    public void cacheSQLResult(NewSQLContext sqlContext,BigSQLResult bigSQLResult,IDataLoader<String,BigSQLResult> loader,
                                IRemoveKeyListener<String,BigSQLResult> listener){
         /**
          * cache-time=xxx auto-refresh=true access-count=5000
          */
-        String key = "" + murmur3_32().hashUnencodedChars(hintSQLInfo.getExecSQL());
+        String realSQL = sqlContext.getRealSQL(0);
+        String key = "" + murmur3_32().hashUnencodedChars(realSQL);
 
         Keyer<String,BigSQLResult> keyer = new Keyer<String,BigSQLResult>();
-        keyer.setSql(hintSQLInfo.getExecSQL());
+        keyer.setSql(realSQL);
         keyer.setKey(key);
         keyer.setValue(bigSQLResult);
-        keyer.setCacheTTL(Integer.valueOf(hintSQLInfo.getParamsKv().get("cache-time")));
-        keyer.setAccessCount(Integer.valueOf(hintSQLInfo.getParamsKv().get("access-count")));
-       // keyer.setAutoRefresh(Boolean.valueOf(hintSQLInfo.getParamsKv().get("auto-refresh")));
+        keyer.setCacheTTL(sqlContext.getAnnotationValue(NewSQLContext.ANNOTATION_CACHE_TIME));
+        keyer.setAccessCount(sqlContext.getAnnotationValue(NewSQLContext.ANNOTATION_ACCESS_COUNT));
+        // keyer.setAutoRefresh(sqlContext.getAnnotationValue(NewSQLContext.ANNOTATION_AUTO_REFRESH));
         keyer.setRemoveKeyListener(listener);
         keyer.setiDataLoader(loader);
         sqlResultCacheImp.put(key,bigSQLResult,keyer);
@@ -97,12 +100,12 @@ public class SQLResultsCacheService {
     /**
      *  处理Select Hint SQL 结果集函数
      * @param frontCon
-     * @param hintSQLInfo
+     * @param sqlContext
      * @param mySQLMessage
      * @return
      * @throws IOException
      */
-    public boolean processHintSQL(MySQLFrontConnection frontCon,HintSQLInfo hintSQLInfo, MySQLMessage mySQLMessage) throws IOException {
+    public boolean processHintSQL(MySQLFrontConnection frontCon, NewSQLContext sqlContext, MySQLMessage mySQLMessage) throws IOException {
 
         /**
          * SQL Cache 结果集缓存框架实现：
@@ -112,16 +115,17 @@ public class SQLResultsCacheService {
          *          2>. 缓存到MyCat本地
          * 3.根据Hint注解的属性，决定异步拉去后端的结果集，替换掉旧的数据集
          */
-        BigSQLResult sqlResultCache = getSQLResult(hintSQLInfo.getExecSQL());
+        String realSql = sqlContext.getRealSQL(0);
+        BigSQLResult sqlResultCache = getSQLResult(realSql);
 
         if (sqlResultCache != null){
-            LOGGER.error(hintSQLInfo.getExecSQL() + ":====>>>> Use Local Cache SQL Resuls");
+            LOGGER.error(realSql + ":====>>>> Use Local Cache SQL Resuls");
             sqlResultCacheDirectClient(frontCon,sqlResultCache);
             return true;
         }else {
             /**从后端拉取数据进行缓存*/
              sqlResultCache =
-                    new BigSQLResult(LocatePolicy.Normal,hintSQLInfo.getExecSQL(),32*1024*1024/**TODO*/);
+                    new BigSQLResult(LocatePolicy.Normal,realSql,32*1024*1024/**TODO*/);
         }
 
         /**
@@ -164,7 +168,7 @@ public class SQLResultsCacheService {
             newCon.setAttachement(frontCon);
 
             /**设置后端连接池结果集处理handler,sqlResultCache缓存结果集类*/
-            newCon.setUserCallback(new SQLResCacheHintHandler(hintSQLInfo,sqlResultCache));
+            newCon.setUserCallback(new SQLResCacheHintHandler(sqlContext,sqlResultCache));
 
             /**
              * 执行sql语句
@@ -173,7 +177,7 @@ public class SQLResultsCacheService {
                 /**
                  * 将数据写到后端连接池中
                  */
-                command.arg = hintSQLInfo.getExecSQL().getBytes(newCon.getCharset());
+                command.arg = realSql.getBytes(newCon.getCharset());
                 newCon.getWriteDataBuffer().putBytes(command.write(newCon));
                 newCon.enableWrite(false);
                 /**
@@ -186,11 +190,11 @@ public class SQLResultsCacheService {
             /**
              * 否则直接写到后端即可
              */
-            command.arg = hintSQLInfo.getExecSQL().getBytes(existCon.getCharset());
+            command.arg = realSql.getBytes(existCon.getCharset());
             existCon.getWriteDataBuffer().putBytes(command.write(existCon));
             existCon.enableWrite(false);
             /**设置后端连接池结果集处理handler,sqlResultCache缓存结果集类*/
-            existCon.setUserCallback(new SQLResCacheHintHandler(hintSQLInfo,sqlResultCache));
+            existCon.setUserCallback(new SQLResCacheHintHandler(sqlContext,sqlResultCache));
         }
 
         return true;
