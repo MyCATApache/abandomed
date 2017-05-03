@@ -77,6 +77,9 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			final ByteBuffer byteBuff = dataBuffer.getBytes(pkgStartPos, pkgLen);
 			initDb(frontCon, byteBuff);
 			break;
+		case MySQLPacket.COM_FIELD_LIST:
+			passThroughSQL(frontCon, dataBuffer, pkgStartPos, pkgLen);
+			break;
 		default:
 			doSQLCommand(frontCon, dataBuffer, packageType, pkgStartPos, pkgLen);
 		}
@@ -109,47 +112,49 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			String sql = mm.readString(frontCon.getCharset());
             LOGGER.info("EXECUTE SQL = "+sql);
 			parser.parse(sql.getBytes(), context);
-			if (context.hasAnnotation() && context.getAnnotationType()==NewSQLContext.ANNOTATION_SQL_CACHE){
-				/**
-				 * 0.判断是select语句
-				 * 1.改写sql语句，去掉前面的注释
-				 * 2.发送sql语句到后端执行。做好backend connection的Handler设置工作
-				 * 3.解析sql的结果集，决定是否异步缓存，一部分直接发送给您前端。
-				 * 4.如果当前sql的结果集已经缓存了。直接从本地缓存中拉去结果集即可
-				 */
+			if (context.hasAnnotation()) {
+				sql = context.getRealSQL(0);
+				if (context.getAnnotationType() == NewSQLContext.ANNOTATION_SQL_CACHE) {
+					/**
+					 * 0.判断是select语句
+					 * 1.改写sql语句，去掉前面的注释
+					 * 2.发送sql语句到后端执行。做好backend connection的Handler设置工作
+					 * 3.解析sql的结果集，决定是否异步缓存，一部分直接发送给您前端。
+					 * 4.如果当前sql的结果集已经缓存了。直接从本地缓存中拉去结果集即可
+					 */
 
-				if (!SQLResultsCacheService.getInstance().processHintSQL(frontCon,context,mm)){
-					frontCon.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "cache no implementation");
+					if (!SQLResultsCacheService.getInstance().processHintSQL(frontCon, context, mm)) {
+						frontCon.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "cache no implementation");
+					}
+
+					return;
 				}
-
-				return;
 			}
 
 			// 执行查询
 			// 如果要支持批量处理，需要先 context.getSQLCount() 获取条数后，再使用 context.getSQLType(sqlIdx) 遍历
 			// 但批量处理需要后端链接支持
-			String exeSQL = context.getRealSQL(0);
 			switch (context.getSQLType()) {
 			case NewSQLContext.EXPLAIN_SQL:
 				LOGGER.debug("EXPLAIN");
 				break;
 			case NewSQLContext.SET_SQL:
 				LOGGER.debug("SET");
-				executeSetSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,exeSQL);
+				executeSetSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,sql);
 				break;
 			case NewSQLContext.SHOW_SQL:
 				LOGGER.debug("SHOW");
-				executeShowSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,exeSQL);
+				executeShowSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,sql);
 				break;
 			case NewSQLContext.SELECT_SQL:
-				LOGGER.debug("SELECT : "+exeSQL);
+				LOGGER.debug("SELECT : "+sql);
 				SchemaBean mycatSchema = frontCon.getMycatSchema();
 				if (mycatSchema == null) {
 					frontCon.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, "No database selected");
 					return;
 				}
 
-				executeSelectSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,exeSQL);
+				executeSelectSQL(frontCon, dataBuffer, packageType,pkgStartPos, pkgLen,sql);
 
 				// SelectHandler.handle(sql, con, rs >>> 8);
 				break;
