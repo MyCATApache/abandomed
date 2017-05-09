@@ -38,7 +38,7 @@ public class MySQLBackendConnectionFactory {
  
     private final MySQLBackendConnectionHandler nioHandler = new MySQLBackendConnectionHandler();
     private final DummyCallBack dummyCallBack=new DummyCallBack();
-    public MySQLBackendConnection make(MySQLDataSource pool,String reactor, String schema) throws IOException {
+    public MySQLBackendConnection make(MySQLDataSource pool,String reactor, String schema,Object attachment) throws IOException {
 
     	MySQLBean dsc = pool.getConfig();
         SocketChannel channel = SocketChannel.open();
@@ -55,6 +55,7 @@ public class MySQLBackendConnectionFactory {
         c.setSchema(schema);
         c.setPool(pool);
         c.setNIOReactor(reactor);
+        c.setAttachement(attachment);
         c.setUserCallback(dummyCallBack);
         c.setIdleTimeout(NetSystem.getInstance().getNetConfig().getConIdleTimeout()*60*1000L);
         NetSystem.getInstance().getConnector().postConnect(c);

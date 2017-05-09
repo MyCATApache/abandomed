@@ -58,8 +58,8 @@ public class MySQLDataSource {
 
 
     
-    public MySQLBackendConnection createNewConnectionOnReactor(String reactor,String schema) throws IOException {
-    	MySQLBackendConnection con= factory.make(this, reactor,schema);
+    public MySQLBackendConnection createNewConnectionOnReactor(String reactor,String schema,Object attachment) throws IOException {
+    	MySQLBackendConnection con= factory.make(this, reactor,schema, attachment);
         this.conMap.getSchemaConQueue(schema).getAutoCommitCons().add(con);
         return con;
     }
@@ -123,7 +123,7 @@ public class MySQLDataSource {
             		itor=reactos.iterator();
             	}
             	actorName=itor.next();
-            	this.createNewConnectionOnReactor(actorName, this.mysqlBean.getDefaultSchema());
+            	this.createNewConnectionOnReactor(actorName, this.mysqlBean.getDefaultSchema(),null);
             } catch (Exception e) {
                 LOGGER.warn(" init connection error.", e);
             }
@@ -162,7 +162,7 @@ public class MySQLDataSource {
             } else { // create connection
                 LOGGER.info(
                         "no ilde connection in pool,create new connection for " + this.name + " of schema " + schema);
-                return createNewConnectionOnReactor(reactor, schema);
+                return createNewConnectionOnReactor(reactor, schema,attachment);
             }
         }
 
