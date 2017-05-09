@@ -58,8 +58,8 @@ public class MySQLDataSource {
 
 
     
-    public MySQLBackendConnection createNewConnectionOnReactor(String reactor,String schema,Object attachment) throws IOException {
-    	MySQLBackendConnection con= factory.make(this, reactor,schema, attachment);
+    public MySQLBackendConnection createNewConnectionOnReactor(String reactor,String schema,Object attachment,BackConnectionCallback userCallback) throws IOException {
+    	MySQLBackendConnection con= factory.make(this, reactor,schema, attachment,userCallback);
         this.conMap.getSchemaConQueue(schema).getAutoCommitCons().add(con);
         return con;
     }
@@ -123,7 +123,7 @@ public class MySQLDataSource {
             		itor=reactos.iterator();
             	}
             	actorName=itor.next();
-            	this.createNewConnectionOnReactor(actorName, this.mysqlBean.getDefaultSchema(),null);
+            	this.createNewConnectionOnReactor(actorName, this.mysqlBean.getDefaultSchema(),null,null);
             } catch (Exception e) {
                 LOGGER.warn(" init connection error.", e);
             }
@@ -147,7 +147,7 @@ public class MySQLDataSource {
         return conn;
     }
 
-    public MySQLBackendConnection getConnection(String reactor,String schema, boolean autocommit, final Object attachment)
+    public MySQLBackendConnection getConnection(String reactor,String schema, boolean autocommit, final Object attachment,final BackConnectionCallback userCallback)
             throws IOException {
     	MySQLBackendConnection con = this.conMap.tryTakeCon(reactor,schema, autocommit);
         if (con != null) {
@@ -162,7 +162,7 @@ public class MySQLDataSource {
             } else { // create connection
                 LOGGER.info(
                         "no ilde connection in pool,create new connection for " + this.name + " of schema " + schema);
-                return createNewConnectionOnReactor(reactor, schema,attachment);
+                return createNewConnectionOnReactor(reactor, schema,attachment,userCallback);
             }
         }
 

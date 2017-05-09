@@ -29,22 +29,24 @@ import java.nio.channels.SocketChannel;
 import io.mycat.backend.callback.DummyCallBack;
 import io.mycat.beans.MySQLBean;
 import io.mycat.net2.NetSystem;
+
 /**
  * bakcend mysql connection factory
- * @author wuzhihui
  *
+ * @author wuzhihui
  */
 public class MySQLBackendConnectionFactory {
- 
-    private final MySQLBackendConnectionHandler nioHandler = new MySQLBackendConnectionHandler();
-    private final DummyCallBack dummyCallBack=new DummyCallBack();
-    public MySQLBackendConnection make(MySQLDataSource pool,String reactor, String schema,Object attachment) throws IOException {
 
-    	MySQLBean dsc = pool.getConfig();
+    private final MySQLBackendConnectionHandler nioHandler = new MySQLBackendConnectionHandler();
+    private final DummyCallBack dummyCallBack = new DummyCallBack();
+
+    public MySQLBackendConnection make(MySQLDataSource pool, String reactor, String schema, Object attachment, BackConnectionCallback userCallback) throws IOException {
+        BackConnectionCallback callback = userCallback == null ? dummyCallBack : userCallback;
+        MySQLBean dsc = pool.getConfig();
         SocketChannel channel = SocketChannel.open();
         channel.configureBlocking(false);
 
-        MySQLBackendConnection c = new MySQLBackendConnection(pool,channel);
+        MySQLBackendConnection c = new MySQLBackendConnection(pool, channel);
         NetSystem.getInstance().setSocketParams(c, false);
         // 设置NIOHandlers
         c.setHandler(nioHandler);
@@ -56,8 +58,8 @@ public class MySQLBackendConnectionFactory {
         c.setPool(pool);
         c.setNIOReactor(reactor);
         c.setAttachement(attachment);
-        c.setUserCallback(dummyCallBack);
-        c.setIdleTimeout(NetSystem.getInstance().getNetConfig().getConIdleTimeout()*60*1000L);
+        c.setUserCallback(callback);
+        c.setIdleTimeout(NetSystem.getInstance().getNetConfig().getConIdleTimeout() * 60 * 1000L);
         NetSystem.getInstance().getConnector().postConnect(c);
         return c;
     }

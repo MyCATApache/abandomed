@@ -158,14 +158,8 @@ public class SQLResultsCacheService {
              * 如果该sql对应后端db，没有连接池，则创建连接池部分
              */
             final MySQLBackendConnection newCon =
-                    datas.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, null);
-
-            /**很关键的设置前端front 与 backend session*/
-            newCon.setAttachement(frontCon);
-
-            /**设置后端连接池结果集处理handler,sqlResultCache缓存结果集类*/
-            newCon.setUserCallback(new SQLResCacheHintHandler(hintSQLInfo,sqlResultCache));
-
+                    datas.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, frontCon,new SQLResCacheHintHandler(hintSQLInfo,sqlResultCache));
+            
             /**
              * 执行sql语句
              */

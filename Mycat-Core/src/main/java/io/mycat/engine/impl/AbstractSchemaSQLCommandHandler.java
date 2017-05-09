@@ -235,10 +235,7 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 			 * 如果该sql对应后端db，没有连接池，则创建连接池部分
 			 */
 			final MySQLBackendConnection newCon = 
-					datas.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, frontCon);
-
-			/**设置后端连接池结果集处理handler*/
-			newCon.setUserCallback(directTransCallback);
+					datas.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, frontCon,directTransCallback);
 
 			/**
 			 * 执行sql语句
