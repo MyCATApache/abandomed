@@ -8,5 +8,5 @@ import io.mycat.mysql.MySQLConnection;
  * @author ynfeng
  */
 public interface MysqlConnectionState {
-    void handle(MySQLConnection mySQLConnection);
+    void handle(MySQLConnection mySQLConnection,Object attachment);
 }

@@ -26,6 +26,7 @@ package io.mycat.front;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
+import io.mycat.mysql.state.CloseState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,67 +40,62 @@ import io.mycat.util.CharsetUtil;
 
 /**
  * Util class used for backend mysql connnection login
- * 
- * @author wuzhihui
  *
+ * @author wuzhihui
  */
 public class CheckUserLoginResponseCallback implements SQLCommandHandler {
-	private static final byte[] AUTH_OK = new byte[] { 7, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0 };
-	private static final Logger LOGGER = LoggerFactory.getLogger(CheckUserLoginResponseCallback.class);
+    private static final byte[] AUTH_OK = new byte[]{7, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0};
+    private static final Logger LOGGER = LoggerFactory.getLogger(CheckUserLoginResponseCallback.class);
 
-	public void processCmd(MySQLFrontConnection con, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos,
-			int pkgLen) throws IOException {
-		// check quit packet
-		if (packageType == MySQLPacket.QUIT_PACKET) {
-			con.close("quit packet");
-			return;
-		}
-		ByteBuffer byteBuff = dataBuffer.getBytes(pkgStartPos, pkgLen);
-		AuthPacket auth = new AuthPacket();
-		auth.read(byteBuff);
+    public void processCmd(MySQLFrontConnection con, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos,
+                           int pkgLen) throws IOException {
+        ByteBuffer byteBuff = dataBuffer.getBytes(pkgStartPos, pkgLen);
+        AuthPacket auth = new AuthPacket();
+        auth.read(byteBuff);
 
-		// Fake check user
-		LOGGER.debug("Check user name. " + auth.user);
-		if (!auth.user.equals("root")) {
-			LOGGER.debug("User name error. " + auth.user);
-			con.failure(ErrorCode.ER_ACCESS_DENIED_ERROR, "Access denied for user '" + auth.user + "'");
-			return;
-		}
+        // Fake check user
+        LOGGER.debug("Check user name. " + auth.user);
+        if (!auth.user.equals("root")) {
+            LOGGER.debug("User name error. " + auth.user);
+            con.failure(ErrorCode.ER_ACCESS_DENIED_ERROR, "Access denied for user '" + auth.user + "'");
+            con.setNextState(CloseState.INSTANCE);
+            return;
+        }
 
-		// Fake check password
-		LOGGER.debug("Check user password. " + new String(auth.password));
+        // Fake check password
+        LOGGER.debug("Check user password. " + new String(auth.password));
 
-		// check schema
-		LOGGER.debug("Check database. " + auth.database);
+        // check schema
+        LOGGER.debug("Check database. " + auth.database);
 
-		success(con, auth);
+        success(con, auth);
 
-	}
+    }
 
-	private void success(MySQLFrontConnection con, AuthPacket auth) throws IOException {
-		LOGGER.debug("Login success");
-		// 设置字符集编码
-		int charsetIndex = (auth.charsetIndex & 0xff);
-		final String charset = CharsetUtil.getCharset(charsetIndex);
-		if (charset == null) {
-			final String errmsg = "Unknown charsetIndex:" + charsetIndex;
-			LOGGER.warn(errmsg);
-			con.writeErrMessage(ErrorCode.ER_UNKNOWN_CHARACTER_SET, errmsg);
-			return;
-		}
-		LOGGER.debug("charset = {}, charsetIndex = {}", charset, charsetIndex);
-		con.setCharset(charsetIndex, charset);
+    private void success(MySQLFrontConnection con, AuthPacket auth) throws IOException {
+        LOGGER.debug("Login success");
+        // 设置字符集编码
+        int charsetIndex = (auth.charsetIndex & 0xff);
+        final String charset = CharsetUtil.getCharset(charsetIndex);
+        if (charset == null) {
+            final String errmsg = "Unknown charsetIndex:" + charsetIndex;
+            LOGGER.warn(errmsg);
+            con.writeErrMessage(ErrorCode.ER_UNKNOWN_CHARACTER_SET, errmsg);
+            return;
+        }
+        LOGGER.debug("charset = {}, charsetIndex = {}", charset, charsetIndex);
+        con.setCharset(charsetIndex, charset);
 
-		//认证成功后，修改changeCmdHandler，由CheckUserLoginResponseCallback改用
-		// AbstractSchemaSQLCommandHandler处理
-		if (!con.setFrontSchema(auth.database)) {
-			final String errmsg = "No Mycat Schema defined: " + auth.database;
-			LOGGER.debug(errmsg);
-			con.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, errmsg);
-		} else {
-			con.write(AUTH_OK);
-		}
-		con.setState(Connection.STATE_IDLE);
+        //认证成功后，修改changeCmdHandler，由CheckUserLoginResponseCallback改用
+        // AbstractSchemaSQLCommandHandler处理
+        if (!con.setFrontSchema(auth.database)) {
+            final String errmsg = "No Mycat Schema defined: " + auth.database;
+            LOGGER.debug(errmsg);
+            con.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, errmsg);
+        } else {
+            con.write(AUTH_OK);
+        }
+        con.setState(Connection.STATE_IDLE);
 
-	}
+    }
 }

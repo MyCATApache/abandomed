@@ -9,11 +9,31 @@ import io.mycat.mysql.state.MysqlConnectionState;
  */
 public interface StatefulConnection {
     /**
-     * 更改状态
+     * 改变状态
+     *
+     * @param state      状态
+     * @param attachment 附加参数
+     */
+    void changeState(MysqlConnectionState state, Object attachment);
+
+    /**
+     * 设置下一个状态
      *
      * @param state
      */
-    void changeState(MysqlConnectionState state);
+    void setNextState(MysqlConnectionState state);
+
+    /**
+     * 驱动状态
+     *
+     * @param attachment 附加参数
+     */
+    void driveState(Object attachment);
+
+    /**
+     * 驱动状态
+     */
+    void driveState();
 
     /**
      * 获取当前状态

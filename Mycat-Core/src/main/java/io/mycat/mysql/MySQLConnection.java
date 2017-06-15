@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
+import io.mycat.mysql.state.InitialState;
 import io.mycat.mysql.state.MysqlConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,7 @@ import io.mycat.util.RandomUtil;
  *
  * @author wuzhihui
  */
-public class MySQLConnection extends Connection implements StatefulConnection{
+public class MySQLConnection extends Connection implements StatefulConnection {
     protected final static Logger LOGGER = LoggerFactory.getLogger(MySQLConnection.class);
 
     public static final int CMD_QUERY_STATUS = 11;
@@ -53,8 +54,14 @@ public class MySQLConnection extends Connection implements StatefulConnection{
     public static final int RESULT_HEADER_STATUS = 24;
     public static final int RESULT_FAIL_STATUS = 29;
 
+    private MysqlConnectionState state;
+    private MysqlConnectionState nextState;
+
     public final static int msyql_packetHeaderSize = 4;
-    public final static int mysql_packetTypeSize = 1;
+
+    private int currentPacketLength;
+    private byte currentPacketType;
+    private int currentPacketStartPos;
 
     protected String user;
     protected String password;
@@ -64,6 +71,7 @@ public class MySQLConnection extends Connection implements StatefulConnection{
 
     public MySQLConnection(SocketChannel channel) {
         super(channel);
+        this.state = InitialState.INSTANCE;
     }
 
     public static final boolean validateHeader(final long offset, final long position) {
@@ -78,8 +86,8 @@ public class MySQLConnection extends Connection implements StatefulConnection{
     /**
      * 获取报文长度
      *
-     * @param buffer   报文buffer
-     * @param offset   buffer解析位置偏移量
+     * @param buffer 报文buffer
+     * @param offset buffer解析位置偏移量
      * @return 报文长度(Header长度+内容长度)
      * @throws IOException
      */
@@ -194,11 +202,60 @@ public class MySQLConnection extends Connection implements StatefulConnection{
         this.charset = charsetName;
     }
 
-    @Override public void changeState(MysqlConnectionState state) {
-
+    public int getCurrentPacketLength() {
+        return currentPacketLength;
     }
 
-    @Override public MysqlConnectionState getCurrentState() {
-        return null;
+    public void setCurrentPacketLength(int currentPacketLength) {
+        this.currentPacketLength = currentPacketLength;
     }
+
+    public byte getCurrentPacketType() {
+        return currentPacketType;
+    }
+
+    public void setCurrentPacketType(byte currentPacketType) {
+        this.currentPacketType = currentPacketType;
+    }
+
+    public int getCurrentPacketStartPos() {
+        return currentPacketStartPos;
+    }
+
+    public void setCurrentPacketStartPos(int currentPacketStartPos) {
+        this.currentPacketStartPos = currentPacketStartPos;
+    }
+
+    @Override
+    public void changeState(MysqlConnectionState state, Object attachment) {
+        this.state = state;
+        this.state.handle(this, attachment);
+    }
+
+    @Override
+    public void setNextState(MysqlConnectionState state) {
+        this.nextState = state;
+    }
+
+    @Override
+    public void driveState(Object attachment) {
+        if (this.nextState != null) {
+            this.state = nextState;
+        }
+        this.state.handle(this, attachment);
+    }
+
+    @Override
+    public void driveState() {
+        driveState(null);
+    }
+
+    @Override
+    public MysqlConnectionState getCurrentState() {
+        return state;
+    }
+
+
+
+
 }

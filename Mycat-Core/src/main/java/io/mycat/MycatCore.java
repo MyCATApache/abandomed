@@ -54,7 +54,7 @@ import io.mycat.net2.SystemConfig;
  */
 public class MycatCore {
     private static final Logger LOGGER = LoggerFactory.getLogger(MycatCore.class);
-    public static final int PORT = 8066;
+    public static final int PORT = 3306;
 
     public static final String MOCK_HOSTNAME = "host1";
 

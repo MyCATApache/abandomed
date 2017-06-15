@@ -36,7 +36,7 @@ import io.mycat.net2.ConDataBuffer;
 public interface SQLCommandHandler {
 	/**
 	 * response received data 
-	 * @param con
+	 * @param frontCon
 	 * @param dataBuffer
 	 * @param packageType
 	 * @param pkgStartPos

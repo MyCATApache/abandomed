@@ -115,19 +115,19 @@ public class MySQLDataSource {
         // long timeOut=start+5000*1000L;
         Set<String> reactos= SQLEngineCtx.INSTANCE().getReactorMap().keySet();
         Iterator<String> itor=reactos.iterator();
-        for (int i = 0; i < initSize; i++) {
-            try {
-            	String actorName=null;
-            	if(!itor.hasNext())
-            	{
-            		itor=reactos.iterator();
-            	}
-            	actorName=itor.next();
-            	this.createNewConnectionOnReactor(actorName, this.mysqlBean.getDefaultSchema(),null,null);
-            } catch (Exception e) {
-                LOGGER.warn(" init connection error.", e);
-            }
-        }
+//        for (int i = 0; i < initSize; i++) {
+//            try {
+//            	String actorName=null;
+//            	if(!itor.hasNext())
+//            	{
+//            		itor=reactos.iterator();
+//            	}
+//            	actorName=itor.next();
+//            	this.createNewConnectionOnReactor(actorName, this.mysqlBean.getDefaultSchema(),null,null);
+//            } catch (Exception e) {
+//                LOGGER.warn(" init connection error.", e);
+//            }
+//        }
         LOGGER.info("init source finished");
         return true;
     }

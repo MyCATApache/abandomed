@@ -17,16 +17,16 @@ public class DirectConDataBuffer implements ConDataBuffer {
     private int readPos;
     private int writePos;
 
-    public DirectConDataBuffer() {
-        //先分16MB,最大的mysql包为16MB
-        this.totalSize = 1024 * 1024 * 16;
+    public DirectConDataBuffer(int size) {
+        this.totalSize = size;
         this.byteBuffer =
-            MyCatMemoryAllocator.getINSTANCE().directBuffer(totalSize).nioBuffer(0, totalSize);
+                MyCatMemoryAllocator.getINSTANCE().directBuffer(totalSize).nioBuffer(0, totalSize);
         this.readPos = 0;
         this.writePos = 0;
     }
 
-    @Override public int transferFrom(SocketChannel socketChanel) throws IOException {
+    @Override
+    public int transferFrom(SocketChannel socketChanel) throws IOException {
         final ByteBuffer byteBuffer = this.byteBuffer;
         byteBuffer.position(writePos);
         byteBuffer.limit(totalSize);
@@ -35,8 +35,11 @@ public class DirectConDataBuffer implements ConDataBuffer {
         return readed;
     }
 
-    @SuppressWarnings("Duplicates") @Override public void putBytes(ByteBuffer buf)
-        throws IOException {
+    @SuppressWarnings("Duplicates")
+    @Override
+    public void putBytes(ByteBuffer buf)
+            throws IOException {
+        buf.flip();
         final ByteBuffer byteBuffer = this.byteBuffer;
         int oldWritePos = writePos;
         prepareToWrite();
@@ -44,8 +47,10 @@ public class DirectConDataBuffer implements ConDataBuffer {
         writePos += (byteBuffer.position() - oldWritePos);
     }
 
-    @SuppressWarnings("Duplicates") @Override public void putBytes(byte[] bytes)
-        throws IOException {
+    @SuppressWarnings("Duplicates")
+    @Override
+    public void putBytes(byte[] bytes)
+            throws IOException {
         final ByteBuffer byteBuffer = this.byteBuffer;
         int oldWritePos = writePos;
         prepareToWrite();
@@ -58,20 +63,24 @@ public class DirectConDataBuffer implements ConDataBuffer {
         byteBuffer.limit(totalSize);
     }
 
-    @Override public ByteBuffer beginWrite(int length) throws IOException {
+    @Override
+    public ByteBuffer beginWrite(int length) throws IOException {
         return MyCatMemoryAllocator.getINSTANCE().directBuffer(length).nioBuffer(0, length);
     }
 
-    @Override public void endWrite(ByteBuffer buffer) throws IOException {
+    @Override
+    public void endWrite(ByteBuffer buffer) throws IOException {
         this.putBytes(buffer);
     }
 
-    @Override public byte getByte(int index) throws IOException {
+    @Override
+    public byte getByte(int index) throws IOException {
         final ByteBuffer byteBuffer = this.byteBuffer;
         return byteBuffer.get(index);
     }
 
-    @Override public ByteBuffer getBytes(int index, int length) throws IOException {
+    @Override
+    public ByteBuffer getBytes(int index, int length) throws IOException {
         final ByteBuffer byteBuffer = this.byteBuffer;
         int oldPos = byteBuffer.position();
         int oldLimit = byteBuffer.limit();
@@ -83,7 +92,8 @@ public class DirectConDataBuffer implements ConDataBuffer {
         return newBuff;
     }
 
-    @Override public int transferTo(SocketChannel socketChanel) throws IOException {
+    @Override
+    public int transferTo(SocketChannel socketChanel) throws IOException {
         final ByteBuffer byteBuffer = this.byteBuffer;
         prepareToRead();
         int writed = socketChanel.write(byteBuffer);
@@ -97,31 +107,38 @@ public class DirectConDataBuffer implements ConDataBuffer {
     }
 
 
-    @Override public int writingPos() throws IOException {
+    @Override
+    public int writingPos() throws IOException {
         return writePos;
     }
 
-    @Override public int readPos() {
+    @Override
+    public int readPos() {
         return readPos;
     }
 
-    @Override public int totalSize() {
+    @Override
+    public int totalSize() {
         return totalSize;
     }
 
-    @Override public void setWritingPos(int writingPos) throws IOException {
+    @Override
+    public void setWritingPos(int writingPos) throws IOException {
         this.writePos = writingPos;
     }
 
-    @Override public void setReadingPos(int readingPos) {
+    @Override
+    public void setReadingPos(int readingPos) {
         this.readPos = readingPos;
     }
 
-    @Override public boolean isFull() throws IOException {
+    @Override
+    public boolean isFull() throws IOException {
         return writePos == totalSize;
     }
 
-    @Override public void recycle() {
+    @Override
+    public void recycle() {
 
     }
 }
