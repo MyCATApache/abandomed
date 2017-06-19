@@ -5,6 +5,7 @@ import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.backend.callback.BackendComQueryResponseCallback;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.packet.MySQLPacket;
+import io.mycat.net2.ConDataBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,14 +29,23 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
     protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in ComQueryResponseState");
         byte packageType = mySQLFrontConnection.getCurrentPacketType();
-        if(packageType !=  MySQLPacket.ERROR_PACKET){
+        if (packageType != MySQLPacket.ERROR_PACKET) {
             mySQLFrontConnection.setNextState(ComQueryColumnDefState.INSTANCE);
         } else {
-            //TODO 透传结束
+            ConDataBuffer writeBuffer = mySQLFrontConnection.getWriteDataBuffer();
+            mySQLFrontConnection.setWriteDataBuffer(mySQLFrontConnection.getShareBuffer());
+            mySQLFrontConnection.setNextState(IdleState.INSTANCE);
+            mySQLFrontConnection.setWriteCompleteListener(() -> {
+                mySQLFrontConnection.setCurrentPacketStartPos(0);
+                mySQLFrontConnection.getWriteDataBuffer().clear();
+                mySQLFrontConnection.getReadDataBuffer().clear();
+                mySQLFrontConnection.setWriteDataBuffer(writeBuffer);
+            });
+            mySQLFrontConnection.enableWrite(true);
         }
-
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
         LOGGER.debug("Backend in ComQueryResponseState");
@@ -47,13 +57,7 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
                     mySQLBackendConnection.getCurrentPacketStartPos(),
                     mySQLBackendConnection.getCurrentPacketLength()
             );
-            MySQLFrontConnection mySQLFrontConnection = mySQLBackendConnection.getMySQLFrontConnection();
-            mySQLFrontConnection.setWriteDataBuffer(mySQLBackendConnection.getReadDataBuffer());
-            mySQLFrontConnection.setDirectTransferParams(
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketLength());
-            mySQLFrontConnection.driveState(attachment);
+            mySQLBackendConnection.getMySQLFrontConnection().driveState(attachment);
         } catch (IOException e) {
             LOGGER.warn("Backend ComQueryResponseState error", e);
             mySQLBackendConnection.changeState(CloseState.INSTANCE, "program error");

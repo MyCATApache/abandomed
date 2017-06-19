@@ -1,6 +1,7 @@
 package io.mycat.backend.callback;
 
 import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.mysql.state.ComQueryRowState;
 import io.mycat.net2.ConDataBuffer;
@@ -13,11 +14,20 @@ public class BackendComQueryColumnDefCallback extends ResponseCallbackAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(BackendComQueryColumnDefCallback.class);
 
     @Override
-    public void handleResponse(MySQLBackendConnection conn, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
+    public void handleResponse(MySQLBackendConnection mySQLBackendConnection, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
+        MySQLFrontConnection mySQLFrontConnection = mySQLBackendConnection.getMySQLFrontConnection();
         if(packageType ==  MySQLPacket.EOF_PACKET){
-            conn.setNextState(ComQueryRowState.INSTANCE);
+            mySQLBackendConnection.setNextState(ComQueryRowState.INSTANCE);
+            mySQLFrontConnection.setDirectTransferParams(
+                    mySQLBackendConnection.getCurrentPacketType(),
+                    mySQLBackendConnection.getCurrentPacketType(),
+                    mySQLBackendConnection.getCurrentPacketLength());
         } else {
-            //TODO 透传结束
+            mySQLFrontConnection.setWriteDataBuffer(mySQLBackendConnection.getReadDataBuffer());
+            mySQLFrontConnection.setDirectTransferParams(
+                    mySQLBackendConnection.getCurrentPacketType(),
+                    mySQLBackendConnection.getCurrentPacketType(),
+                    mySQLBackendConnection.getCurrentPacketLength());
         }
     }
 }

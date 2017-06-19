@@ -28,13 +28,12 @@ public class ComQueryColumnDefState extends AbstractMysqlConnectionState {
     protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in ComQueryColumnDefState");
         byte packageType = mySQLFrontConnection.getCurrentPacketType();
-        if(packageType ==  MySQLPacket.EOF_PACKET){
+        if (packageType == MySQLPacket.EOF_PACKET) {
             mySQLFrontConnection.setNextState(ComQueryRowState.INSTANCE);
-        } else {
-            //TODO 透传结束
         }
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
         LOGGER.debug("Backend in ComQueryColumnDefState");
@@ -46,13 +45,7 @@ public class ComQueryColumnDefState extends AbstractMysqlConnectionState {
                     mySQLBackendConnection.getCurrentPacketStartPos(),
                     mySQLBackendConnection.getCurrentPacketLength()
             );
-            MySQLFrontConnection mySQLFrontConnection = mySQLBackendConnection.getMySQLFrontConnection();
-            mySQLFrontConnection.setWriteDataBuffer(mySQLBackendConnection.getReadDataBuffer());
-            mySQLFrontConnection.setDirectTransferParams(
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketLength());
-            mySQLFrontConnection.driveState(attachment);
+            mySQLBackendConnection.getMySQLFrontConnection().driveState(attachment);
         } catch (IOException e) {
             LOGGER.warn("Backend ComQueryColumnDefState error", e);
             mySQLBackendConnection.changeState(CloseState.INSTANCE, "program error");

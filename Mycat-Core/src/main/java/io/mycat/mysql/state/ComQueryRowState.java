@@ -38,15 +38,17 @@ public class ComQueryRowState extends AbstractMysqlConnectionState {
             mySQLFrontConnection.enableWrite(true);
             mySQLFrontConnection.setWriteCompleteListener(() -> {
                 mySQLFrontConnection.clearCurrentPacket();
+                mySQLFrontConnection.setDirectTransferMode(false);
                 mySQLFrontConnection.getWriteDataBuffer().clear();
+                mySQLFrontConnection.getReadDataBuffer().clear();
                 mySQLFrontConnection.setWriteDataBuffer(writeBuffer);
+                mySQLFrontConnection.clearCurrentPacket();
                 mySQLFrontConnection.setNextState(IdleState.INSTANCE);
             });
-        } else {
-            //TODO 透传结束
         }
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
         LOGGER.debug("Backend in ComQueryRowState");
@@ -58,14 +60,7 @@ public class ComQueryRowState extends AbstractMysqlConnectionState {
                     mySQLBackendConnection.getCurrentPacketStartPos(),
                     mySQLBackendConnection.getCurrentPacketLength()
             );
-            MySQLFrontConnection mySQLFrontConnection = mySQLBackendConnection.getMySQLFrontConnection();
-            mySQLFrontConnection.setShareBuffer(mySQLBackendConnection.getReadDataBuffer());
-            mySQLFrontConnection.setDirectTransferParams(
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketLength());
-            mySQLBackendConnection.clearCurrentPacket();
-            mySQLFrontConnection.driveState(attachment);
+            mySQLBackendConnection.getMySQLFrontConnection().driveState(attachment);
         } catch (IOException e) {
             LOGGER.warn("frontend ComQueryRowState error", e);
             mySQLBackendConnection.changeState(CloseState.INSTANCE, "program error");

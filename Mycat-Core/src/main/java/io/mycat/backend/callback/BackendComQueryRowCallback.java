@@ -15,12 +15,25 @@ public class BackendComQueryRowCallback extends ResponseCallbackAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(BackendComQueryRowCallback.class);
 
     @Override
-    public void handleResponse(MySQLBackendConnection conn, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
+    public void handleResponse(MySQLBackendConnection mySQLBackendConnection, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
+        MySQLFrontConnection mySQLFrontConnection = mySQLBackendConnection.getMySQLFrontConnection();
         if (packageType == MySQLPacket.EOF_PACKET) {
             LOGGER.debug("backend com query response complete change to idle state");
-            conn.setNextState(IdleState.INSTANCE);
+            mySQLFrontConnection.setShareBuffer(mySQLBackendConnection.getReadDataBuffer());
+            mySQLFrontConnection.setDirectTransferParams(
+                    mySQLBackendConnection.getCurrentPacketType(),
+                    mySQLBackendConnection.getCurrentPacketType(),
+                    mySQLBackendConnection.getCurrentPacketLength());
+
+            mySQLBackendConnection.setDirectTransferMode(false);
+            mySQLBackendConnection.clearCurrentPacket();
+            mySQLBackendConnection.getWriteDataBuffer().clear();
+            mySQLBackendConnection.setNextState(IdleState.INSTANCE);
         } else {
-            //TODO 透传结束
+            mySQLFrontConnection.setDirectTransferParams(
+                    mySQLBackendConnection.getCurrentPacketType(),
+                    mySQLBackendConnection.getCurrentPacketType(),
+                    mySQLBackendConnection.getCurrentPacketLength());
         }
     }
 }
