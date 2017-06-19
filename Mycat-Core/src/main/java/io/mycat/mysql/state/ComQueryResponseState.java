@@ -25,6 +25,7 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
     private ComQueryResponseState() {
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in ComQueryResponseState");
@@ -40,6 +41,16 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
                 mySQLFrontConnection.getWriteDataBuffer().clear();
                 mySQLFrontConnection.getReadDataBuffer().clear();
                 mySQLFrontConnection.setWriteDataBuffer(writeBuffer);
+            });
+            mySQLFrontConnection.enableWrite(true);
+        }
+
+        if (attachment != null && ((Boolean) attachment == true)) {
+            //表示后端后到的半包需要进行一次透传，压制后端的读，实现前后端流量匹配
+            mySQLFrontConnection.getBackendConnection().disableRead();
+            mySQLFrontConnection.setWriteCompleteListener(() -> {
+                //写完成后开启后端的读
+                mySQLFrontConnection.getBackendConnection().enableRead();
             });
             mySQLFrontConnection.enableWrite(true);
         }

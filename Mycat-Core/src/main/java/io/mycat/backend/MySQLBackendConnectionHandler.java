@@ -53,7 +53,6 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
         int length;
         int limit = dataBuffer.writingPos();
 
-        System.out.println();
         // 循环收到的报文处理
         while (true) {
             if (!MySQLConnection.validateHeader(offset, limit)) {
@@ -64,6 +63,7 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
                 //透传模式下遇到不完整的包，只要能读取出包类型就进行透传
                 if (con.isDirectTransferMode() &&
                         offset + MySQLConnection.msyql_packetHeaderSize <= limit) {
+                    LOGGER.debug("backend receive not whole packet!length={},offset={},limit={}", length, offset, limit);
                     byte packetType = dataBuffer.getByte(offset + MySQLConnection.msyql_packetHeaderSize);
                     int pkgStartPos = offset;
                     con.setCurrentPacketLength(length);
@@ -71,6 +71,7 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
                     con.setCurrentPacketType(packetType);
                     //传true表示，需要进行一次透传
                     con.driveState(true);
+                    break;
                 }
             } else {
                 //完整的包

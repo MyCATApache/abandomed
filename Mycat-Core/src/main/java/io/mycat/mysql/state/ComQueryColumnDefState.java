@@ -24,12 +24,23 @@ public class ComQueryColumnDefState extends AbstractMysqlConnectionState {
     private ComQueryColumnDefState() {
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in ComQueryColumnDefState");
         byte packageType = mySQLFrontConnection.getCurrentPacketType();
         if (packageType == MySQLPacket.EOF_PACKET) {
             mySQLFrontConnection.setNextState(ComQueryRowState.INSTANCE);
+        }
+
+        if (attachment != null && ((Boolean) attachment == true)) {
+            //表示后端后到的半包需要进行一次透传，压制后端的读，实现前后端流量匹配
+            mySQLFrontConnection.getBackendConnection().disableRead();
+            mySQLFrontConnection.setWriteCompleteListener(() -> {
+                //写完成后开启后端的读
+                mySQLFrontConnection.getBackendConnection().enableRead();
+            });
+            mySQLFrontConnection.enableWrite(true);
         }
     }
 
