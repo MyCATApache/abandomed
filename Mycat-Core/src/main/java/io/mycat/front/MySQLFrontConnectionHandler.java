@@ -25,6 +25,7 @@ package io.mycat.front;
 
 import java.io.IOException;
 
+import io.mycat.mysql.state.CloseState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,47 +65,30 @@ public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnect
     public void handleReadEvent(final MySQLFrontConnection cnxn) throws IOException {
         LOGGER.debug("handleReadEvent(): {}", cnxn);
         final ConDataBuffer buffer = cnxn.getReadDataBuffer();
-        int offset = buffer.readPos(), limit = buffer.writingPos();
-        // 读取到了包头和长度
-        // 是否讀完一個報文
-        for (; ; ) {
-            if (!MySQLConnection.validateHeader(offset, limit)) {
-                LOGGER.debug("C#{}B#{} validate protocol packet header: too short, ready to handle next the read event",
-                        cnxn.getId(), buffer.hashCode());
-                return;
-            }
-            int length = MySQLConnection.getPacketLength(buffer, offset);
-            if ((length + offset) > limit) {
-                LOGGER.debug("C#{}B#{} nNot a whole packet: required length = {} bytes, cur total length = {} bytes, "
-                        + "ready to handle the next read event", cnxn.getId(), buffer.hashCode(), length, limit);
-                return;
-            }
-            if (length == 4) {
-                // @todo handle empty packet
-            }
-            // 解析报文类型
-            final byte packetType = buffer.getByte(offset + MySQLConnection.msyql_packetHeaderSize);
-            final int pkgStartPos = offset;
-
-            final NetSystem nets = NetSystem.getInstance();
-            if (nets.getNetConfig().isTraceProtocol()) {
-                final String hexs = StringUtil.dumpAsHex(buffer, pkgStartPos, length);
-                LOGGER.info("C#{}B#{} received a packet: offset = {}, length = {}, type = {}, cur total length = {}, packet bytes\n{}",
-                        cnxn.getId(), buffer.hashCode(), pkgStartPos, length, packetType, limit, hexs);
-            }
-            cnxn.setCurrentPacketLength(length);
-            cnxn.setCurrentPacketStartPos(pkgStartPos);
-            cnxn.setCurrentPacketType(packetType);
-            cnxn.driveState();
-            offset += length;
-            buffer.setReadingPos(offset);
+        int offset = cnxn.getCurrentPacketStartPos();
+        int limit = buffer.writingPos();
+        int length = MySQLConnection.getPacketLength(buffer, offset);
+        final byte packetType = buffer.getByte(offset + MySQLConnection.msyql_packetHeaderSize);
+        final int pkgStartPos = offset;
+        final NetSystem nets = NetSystem.getInstance();
+        if (nets.getNetConfig().isTraceProtocol()) {
+            final String hexs = StringUtil.dumpAsHex(buffer, pkgStartPos, length);
+            LOGGER.info("C#{}B#{} received a packet: offset = {}, length = {}, type = {}, cur total length = {}, packet bytes\n{}",
+                    cnxn.getId(), buffer.hashCode(), pkgStartPos, length, packetType, limit, hexs);
         }
+        cnxn.setCurrentPacketLength(length);
+        cnxn.setCurrentPacketStartPos(pkgStartPos);
+        cnxn.setCurrentPacketType(packetType);
+        cnxn.driveState();
+        offset += length;
+//        buffer.setReadingPos(offset);
+        cnxn.setCurrentPacketStartPos(offset);
     }
 
     @Override
     public void onHandlerError(final MySQLFrontConnection con, final Exception e) {
         LOGGER.warn("onHandlerError(): connect = {}, error = {}", con, e);
-        con.close(e.toString());
+
     }
 
 }

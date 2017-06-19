@@ -2,6 +2,7 @@ package io.mycat.mysql.state;
 
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.front.MySQLFrontConnection;
+import io.mycat.net2.NetSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,17 +31,25 @@ public class ConnectingState extends AbstractMysqlConnectionState {
     protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in ConnectingState");
         try {
-            mySQLFrontConnection.sendAuthPackge();
             mySQLFrontConnection.setNextState(HandshakeState.INSTANCE);
-        } catch (IOException e) {
+            mySQLFrontConnection.sendAuthPackge();
+        } catch (Throwable e) {
             LOGGER.warn("frontend InitialState error", e);
             mySQLFrontConnection.changeState(CloseState.INSTANCE, "register error");
             throw new StateException(e);
         }
     }
 
+    /**
+     * 连接后端服务器
+     *
+     * @param mySQLBackendConnection
+     * @param attachment
+     */
     @Override
     protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
-
+        LOGGER.debug("Backend in ConnectingState");
+        mySQLBackendConnection.setNextState(HandshakeState.INSTANCE);
+        NetSystem.getInstance().getConnector().postConnect(mySQLBackendConnection);
     }
 }

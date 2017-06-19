@@ -48,22 +48,21 @@ public class DirectTransTofrontCallBack  implements BackConnectionCallback{
 	@Override
 	public void handleResponse(MySQLBackendConnection source, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos,
 			int pkgLen) throws IOException {
-		 LOGGER.debug("Direct Trans To front CallBack."+source);
-	        MySQLFrontConnection frontCon=getFrontCon(source);
-	        frontCon.getWriteDataBuffer().putBytes(dataBuffer.getBytes(pkgStartPos, pkgLen));
-        	frontCon.enableWrite(false);
-	        source.setNextStatus(packageType);
-	       
-	        if (source.getState()== Connection.STATE_IDLE)
-	        {
-	        	LOGGER.debug("realese bakend connedtion "+source);
-	        	source.release();
-	        }
-		
+//		 LOGGER.debug("Direct Trans To front CallBack."+source);
+//	        MySQLFrontConnection frontCon=getFrontCon(source);
+//	        frontCon.getWriteDataBuffer().putBytes(dataBuffer.getBytes(pkgStartPos, pkgLen));
+//        	frontCon.enableWrite(false);
+//	        source.setNextStatus(packageType);
+//
+//	        if (source.getState()== Connection.STATE_IDLE)
+//	        {
+//	        	LOGGER.debug("realese bakend connedtion "+source);
+//	        	source.release();
+//	        }
 	}
 	private MySQLFrontConnection getFrontCon(MySQLBackendConnection source)
 	{
-		return (MySQLFrontConnection) source.getAttachement();
+		return source.getMySQLFrontConnection();
 	}
 
 	@Override
@@ -75,7 +74,7 @@ public class DirectTransTofrontCallBack  implements BackConnectionCallback{
 	public void connectionAcquired(MySQLBackendConnection conn) {
 		LOGGER.info("connection acquired "+conn);
 		//执行异步任务（如果有，比如發送SQL語句給後端）
-		getFrontCon(conn).executePendingTask();
+//		getFrontCon(conn).executePendingTask();
 		
 	}
 	@Override

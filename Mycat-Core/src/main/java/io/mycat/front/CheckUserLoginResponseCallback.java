@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import io.mycat.mysql.state.CloseState;
+import io.mycat.mysql.state.IdleState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,21 +82,26 @@ public class CheckUserLoginResponseCallback implements SQLCommandHandler {
             final String errmsg = "Unknown charsetIndex:" + charsetIndex;
             LOGGER.warn(errmsg);
             con.writeErrMessage(ErrorCode.ER_UNKNOWN_CHARACTER_SET, errmsg);
+            con.setNextState(CloseState.INSTANCE);
             return;
         }
         LOGGER.debug("charset = {}, charsetIndex = {}", charset, charsetIndex);
         con.setCharset(charsetIndex, charset);
 
-        //认证成功后，修改changeCmdHandler，由CheckUserLoginResponseCallback改用
-        // AbstractSchemaSQLCommandHandler处理
         if (!con.setFrontSchema(auth.database)) {
             final String errmsg = "No Mycat Schema defined: " + auth.database;
             LOGGER.debug(errmsg);
             con.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, errmsg);
+            con.setNextState(CloseState.INSTANCE);
         } else {
+            con.clearCurrentPacket();
             con.write(AUTH_OK);
+            con.setWriteCompleteListener(() -> {
+                con.getReadDataBuffer().clear();
+                con.getWriteDataBuffer().clear();
+                con.clearCurrentPacket();
+                con.setNextState(IdleState.INSTANCE);
+            });
         }
-        con.setState(Connection.STATE_IDLE);
-
     }
 }

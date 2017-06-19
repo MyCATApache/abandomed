@@ -152,6 +152,12 @@ public class MappedFileConDataBuffer3 implements ConDataBuffer {
 			 
 		}
 	}
+
+	@Override
+	public void clear() {
+
+	}
+
 	@Override
 	public byte getByte(int index) throws IOException {
 		return unsafe.getByte(index + addr);

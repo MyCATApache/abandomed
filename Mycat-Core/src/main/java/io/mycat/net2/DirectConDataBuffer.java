@@ -31,7 +31,9 @@ public class DirectConDataBuffer implements ConDataBuffer {
         byteBuffer.position(writePos);
         byteBuffer.limit(totalSize);
         int readed = socketChanel.read(byteBuffer);
-        writePos += readed;
+        if (readed != -1) {
+            writePos += readed;
+        }
         return readed;
     }
 
@@ -85,7 +87,7 @@ public class DirectConDataBuffer implements ConDataBuffer {
         int oldPos = byteBuffer.position();
         int oldLimit = byteBuffer.limit();
         byteBuffer.position(index);
-        byteBuffer.limit(length);
+        byteBuffer.limit(index + length);
         ByteBuffer newBuff = byteBuffer.slice();
         byteBuffer.position(oldPos);
         byteBuffer.limit(oldLimit);
@@ -140,5 +142,12 @@ public class DirectConDataBuffer implements ConDataBuffer {
     @Override
     public void recycle() {
 
+    }
+
+    @Override
+    public void clear() {
+        byteBuffer.clear();
+        writePos = 0;
+        readPos = 0;
     }
 }

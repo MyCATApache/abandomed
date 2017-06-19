@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
+import io.mycat.backend.WriteCompleteListener;
 import io.mycat.mysql.state.InitialState;
 import io.mycat.mysql.state.MysqlConnectionState;
 import org.slf4j.Logger;
@@ -47,15 +48,9 @@ import io.mycat.util.RandomUtil;
 public class MySQLConnection extends Connection implements StatefulConnection {
     protected final static Logger LOGGER = LoggerFactory.getLogger(MySQLConnection.class);
 
-    public static final int CMD_QUERY_STATUS = 11;
-    public static final int RESULT_WAIT_STATUS = 21;
-    public static final int RESULT_INIT_STATUS = 22;
-    public static final int RESULT_FETCH_STATUS = 23;
-    public static final int RESULT_HEADER_STATUS = 24;
-    public static final int RESULT_FAIL_STATUS = 29;
-
     private MysqlConnectionState state;
     private MysqlConnectionState nextState;
+    private boolean directTransferMode;
 
     public final static int msyql_packetHeaderSize = 4;
 
@@ -68,6 +63,8 @@ public class MySQLConnection extends Connection implements StatefulConnection {
     protected String charset;
     protected int charsetIndex;
     protected byte[] seed;
+    private WriteCompleteListener writeCompleteListener;
+    private ConDataBuffer shareBuffer;
 
     public MySQLConnection(SocketChannel channel) {
         super(channel);
@@ -226,6 +223,15 @@ public class MySQLConnection extends Connection implements StatefulConnection {
         this.currentPacketStartPos = currentPacketStartPos;
     }
 
+    /**
+     * 清除关于当前包的记录状态
+     */
+    public void clearCurrentPacket() {
+        this.currentPacketLength = 0;
+        this.currentPacketType = 0;
+        this.currentPacketStartPos = 0;
+    }
+
     @Override
     public void changeState(MysqlConnectionState state, Object attachment) {
         this.state = state;
@@ -241,6 +247,7 @@ public class MySQLConnection extends Connection implements StatefulConnection {
     public void driveState(Object attachment) {
         if (this.nextState != null) {
             this.state = nextState;
+            this.nextState = null;
         }
         this.state.handle(this, attachment);
     }
@@ -255,7 +262,42 @@ public class MySQLConnection extends Connection implements StatefulConnection {
         return state;
     }
 
+    public void setDirectTransferParams(byte packetType, int packetPos, int packetLength) throws IOException {
+        this.directTransferMode = true;
+        this.currentPacketType = packetType;
+        this.currentPacketStartPos = packetPos;
+        this.currentPacketLength = packetLength;
+    }
 
+    public boolean isDirectTransferMode() {
+        return directTransferMode;
+    }
 
+    public void setDirectTransferMode(boolean directTransferMode) {
+        this.directTransferMode = directTransferMode;
+    }
 
+    @Override
+    protected boolean write0() throws IOException {
+        boolean isComplete = super.write0();
+        if (isComplete) {
+            if (this.writeCompleteListener != null) {
+                this.writeCompleteListener.wirteComplete();
+                this.writeCompleteListener = null;
+            }
+        }
+        return isComplete;
+    }
+
+    public void setWriteCompleteListener(WriteCompleteListener writeCompleteListener) {
+        this.writeCompleteListener = writeCompleteListener;
+    }
+
+    public ConDataBuffer getShareBuffer() {
+        return shareBuffer;
+    }
+
+    public void setShareBuffer(ConDataBuffer shareBuffer) {
+        this.shareBuffer = shareBuffer;
+    }
 }

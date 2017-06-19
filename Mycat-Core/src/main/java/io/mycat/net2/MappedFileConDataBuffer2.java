@@ -138,6 +138,12 @@ public class MappedFileConDataBuffer2 implements ConDataBuffer {
 			 
 		}
 	}
+
+	@Override
+	public void clear() {
+
+	}
+
 	@Override
 	public byte getByte(int index) throws IOException {
 		ByteBuffer dst=ByteBuffer.allocate(1);

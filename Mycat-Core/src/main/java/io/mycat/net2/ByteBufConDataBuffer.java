@@ -123,6 +123,11 @@ public class ByteBufConDataBuffer implements ConDataBuffer {
         //buffer.release();
     }
 
+    @Override
+    public void clear() {
+
+    }
+
     public ByteBuf getBuffer() {
         return buffer;
     }

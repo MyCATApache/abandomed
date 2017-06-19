@@ -1,6 +1,5 @@
 package io.mycat.net2;
 
-import io.mycat.mysql.StatefulConnection;
 import io.mycat.util.StringUtil;
 
 import java.io.IOException;
@@ -26,7 +25,6 @@ public abstract class Connection implements ClosableConnection {
     protected int localPort;
     protected long id;
     private String reactor;
-    private Object attachement;
     private int state = STATE_CONNECTING;
 
 
@@ -239,9 +237,6 @@ public abstract class Connection implements ClosableConnection {
                 if ((processKey.isValid()
                         && (processKey.interestOps() & SelectionKey.OP_WRITE) != 0)) {
                     disableWrite();
-                    if (this instanceof StatefulConnection) {
-                        ((StatefulConnection) this).driveState();
-                    }
                 }
             } else {
 
@@ -250,7 +245,6 @@ public abstract class Connection implements ClosableConnection {
                     enableWrite(false);
                 }
             }
-
         } catch (IOException e) {
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("caught err:", e);
@@ -267,7 +261,7 @@ public abstract class Connection implements ClosableConnection {
 
     }
 
-    private boolean write0() throws IOException {
+    protected boolean write0() throws IOException {
         final NetSystem nets = NetSystem.getInstance();
         final ConDataBuffer buffer = this.writeDataBuffer;
         final int written = buffer.transferTo(this.channel);
@@ -308,14 +302,6 @@ public abstract class Connection implements ClosableConnection {
         if (needWakeup && wakeup) {
             processKey.selector().wakeup();
         }
-    }
-
-    public Object getAttachement() {
-        return attachement;
-    }
-
-    public void setAttachement(Object attachement) {
-        this.attachement = attachement;
     }
 
     public void disableRead() {
@@ -447,4 +433,11 @@ public abstract class Connection implements ClosableConnection {
         return reactor.equals(reacotr);
     }
 
+    public void setReadDataBuffer(ConDataBuffer readDataBuffer) {
+        this.readDataBuffer = readDataBuffer;
+    }
+
+    public void setWriteDataBuffer(ConDataBuffer writeDataBuffer) {
+        this.writeDataBuffer = writeDataBuffer;
+    }
 }

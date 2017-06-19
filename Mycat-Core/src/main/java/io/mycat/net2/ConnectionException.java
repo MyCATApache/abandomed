@@ -1,9 +1,6 @@
 package io.mycat.net2;
 
 public class ConnectionException extends RuntimeException {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private final int code;
 	private final String msg;

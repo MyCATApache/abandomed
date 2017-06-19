@@ -130,6 +130,12 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 			 
 		}
 	}
+
+	@Override
+	public void clear() {
+
+	}
+
 	@Override
 	public byte getByte(int index) {
 		return mapBuf.get(index);

@@ -86,5 +86,7 @@ public interface ConDataBuffer {
 	public boolean isFull() throws IOException;
 	
 	public void recycle();
+
+	public void clear();
 	
 }

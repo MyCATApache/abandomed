@@ -42,7 +42,6 @@ public class ConMap {
     }
 
     private MySQLBackendConnection tryTakeCon(String reacotr,ConQueue queue, boolean autoCommit) {
-
     	MySQLBackendConnection con = null;
         if (queue != null && ((con = queue.takeIdleCon(autoCommit)) != null) && ((Connection)con).belongsActor(reacotr)) {
             return con;
@@ -73,7 +72,6 @@ public class ConMap {
     }
 
     public int getActiveCountForDs(MySQLDataSource dataSouce) {
-
         int total = 0;
         for (Connection conn : NetSystem.getInstance().getAllConnectios().values()) {
             if (conn instanceof MySQLBackendConnection) {
@@ -90,7 +88,6 @@ public class ConMap {
     }
 
     public void clearConnections(String reason, MySQLDataSource dataSouce) {
-
         Iterator<Entry<Long, Connection>> itor = NetSystem.getInstance().getAllConnectios().entrySet().iterator();
         while (itor.hasNext()) {
             Entry<Long, Connection> entry = itor.next();
@@ -101,7 +98,6 @@ public class ConMap {
                     itor.remove();
                 }
             }
-
         }
         items.clear();
     }

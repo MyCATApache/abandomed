@@ -53,8 +53,6 @@ public class UserSession {
         if (this.backConLst.remove(con)) {
             LOGGER.warn("remove back con ,but not found ! " + this);
         }
-
-
     }
 
     public void addBackCon(MySQLBackendConnection con) {

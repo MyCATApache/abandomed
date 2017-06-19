@@ -28,6 +28,7 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 
 import io.mycat.SQLEngineCtx;
+import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.beans.SchemaBean;
 import io.mycat.engine.NoneBlockTask;
 import io.mycat.engine.UserSession;
@@ -42,6 +43,7 @@ import io.mycat.mysql.packet.MySQLPacket;
 public class MySQLFrontConnection extends MySQLConnection {
     private final UserSession session;
     private SchemaBean mycatSchema;
+    private MySQLBackendConnection backendConnection;
     private final ArrayList<NoneBlockTask> todoTasks = new ArrayList<NoneBlockTask>(2);
 
     public MySQLFrontConnection(SocketChannel channel) {
@@ -56,8 +58,10 @@ public class MySQLFrontConnection extends MySQLConnection {
      * @throws IOException
      */
     public boolean setFrontSchema(String schema) throws IOException {
+        //TODO 此处应该重新实现
         SchemaBean mycatSchema = null;
         if (schema != null) {
+
             mycatSchema = SQLEngineCtx.INSTANCE().getMycatSchema(schema);
             if (mycatSchema == null) {
 
@@ -65,65 +69,15 @@ public class MySQLFrontConnection extends MySQLConnection {
             }
             this.mycatSchema = mycatSchema;
             if (!mycatSchema.isNormalSchema()) {
-                this.session
-                    .changeCmdHandler(SQLEngineCtx.INSTANCE().getPartionSchemaSQLCmdHandler());
+                this.session.changeCmdHandler(SQLEngineCtx.INSTANCE().getPartionSchemaSQLCmdHandler());
             } else {
                 session.changeCmdHandler(SQLEngineCtx.INSTANCE().getNomalSchemaSQLCmdHandler());
             }
-
             return true;
-
         } else {
             // 默认设置为不分片的SQL处理器
             session.changeCmdHandler(SQLEngineCtx.INSTANCE().getNomalSchemaSQLCmdHandler());
             return true;
-        }
-
-
-    }
-
-    public void setNextStatus(byte packetType) {
-        if (packetType == MySQLPacket.COM_QUIT) {
-            this.setState(STATE_CLOSING);
-        }
-        int status = this.getState();
-        switch (status) {
-            case STATE_IDLE:
-                if (packetType == MySQLPacket.COM_QUERY) {
-                    this.setState(CMD_QUERY_STATUS);
-                } else if (packetType == MySQLPacket.COM_QUIT) {
-                    this.setState(STATE_CLOSING);
-                }
-                break;
-            case CMD_QUERY_STATUS:
-                if (packetType == MySQLPacket.OK_PACKET) {
-                    this.setState(RESULT_INIT_STATUS);
-                } else if (packetType == MySQLPacket.ERROR_PACKET) {
-                    this.setState(STATE_IDLE);
-                }
-                break;
-            case RESULT_INIT_STATUS:
-                if (packetType == MySQLPacket.OK_PACKET) {
-                    this.setState(RESULT_FETCH_STATUS);
-                } else if (packetType == MySQLPacket.ERROR_PACKET) {
-                    this.setState(RESULT_FAIL_STATUS);
-                }
-                break;
-            case RESULT_FETCH_STATUS:
-                if (packetType == MySQLPacket.EOF_PACKET) {
-                    this.setState(STATE_IDLE);
-                } else if (packetType == MySQLPacket.ERROR_PACKET) {
-                    this.setState(RESULT_FAIL_STATUS);
-                }
-                break;
-            case RESULT_FAIL_STATUS:
-                if (packetType == MySQLPacket.EOF_PACKET) {
-                    this.setState(STATE_IDLE);
-                }
-                break;
-            default:
-                LOGGER.warn("Error connected status.", status);
-                break;
         }
     }
 
@@ -156,4 +110,11 @@ public class MySQLFrontConnection extends MySQLConnection {
         this.mycatSchema = mycatSchema;
     }
 
+    public MySQLBackendConnection getBackendConnection() {
+        return backendConnection;
+    }
+
+    public void setBackendConnection(MySQLBackendConnection backendConnection) {
+        this.backendConnection = backendConnection;
+    }
 }

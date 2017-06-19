@@ -32,8 +32,15 @@ public class InitialState extends AbstractMysqlConnectionState {
         mySQLFrontConnection.changeState(ConnectingState.INSTANCE, attachment);
     }
 
+    /**
+     * 后端连接在初始状态下不做任何动作，转到至连接中状态
+     *
+     * @param mySQLBackendConnection
+     * @param attachment
+     */
     @Override
     protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
-
+        LOGGER.debug("Backend in ConnectingState");
+        mySQLBackendConnection.changeState(ConnectingState.INSTANCE, attachment);
     }
 }

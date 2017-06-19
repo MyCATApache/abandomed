@@ -40,10 +40,9 @@ public final class NIOReactor {
 
     public void ensureInActorThread() {
         if (Thread.currentThread().getId() != reactorR.getId()) {
-            //System.out.println("thread "+Thread.currentThread().getId()+ ","+reactorR.getId());
             throw new RuntimeException(
-                "must called in actor thread ,connection.invokeLater(...) ,cur thread: " + Thread
-                    .currentThread().getName() + " should in thread: " + reactorR.getName());
+                    "must called in actor thread ,connection.invokeLater(...) ,cur thread: " + Thread
+                            .currentThread().getName() + " should in thread: " + reactorR.getName());
         }
     }
 
@@ -71,7 +70,7 @@ public final class NIOReactor {
         private long reactCount;
         private final ReactorBufferPool myBufferPool;
         private java.util.concurrent.CopyOnWriteArrayList<Runnable> events =
-            new CopyOnWriteArrayList<Runnable>();
+                new CopyOnWriteArrayList<Runnable>();
 
         private RWThread(String name) throws IOException {
             this.setName(name);
@@ -80,7 +79,8 @@ public final class NIOReactor {
             this.registerQueue = new ConcurrentLinkedQueue<Connection>();
         }
 
-        @Override public void run() {
+        @Override
+        public void run() {
             final Selector selector = this.selector;
             Set<SelectionKey> keys = null;
             int readys = 0;
@@ -98,8 +98,8 @@ public final class NIOReactor {
                         try {
                             final Object att = key.attachment();
                             LOGGER
-                                .debug("select-key-readyOps = {}, attachment = {}", key.readyOps(),
-                                    att);
+                                    .debug("select-key-readyOps = {}, attachment = {}", key.readyOps(),
+                                            att);
                             if (att != null && key.isValid()) {
                                 con = (Connection) att;
                                 if (key.isReadable()) {
@@ -113,9 +113,6 @@ public final class NIOReactor {
                                         continue;
                                     }
                                 }
-                                // "key" may be cancelled in asynRead()!
-                                // @author little-pan
-                                // @since 2016-09-29
                                 if (key.isValid() == false) {
                                     LOGGER.debug("select-key cancelled");
                                     continue;
@@ -133,6 +130,7 @@ public final class NIOReactor {
                                 }
                             } else {
                                 LOGGER.warn(con + " " + e);
+                                e.printStackTrace();
                             }
 
                         }
@@ -184,7 +182,6 @@ public final class NIOReactor {
                     c.register(selector, myBufferPool);
                 } catch (Throwable e) {
                     LOGGER.warn("register error ", e);
-//                    c.close("register err");
                 }
             }
         }
