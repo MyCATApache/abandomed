@@ -65,6 +65,7 @@ public class MySQLBackendConnection extends MySQLConnection {
     private int charsetIndex;
 
     private MySQLDataSource datasource;
+    private int serverStatus;
 
     public MySQLBackendConnection(MySQLDataSource datasource, SocketChannel channel) {
         super(channel);
@@ -207,5 +208,13 @@ public class MySQLBackendConnection extends MySQLConnection {
 
     public void setMySQLFrontConnection(MySQLFrontConnection mySQLFrontConnection) {
         this.mySQLFrontConnection = mySQLFrontConnection;
+    }
+
+    public int getServerStatus() {
+        return serverStatus;
+    }
+
+    public void setServerStatus(int serverStatus) {
+        this.serverStatus = serverStatus;
     }
 }

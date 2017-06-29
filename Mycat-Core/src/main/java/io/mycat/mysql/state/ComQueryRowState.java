@@ -6,6 +6,8 @@ import io.mycat.backend.callback.BackendComQueryCallback;
 import io.mycat.backend.callback.BackendComQueryRowCallback;
 import io.mycat.engine.impl.FrontendComQueryCommandHandler;
 import io.mycat.front.MySQLFrontConnection;
+import io.mycat.mysql.ServerStatus;
+import io.mycat.mysql.packet.MySQLMessage;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.ConDataBuffer;
 import org.slf4j.Logger;
@@ -31,21 +33,33 @@ public class ComQueryRowState extends AbstractMysqlConnectionState {
     @Override
     protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in ComQueryRowState");
+        MySQLBackendConnection mySQLBackendConnection = mySQLFrontConnection.getBackendConnection();
         byte packageType = mySQLFrontConnection.getCurrentPacketType();
         if (packageType == MySQLPacket.EOF_PACKET) {
-            LOGGER.debug("frontend com query response complete change to idle state");
-            ConDataBuffer writeBuffer = mySQLFrontConnection.getWriteDataBuffer();
-            mySQLFrontConnection.setWriteDataBuffer(mySQLFrontConnection.getShareBuffer());
-            mySQLFrontConnection.enableWrite(true);
-            mySQLFrontConnection.setWriteCompleteListener(() -> {
-                mySQLFrontConnection.clearCurrentPacket();
-                mySQLFrontConnection.setDirectTransferMode(false);
-                mySQLFrontConnection.getWriteDataBuffer().clear();
-                mySQLFrontConnection.getReadDataBuffer().clear();
-                mySQLFrontConnection.setWriteDataBuffer(writeBuffer);
-                mySQLFrontConnection.clearCurrentPacket();
-                mySQLFrontConnection.setNextState(IdleState.INSTANCE);
-            });
+            if ((mySQLBackendConnection.getServerStatus() & ServerStatus.SERVER_MORE_RESULTS_EXISTS) == 0) {
+                LOGGER.debug("frontend com query response complete change to idle state");
+                ConDataBuffer writeBuffer = mySQLFrontConnection.getWriteDataBuffer();
+                mySQLFrontConnection.setWriteDataBuffer(mySQLFrontConnection.getShareBuffer());
+                mySQLFrontConnection.enableWrite(true);
+                mySQLFrontConnection.setWriteCompleteListener(() -> {
+                    mySQLFrontConnection.clearCurrentPacket();
+                    mySQLFrontConnection.setDirectTransferMode(false);
+                    mySQLFrontConnection.getWriteDataBuffer().clear();
+                    mySQLFrontConnection.getReadDataBuffer().clear();
+                    mySQLFrontConnection.setWriteDataBuffer(writeBuffer);
+                    mySQLFrontConnection.clearCurrentPacket();
+                    mySQLFrontConnection.setNextState(IdleState.INSTANCE);
+                });
+            } else {
+                LOGGER.debug("frontend com query response state have multi result");
+                mySQLFrontConnection.setNextState(ComQueryResponseState.INSTANCE);
+                mySQLFrontConnection.getBackendConnection().disableRead();
+                mySQLFrontConnection.setWriteCompleteListener(() -> {
+                    //写完成后开启后端的读
+                    mySQLFrontConnection.getBackendConnection().enableRead();
+                });
+                mySQLFrontConnection.enableWrite(true);
+            }
         }
 
         if (attachment != null && ((Boolean) attachment == true)) {

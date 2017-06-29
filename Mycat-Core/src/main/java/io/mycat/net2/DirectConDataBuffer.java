@@ -89,8 +89,8 @@ public class DirectConDataBuffer implements ConDataBuffer {
         byteBuffer.position(index);
         byteBuffer.limit(index + length);
         ByteBuffer newBuff = byteBuffer.slice();
-        byteBuffer.position(oldPos);
         byteBuffer.limit(oldLimit);
+        byteBuffer.position(oldPos);
         return newBuff;
     }
 

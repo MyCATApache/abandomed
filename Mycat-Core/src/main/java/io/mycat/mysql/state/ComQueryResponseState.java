@@ -30,9 +30,7 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
     protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in ComQueryResponseState");
         byte packageType = mySQLFrontConnection.getCurrentPacketType();
-        if (packageType != MySQLPacket.ERROR_PACKET) {
-            mySQLFrontConnection.setNextState(ComQueryColumnDefState.INSTANCE);
-        } else {
+        if(packageType == MySQLPacket.ERROR_PACKET || packageType == MySQLPacket.OK_PACKET){
             ConDataBuffer writeBuffer = mySQLFrontConnection.getWriteDataBuffer();
             mySQLFrontConnection.setWriteDataBuffer(mySQLFrontConnection.getShareBuffer());
             mySQLFrontConnection.setNextState(IdleState.INSTANCE);
@@ -43,6 +41,8 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
                 mySQLFrontConnection.setWriteDataBuffer(writeBuffer);
             });
             mySQLFrontConnection.enableWrite(true);
+        } else {
+            mySQLFrontConnection.setNextState(ComQueryColumnDefState.INSTANCE);
         }
 
         if (attachment != null && ((Boolean) attachment == true)) {
