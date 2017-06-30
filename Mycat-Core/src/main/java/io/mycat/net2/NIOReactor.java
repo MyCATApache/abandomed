@@ -104,6 +104,7 @@ public final class NIOReactor {
                                 con = (Connection) att;
                                 if (key.isReadable()) {
                                     try {
+                                        LOGGER.debug("select-key-read = {}",att);
                                         con.asynRead();
                                     } catch (Throwable e) {
                                         if (!(e instanceof java.io.IOException)) {
@@ -118,6 +119,7 @@ public final class NIOReactor {
                                     continue;
                                 }
                                 if (key.isWritable()) {
+                                    LOGGER.debug("select-key-write = {}",att);
                                     con.doWriteQueue();
                                 }
                             } else {

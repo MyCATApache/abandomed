@@ -19,6 +19,7 @@ public class BackendComQueryCallback extends ResponseCallbackAdapter {
         conn.setWriteCompleteListener(() -> {
             conn.setNextState(ComQueryResponseState.INSTANCE);
             conn.setWriteDataBuffer(writeBuffer);
+            conn.enableRead();
         });
 
     }
