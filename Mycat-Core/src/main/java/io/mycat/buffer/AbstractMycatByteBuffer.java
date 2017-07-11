@@ -80,7 +80,12 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
 
     @Override
     public int remaining() {
-        return readIndex - writeIndex;
+        return writeIndex - readIndex;
+    }
+
+    @Override
+    public int freeBytes() {
+        return capacity() - writeIndex;
     }
 
     @Override
@@ -130,11 +135,12 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     }
 
     @Override
-    public long readLenencInt(int index) {
+    public long readLenencInt() {
+        int index = readIndex;
         long len = getInt(index, 1) & 0xff;
         if (len < 251) {
             this.readIndex += 1;
-            return getInt(index + 1, 1);
+            return getInt(index, 1);
         } else if (len == 0xfc) {
             this.readIndex += 2;
             return getInt(index + 1, 2);
@@ -237,7 +243,7 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
             putFixInt(index + 1, 3, val);
         } else {
             putByte(index, (byte) 0xfe);
-            putFixInt(index, 8, val);
+            putFixInt(index + 1, 8, val);
         }
         return this;
     }

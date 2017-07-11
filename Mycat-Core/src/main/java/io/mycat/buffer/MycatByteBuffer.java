@@ -53,6 +53,13 @@ public interface MycatByteBuffer {
     int remaining();
 
     /**
+     * 获取可写的数据长度
+     *
+     * @return 可写长度
+     */
+    int freeBytes();
+
+    /**
      * 获取容量
      *
      * @return 容量
@@ -119,10 +126,9 @@ public interface MycatByteBuffer {
      * 从当前readIndex读取Protocol::LengthEncodedInteger，详见mysql协议
      * 影响readIndex
      *
-     * @param index 起始位置
      * @return 值
      */
-    long readLenencInt(int index);
+    long readLenencInt();
 
     /**
      * 读取Protocol::FixedLengthString，详见mysql协议

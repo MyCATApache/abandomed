@@ -3,15 +3,20 @@ package io.mycat.buffer;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.nio.ByteBuffer;
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * Created by ynfeng on 2017/7/7.
  */
 public class MycatByteBufferTest {
-    private MycatByteBufferAllocator allocator = new DirectFixBufferAllocator(100);
+    private static final int CHUNK_SIZE = 1024 * 1024 * 512;
+    private MycatByteBufferAllocator allocator = new DirectFixBufferAllocator(CHUNK_SIZE);
 
     @Test
     public void testIntReadWrite() {
         MycatByteBuffer buffer = allocator.allocate();
+        Assert.assertTrue(allocator.getChunkSize() == CHUNK_SIZE);
         //fix int test
         buffer.putFixInt(0, 1, 100);
         Assert.assertTrue(buffer.getFixInt(0, 1) == 100);
@@ -36,10 +41,30 @@ public class MycatByteBufferTest {
         Assert.assertTrue(buffer.writeIndex() == 0);
         buffer.clear();
 
+        buffer.putLenencInt(0, 1 << 17);
+        Assert.assertTrue(buffer.getLenencInt(0) == 1 << 17);
+        buffer.clear();
+
+        buffer.putLenencInt(0, 1 << 25);
+        Assert.assertTrue(buffer.getLenencInt(0) == 1 << 25);
+        buffer.clear();
+
+        buffer.writeLenencInt(1);
+        Assert.assertTrue(buffer.readLenencInt() == 1);
+        buffer.clear();
+
+        buffer.writeLenencInt(1 << 17);
+        Assert.assertTrue(buffer.readLenencInt() == 1 << 17);
+        buffer.clear();
+
+        buffer.writeLenencInt(1 << 25);
+        Assert.assertTrue(buffer.readLenencInt() == 1 << 25);
+        buffer.clear();
+
         buffer.writeLenencInt(2048);
         Assert.assertTrue(buffer.readIndex() == 0);
         Assert.assertTrue(buffer.writeIndex() == 3);
-        Assert.assertTrue(buffer.readLenencInt(0) == 2048);
+        Assert.assertTrue(buffer.readLenencInt() == 2048);
         Assert.assertTrue(buffer.readIndex() == 2);
         allocator.recyle(buffer);
     }
@@ -62,7 +87,7 @@ public class MycatByteBufferTest {
         buffer.clear();
 
         //Lenenc String test
-        buffer.putLenencString(0,"hello");
+        buffer.putLenencString(0, "hello");
         Assert.assertTrue(buffer.writeIndex() == 0);
         Assert.assertTrue(buffer.readIndex() == 0);
         Assert.assertTrue(buffer.getLenencString(0).equals("hello"));
@@ -76,10 +101,10 @@ public class MycatByteBufferTest {
         buffer.clear();
 
         //Var String test
-        buffer.putVarString(0,"hello");
+        buffer.putVarString(0, "hello");
         Assert.assertTrue(buffer.writeIndex() == 0);
         Assert.assertTrue(buffer.readIndex() == 0);
-        Assert.assertTrue(buffer.getVarString(0,5).equals("hello"));
+        Assert.assertTrue(buffer.getVarString(0, 5).equals("hello"));
         buffer.clear();
 
         buffer.writeVarString("hello");
@@ -91,12 +116,49 @@ public class MycatByteBufferTest {
 
 
         //NUL String test
-        buffer.putNULString(0,"hello");
+        buffer.putNULString(0, "hello");
         Assert.assertTrue(buffer.writeIndex() == 0);
         Assert.assertTrue(buffer.readIndex() == 0);
-        String s = buffer.getNULString(0);
         Assert.assertTrue(buffer.getNULString(0).equals("hello"));
+        buffer.clear();
+
+        buffer.writeNULString("hello");
+        Assert.assertTrue(buffer.remaining() == 6);
+        Assert.assertTrue(buffer.freeBytes() == CHUNK_SIZE - 6);
+        Assert.assertTrue((buffer.writeIndex() == 6));
+        Assert.assertTrue(buffer.readIndex() == 0);
+        Assert.assertTrue(buffer.readNULString().equals("hello"));
+        Assert.assertTrue(buffer.readIndex() == 6);
+        Assert.assertFalse(buffer.hasRemaining());
+        buffer.clear();
+
+        String str = randomString(1 << 17);
+        buffer.putLenencString(0,str);
+        Assert.assertTrue(buffer.getLenencString(0).equals(str));
+        buffer.clear();
+
+        str = randomString(1 << 25);
+        buffer.putLenencString(0,str);
+        Assert.assertTrue(buffer.getLenencString(0).equals(str));
+        buffer.clear();
+
+        str = randomString(1 << 15);
+        buffer.putLenencString(0,str);
+        Assert.assertTrue(buffer.getLenencString(0).equals(str));
         buffer.clear();
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void recyleExceptionTest(){
+        MycatByteBuffer buffer = new DirectFixBuffer(ByteBuffer.allocateDirect(10),10);
+        allocator.recyle(buffer);
+    }
+
+    private String randomString(int length){
+        byte[] bytes = new byte[length];
+        for (int i = 0; i < length; i++) {
+            bytes[i] = (byte) ThreadLocalRandom.current().nextInt(33,128);
+        }
+        return new String(bytes);
+    }
 }
