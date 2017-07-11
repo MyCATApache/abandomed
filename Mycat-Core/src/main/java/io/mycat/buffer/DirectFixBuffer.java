@@ -88,4 +88,8 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
         byteBuffer.position(index);
         byteBuffer.put(val);
     }
+
+    public ByteBuffer getByteBuffer(){
+       return byteBuffer;
+    }
 }
