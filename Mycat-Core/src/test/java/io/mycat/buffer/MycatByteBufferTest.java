@@ -189,6 +189,7 @@ public class MycatByteBufferTest {
         Assert.assertTrue(buffer.readIndex() == 0);
         Assert.assertTrue(buffer.writeIndex() == 5);
         Assert.assertTrue(buffer.readFixString(5).equals("world"));
+        Assert.assertTrue(buffer.remaining() == 0);
         allocator.recyle(buffer);
     }
 
