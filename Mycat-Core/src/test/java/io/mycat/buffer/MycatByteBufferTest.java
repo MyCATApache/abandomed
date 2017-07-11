@@ -153,6 +153,8 @@ public class MycatByteBufferTest {
         buffer.putLenencString(0, str);
         Assert.assertTrue(buffer.getLenencString(0).equals(str));
         buffer.clear();
+
+        allocator.recyle(buffer);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -175,6 +177,19 @@ public class MycatByteBufferTest {
         Assert.assertFalse(buffer.hasRemaining());
         Assert.assertTrue(buffer.readIndex() == CHUNK_SIZE);
         Assert.assertNotNull(((DirectFixBuffer)buffer).getByteBuffer());
+        allocator.recyle(buffer);
+    }
+
+    @Test
+    public void compactTest(){
+        MycatByteBuffer buffer = allocator.allocate();
+        buffer.writeFixString("hello world");
+        Assert.assertTrue(buffer.readFixString(6).equals("hello "));
+        buffer.compact();
+        Assert.assertTrue(buffer.readIndex() == 0);
+        Assert.assertTrue(buffer.writeIndex() == 5);
+        Assert.assertTrue(buffer.readFixString(5).equals("world"));
+        allocator.recyle(buffer);
     }
 
     private String randomString(int length) {

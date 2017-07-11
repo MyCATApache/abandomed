@@ -35,6 +35,16 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
     }
 
     @Override
+    public MycatByteBuffer compact() {
+        byteBuffer.position(readIndex());
+        byteBuffer.limit(writeIndex());
+        byteBuffer.compact();
+        writeIndex(writeIndex() - readIndex());
+        readIndex(0);
+        return this;
+    }
+
+    @Override
     public void clear() {
         byteBuffer.clear();
         writeIndex(0);
@@ -89,7 +99,7 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
         byteBuffer.put(val);
     }
 
-    public ByteBuffer getByteBuffer(){
-       return byteBuffer;
+    public ByteBuffer getByteBuffer() {
+        return byteBuffer;
     }
 }
