@@ -34,6 +34,18 @@ public interface MycatByteBuffer {
     int transferFromChannel(SocketChannel socketChannel) throws IOException;
 
     /**
+     * 在position做标记
+     *
+     * @return
+     */
+    void mark(int position);
+
+    /**
+     *  清除标记
+     */
+    void reset();
+
+    /**
      * 压缩空间
      *
      * @return 本身的实例

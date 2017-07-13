@@ -10,6 +10,7 @@ import java.nio.channels.SocketChannel;
 public class DirectFixBuffer extends AbstractMycatByteBuffer {
     private ByteBuffer byteBuffer;
     private int capacity;
+    private  int mark;
 
     protected DirectFixBuffer(ByteBuffer byteBuffer, int capacity) {
         this.byteBuffer = byteBuffer;
@@ -32,6 +33,16 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
         int read = socketChannel.read(byteBuffer);
         writeIndex(writeIndex() + read);
         return read;
+    }
+
+    @Override
+    public void mark(int position) {
+        this.mark = position;
+    }
+
+    @Override
+    public void reset() {
+        this.mark = 0;
     }
 
     @Override
