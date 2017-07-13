@@ -34,14 +34,14 @@ public interface MycatByteBuffer {
     int transferFromChannel(SocketChannel socketChannel) throws IOException;
 
     /**
-     * 在position做标记
+     * 在position位置做标记
      *
      * @return
      */
     void mark(int position);
 
     /**
-     *  清除标记
+     *  将readIndex复位至mark标记过的位置
      */
     void reset();
 

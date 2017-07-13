@@ -193,6 +193,14 @@ public class MycatByteBufferTest {
         allocator.recyle(buffer);
     }
 
+    @Test
+    public void markTest(){
+        MycatByteBuffer buffer = allocator.allocate();
+        buffer.mark(100);
+        buffer.reset();
+        Assert.assertTrue(buffer.readIndex() == 100);
+    }
+
     private String randomString(int length) {
         byte[] bytes = new byte[length];
         for (int i = 0; i < length; i++) {
