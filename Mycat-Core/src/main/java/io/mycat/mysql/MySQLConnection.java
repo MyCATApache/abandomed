@@ -27,30 +27,33 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
-import io.mycat.backend.WriteCompleteListener;
-import io.mycat.mysql.state.InitialState;
-import io.mycat.mysql.state.MysqlConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.mysql.packet.ErrorPacket;
 import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.mysql.packet.MySQLPacket;
+import io.mycat.mysql.state.InitialState;
+import io.mycat.mysql.state.MysqlConnectionState;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.Connection;
+import io.mycat.net2.states.WriteWaitingState;
 import io.mycat.util.RandomUtil;
-
 /**
- * Mysql connection
- *
+ * Mysql connection 
  * @author wuzhihui
+ *
  */
-public class MySQLConnection extends Connection implements StatefulConnection {
+public class MySQLConnection extends Connection implements StatefulConnection{
     protected final static Logger LOGGER = LoggerFactory.getLogger(MySQLConnection.class);
+    
+    public static int NORMAL = 0;            //正常非透传状态
+    public static int HALF_PACKET = 1;       //半包透传状态
+    public static int COMPLETE_PACKET = 2;   //整包透传状态
 
     private MysqlConnectionState state;
     private MysqlConnectionState nextState;
-    private boolean directTransferMode;
 
     public final static int msyql_packetHeaderSize = 4;
 
@@ -63,9 +66,8 @@ public class MySQLConnection extends Connection implements StatefulConnection {
     protected String charset;
     protected int charsetIndex;
     protected byte[] seed;
-    private WriteCompleteListener writeCompleteListener;
     private ConDataBuffer shareBuffer;
-
+    
     public MySQLConnection(SocketChannel channel) {
         super(channel);
         this.state = InitialState.INSTANCE;
@@ -77,7 +79,7 @@ public class MySQLConnection extends Connection implements StatefulConnection {
         // fixbug: can't pass when an empty packet comes, so we should exclude "mysql_packetTypeSize"
         // @author little-pan
         // @since 2016-09-29
-        return (position >= (offset + msyql_packetHeaderSize));
+        return (position > (offset + msyql_packetHeaderSize));
     }
 
     /**
@@ -156,23 +158,40 @@ public class MySQLConnection extends Connection implements StatefulConnection {
         }
     }
 
-
-    public void writeMsqlPackage(MySQLPacket pkg) throws IOException {
-        int pkgSize = pkg.calcPacketSize();
-        ByteBuffer buf = getWriteDataBuffer().beginWrite(pkgSize + MySQLPacket.packetHeaderSize);
-        pkg.write(buf, pkgSize);
-        getWriteDataBuffer().endWrite(buf);
-        this.enableWrite(true);
-    }
-
+    /**
+     * 发送mysql 报文时,直接发送报文.不再通过queue
+     * @param pkg
+     * @throws IOException
+     */
+	public void writeMsqlPackage(MySQLPacket pkg) throws IOException
+	{
+		int pkgSize = pkg.calcPacketSize();
+		byte[] data = new byte[pkgSize+3+1];
+		ByteBuffer buffer = ByteBuffer.allocate(pkgSize+3+1);
+        pkg.write(buffer, pkgSize);
+        buffer.flip();
+        buffer.get(data);
+        write(data);
+        buffer = null;
+	}
+	
     public void writeErrMessage(int errno, String info) throws IOException {
         ErrorPacket err = new ErrorPacket();
-        err.packetId = 1;
+        err.packetId = 2;
         err.errno = errno;
         err.message = info.getBytes();
-        this.writeMsqlPackage(err);
+       this.writeMsqlPackage(err);
     }
-
+    
+    public void writeErrMessage(int errno,byte[] sqlstate, String info) throws IOException {
+        ErrorPacket err = new ErrorPacket();
+        err.packetId = 2;
+        err.errno = errno;
+        err.message = info.getBytes();
+        err.sqlState = sqlstate;
+       this.writeMsqlPackage(err);
+    }
+    
     public String getUser() {
         return user;
     }
@@ -189,11 +208,10 @@ public class MySQLConnection extends Connection implements StatefulConnection {
         this.password = password;
     }
 
-
+   
     public String getCharset() {
-        return charset;
-    }
-
+		return charset;
+	}
     public void setCharset(int charsetIndex, String charsetName) {
         this.charsetIndex = charsetIndex;
         this.charset = charsetName;
@@ -222,13 +240,12 @@ public class MySQLConnection extends Connection implements StatefulConnection {
     public void setCurrentPacketStartPos(int currentPacketStartPos) {
         this.currentPacketStartPos = currentPacketStartPos;
     }
-
-    /**
+	/**
      * 清除关于当前包的记录状态
      */
     public void clearCurrentPacket() {
         this.currentPacketLength = 0;
-        this.currentPacketType = 0;
+        this.currentPacketType = MySQLPacket.COM_SLEEP;
         this.currentPacketStartPos = 0;
     }
 
@@ -262,42 +279,12 @@ public class MySQLConnection extends Connection implements StatefulConnection {
         return state;
     }
 
-    public void setDirectTransferParams(byte packetType, int packetPos, int packetLength) throws IOException {
-        this.directTransferMode = true;
-        this.currentPacketType = packetType;
-        this.currentPacketStartPos = packetPos;
-        this.currentPacketLength = packetLength;
-    }
+	public ConDataBuffer getShareBuffer() {
+		return shareBuffer;
+	}
 
-    public boolean isDirectTransferMode() {
-        return directTransferMode;
-    }
+	public void setShareBuffer(ConDataBuffer shareBuffer) {
+		this.shareBuffer = shareBuffer;
+	}
 
-    public void setDirectTransferMode(boolean directTransferMode) {
-        this.directTransferMode = directTransferMode;
-    }
-
-    @Override
-    protected boolean write0() throws IOException {
-        boolean isComplete = super.write0();
-        if (isComplete) {
-            if (this.writeCompleteListener != null) {
-                this.writeCompleteListener.wirteComplete();
-                this.writeCompleteListener = null;
-            }
-        }
-        return isComplete;
-    }
-
-    public void setWriteCompleteListener(WriteCompleteListener writeCompleteListener) {
-        this.writeCompleteListener = writeCompleteListener;
-    }
-
-    public ConDataBuffer getShareBuffer() {
-        return shareBuffer;
-    }
-
-    public void setShareBuffer(ConDataBuffer shareBuffer) {
-        this.shareBuffer = shareBuffer;
-    }
 }

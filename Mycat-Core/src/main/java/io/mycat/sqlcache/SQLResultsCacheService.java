@@ -13,6 +13,8 @@ import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.*;
 import io.mycat.net2.Connection;
+import io.mycat.net2.states.WriteWaitingState;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -181,8 +183,8 @@ public class SQLResultsCacheService {
              * 否则直接写到后端即可
              */
             command.arg = hintSQLInfo.getExecSQL().getBytes(existCon.getCharset());
-            existCon.getWriteDataBuffer().putBytes(command.write(existCon));
-            existCon.enableWrite(false);
+            LOGGER.debug(" here has bug , please fix it ");  //TODO existCon.getWriteDataBuffer().putBytes(command.write(existCon));
+            existCon.setNextConnState(WriteWaitingState.INSTANCE);
             /**设置后端连接池结果集处理handler,sqlResultCache缓存结果集类*/
             existCon.setUserCallback(new SQLResCacheHintHandler(hintSQLInfo, sqlResultCache));
         }

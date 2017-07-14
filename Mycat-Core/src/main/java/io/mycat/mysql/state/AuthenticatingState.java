@@ -36,7 +36,7 @@ public class AuthenticatingState extends AbstractMysqlConnectionState {
             LOGGER.debug("Frontend in AuthenticatingState");
             loginCmdHandler.processCmd(
                     mySQLFrontConnection,
-                    mySQLFrontConnection.getReadDataBuffer(),
+                    mySQLFrontConnection.getDataBuffer(),
                     mySQLFrontConnection.getCurrentPacketType(),
                     mySQLFrontConnection.getCurrentPacketStartPos(),
                     mySQLFrontConnection.getCurrentPacketLength()
@@ -60,7 +60,7 @@ public class AuthenticatingState extends AbstractMysqlConnectionState {
         try {
             authenticateRespCallback.handleResponse(
                     mySQLBackendConnection,
-                    mySQLBackendConnection.getReadDataBuffer(),
+                    mySQLBackendConnection.getDataBuffer(),
                     mySQLBackendConnection.getCurrentPacketType(),
                     mySQLBackendConnection.getCurrentPacketStartPos(),
                     mySQLBackendConnection.getCurrentPacketLength()

@@ -1,9 +1,12 @@
 package io.mycat.engine.impl;
 
 import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.state.ComQueryResponseState;
 import io.mycat.net2.ConDataBuffer;
+import io.mycat.net2.states.NoReadAndWriteState;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,14 +30,31 @@ public class FrontendComQueryCommandHandler extends AbstractComQueryCommandHandl
             backendConnection = getBackendFrontConnection(frontCon);
             MySQLBackendConnection finalBackendConnection = backendConnection;
             frontCon.addTodoTask(() -> {
+                
+                //开启透传模式
+                finalBackendConnection.setDirectTransferMode(TransferMode.COMPLETE_PACKET); //整包透传
+                finalBackendConnection.setCurrentPacketLength(frontCon.getCurrentPacketLength());
+                finalBackendConnection.setCurrentPacketStartPos(frontCon.getCurrentPacketStartPos());
+                finalBackendConnection.setCurrentPacketType(frontCon.getCurrentPacketType());
+
                 finalBackendConnection.setShareBuffer(dataBuffer);
-                finalBackendConnection.setDirectTransferParams(packageType, pkgStartPos, pkgLen);
+                finalBackendConnection.getShareBuffer().setLastWritePos(0);
+                finalBackendConnection.getShareBuffer().setReadPos(frontCon.getCurrentPacketLength());
                 finalBackendConnection.driveState();
             });
         } else {
+        	
+        	//开启透传模式
+        	backendConnection.setDirectTransferMode(TransferMode.COMPLETE_PACKET); //整包透传
+            backendConnection.setCurrentPacketLength(frontCon.getCurrentPacketLength());
+            backendConnection.setCurrentPacketStartPos(frontCon.getCurrentPacketStartPos());
+            backendConnection.setCurrentPacketType(frontCon.getCurrentPacketType());
+        	
             backendConnection.setShareBuffer(dataBuffer);
-            backendConnection.setDirectTransferParams(packageType, pkgStartPos, pkgLen);
+            backendConnection.getShareBuffer().setLastWritePos(0);
+            backendConnection.getShareBuffer().setReadPos(frontCon.getCurrentPacketLength());
             backendConnection.driveState();
         }
+        frontCon.setNextConnState(NoReadAndWriteState.INSTANCE);
     }
 }

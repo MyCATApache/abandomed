@@ -1,10 +1,12 @@
 package io.mycat.mysql.state;
 
 
-import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.front.MySQLFrontConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.front.MySQLFrontConnection;
+import io.mycat.net2.states.ClosingState;
 
 /**
  * 关闭状态
@@ -22,7 +24,7 @@ public class CloseState extends AbstractMysqlConnectionState {
     @Override
     protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in CloseState");
-        mySQLFrontConnection.close((String)attachment);
+        mySQLFrontConnection.setNextConnState(ClosingState.INSTANCE);
     }
 
     @Override

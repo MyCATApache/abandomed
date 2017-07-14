@@ -1,14 +1,13 @@
 package io.mycat.mysql.state;
 
 
-import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.backend.callback.HandshakeRespCallback;
-import io.mycat.front.CheckUserLoginResponseCallback;
-import io.mycat.front.MySQLFrontConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.backend.callback.HandshakeRespCallback;
+import io.mycat.front.MySQLFrontConnection;
+import io.mycat.net2.ConDataBuffer;
 
 /**
  * 握手状态
@@ -43,11 +42,11 @@ public class HandshakeState extends AbstractMysqlConnectionState {
      */
     @Override
     protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
-        LOGGER.debug("Backend in HandshakeState");
+    	LOGGER.debug("Backend in HandshakeState");
         try {
             handshakeRespCallback.handleResponse(
                     mySQLBackendConnection,
-                    mySQLBackendConnection.getReadDataBuffer(),
+                    mySQLBackendConnection.getDataBuffer(),
                     mySQLBackendConnection.getCurrentPacketType(),
                     mySQLBackendConnection.getCurrentPacketStartPos(),
                     mySQLBackendConnection.getCurrentPacketLength()

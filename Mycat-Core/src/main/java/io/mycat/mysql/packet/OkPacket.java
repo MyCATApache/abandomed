@@ -25,6 +25,7 @@ package io.mycat.mysql.packet;
 
 import java.nio.ByteBuffer;
 
+import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.NetSystem;
 import io.mycat.util.BufferUtil;
 
@@ -71,7 +72,7 @@ public class OkPacket extends MySQLPacket {
     // }
     // }
 
-    public void read(ByteBuffer buffer) {
+    public void read(ConDataBuffer buffer) {
         MySQLMessage mm = new MySQLMessage(buffer);
         packetLength = mm.readUB3();
         packetId = mm.read();

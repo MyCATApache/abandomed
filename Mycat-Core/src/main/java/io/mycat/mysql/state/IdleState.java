@@ -29,10 +29,12 @@ public class IdleState extends AbstractMysqlConnectionState {
                 LOGGER.debug("Frontend receive a COM_QUERY in IdleState");
                 mySQLFrontConnection.changeState(ComQueryState.INSTANCE, attachment);
                 break;
+            case MySQLPacket.COM_QUIT:
+            	LOGGER.debug("Frontend receive a COM_QUIT in IdleState");
+            	mySQLFrontConnection.changeState(CloseState.INSTANCE, attachment);
             default:
                 break;
         }
-
     }
 
     @Override

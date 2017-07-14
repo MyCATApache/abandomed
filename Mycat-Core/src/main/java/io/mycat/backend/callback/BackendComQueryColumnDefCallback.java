@@ -1,33 +1,48 @@
 package io.mycat.backend.callback;
 
-import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.front.MySQLFrontConnection;
-import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.mysql.state.ComQueryRowState;
-import io.mycat.net2.ConDataBuffer;
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import io.mycat.SQLEngineCtx;
+import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.mysql.packet.MySQLPacket;
+import io.mycat.mysql.state.ComQueryRowState;
+import io.mycat.net2.ConDataBuffer;
 
 public class BackendComQueryColumnDefCallback extends ResponseCallbackAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(BackendComQueryColumnDefCallback.class);
 
     @Override
     public void handleResponse(MySQLBackendConnection mySQLBackendConnection, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
-        MySQLFrontConnection mySQLFrontConnection = mySQLBackendConnection.getMySQLFrontConnection();
-        if(packageType ==  MySQLPacket.EOF_PACKET){
-            mySQLBackendConnection.setNextState(ComQueryRowState.INSTANCE);
-            mySQLFrontConnection.setDirectTransferParams(
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketLength());
-        } else {
-            mySQLFrontConnection.setWriteDataBuffer(mySQLBackendConnection.getReadDataBuffer());
-            mySQLFrontConnection.setDirectTransferParams(
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketLength());
+    	LOGGER.debug(mySQLBackendConnection.getClass().getSimpleName() + "  in  BackendComQueryColumnDefCallback");
+    	switch(mySQLBackendConnection.getDirectTransferMode()){
+        case COMPLETE_PACKET:
+        	if (packageType ==  MySQLPacket.EOF_PACKET) {
+        		mySQLBackendConnection.setNextState(ComQueryRowState.INSTANCE);
+//                SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true, true);
+            }
+//        	else {
+//                SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true, false);
+//            }
+        	break;
+        case LONG_HALF_PACKET:
+        	if(packageType ==  MySQLPacket.EOF_PACKET){
+    			//当前半包不透传
+    			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, false, false);
+    		}else{
+    			//当前半包透传
+    			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true, false);
+    		}
+        	break;
+        case SHORT_HALF_PACKET:
+        	//当前半包不透传
+			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, false, false);
+			break;
+        case NORMAL:
+        	break;
         }
+    	
     }
 }

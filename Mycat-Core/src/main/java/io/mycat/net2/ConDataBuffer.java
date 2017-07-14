@@ -1,7 +1,6 @@
 package io.mycat.net2;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 /**
@@ -19,43 +18,6 @@ public interface ConDataBuffer {
 	public int transferFrom(SocketChannel socketChanel ) throws IOException;
 	
 	/**
-	 * put bytes to inner datas from buf
-	 * @param buf
-	 */
-	public void putBytes(ByteBuffer buf) throws IOException;
-	
-	/**
-	 * put bytes to inner datas from buf
-	 */
-	public void putBytes(byte[] buf) throws IOException;
-	
-	/**
-	 * begin write ,return a write buffer ,with requreid length
-	 * this buffer should not shared and reused
-	 * @param length
-	 * @return
-	 */
-	public ByteBuffer beginWrite(int length) throws IOException;
-	
-	 /**
-	  * end write ,must with beginWrite
-	  * @param buffer
-	 * @throws IOException 
-	  */
-	public void endWrite(ByteBuffer buffer) throws IOException;
-	/**
-	 * read one byte from inner buffer
-	 * @param index
-	 * @return
-	 */
-	public byte getByte(int index) throws IOException;
-	/**
-	 * read bytes from inner buffer
-	 * 
-	 */
-	public ByteBuffer getBytes(int index,int length) throws IOException;
-	
-	/**
 	 * transfert inner datas to this socket
 	 * @param socketChanel
 	 * @return transferd data
@@ -63,30 +25,73 @@ public interface ConDataBuffer {
 	public int transferTo(SocketChannel socketChanel) throws IOException;
 	
 	/**
-	 * cur writing start pos  (valid writeble data is from  writing pos -> totalSize)
+	 * 透传模式 传输数据
+	 * @param socketChanel
 	 * @return
-	 * @throws IOException 
+	 * @throws IOException
 	 */
-	public int writingPos() throws IOException;
-	/**
-	 * cur reading start pos ,(valid readable data is from readPos -> writing pos)
-	 * @return
-	 */
-	public int readPos();
-	/**
-	 * total length 
-	 * @return
-	 */
-	public int totalSize();
+	public int transferToWithDirectTransferMode(SocketChannel socketChanel) throws IOException;
 	
-	public void setWritingPos(int writingPos) throws IOException;
 	
-	public void setReadingPos(int readingPos);
+	/**
+	 * 缓冲区总大小
+	 * @return
+	 */
+	public int getTotalSize();
+	
+	/**
+	 * 获取 writepos
+	 * @return
+	 */
+	public int getWritePos();
+	
+	/**
+	 * 设置 write
+	 * @param writePos
+	 */
+	public void setWritePos(int writePos);
+	
+	public int getReadPos();
+
+	public void setReadPos(int readPos);
+
+	
+	public int getLastWritePos();
+
+	public void setLastWritePos(int lastWritePos);
+	
+	/**
+	 * read one byte from inner buffer
+	 * @param index
+	 * @return
+	 */
+	public byte getByte(int index);
+	
+	public byte getByte();
+	
+	public void getBytes(byte[] ab);
+	
+	/**
+	 * put bytes to inner datas from buf
+	 */
+	public void putBytes(byte[] buf) ;
+	
+	public void putBytes(byte[] src,int offset,int length);
+	
+	/**
+	 * put bytes to inner data from buf
+	 */
+	public void putByte(byte buf) ;
+	
+	/**
+	 * buffer 压缩
+	 */
+	public void compact();
+	
+	public void clear();
 	
 	public boolean isFull() throws IOException;
 	
 	public void recycle();
-
-	public void clear();
 	
 }

@@ -1,7 +1,11 @@
 package io.mycat.backend.callback;
 
+import java.io.IOException;
+
 import io.mycat.backend.BackConnectionCallback;
 import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.mysql.MySQLConnection;
+import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.ConnectionException;
 
 /**

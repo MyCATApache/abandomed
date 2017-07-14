@@ -26,6 +26,7 @@ package io.mycat.mysql.packet;
 
 import io.mycat.mysql.BufferUtil;
 import io.mycat.mysql.MySQLConnection;
+import io.mycat.net2.ConDataBuffer;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -93,7 +94,7 @@ public class CommandPacket extends MySQLPacket {
     public byte command;
     public byte[] arg;
 
-    public void read(ByteBuffer data) {
+    public void read(ConDataBuffer data) {
         MySQLMessage mm = new MySQLMessage(data);
         packetLength = mm.readUB3();
         packetId = mm.read();

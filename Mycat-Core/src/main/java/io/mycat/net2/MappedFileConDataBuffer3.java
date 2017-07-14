@@ -88,22 +88,22 @@ public class MappedFileConDataBuffer3 implements ConDataBuffer {
 		return tranfered;
 	}
 
-	@Override
-	public void putBytes(ByteBuffer buf) throws IOException {
-		int offset=(int) channel2.position();
-		System.out.println("put bytes "+buf.position()+" limit:"+buf.limit()+ " writePos "+offset);
-		for(int i=0;i<buf.limit();i++)
-		{
-			unsafe.putByte(offset + addr+i, buf.get(i));
-		}
-		channel2.position(offset+buf.limit());
-	
-	}
-	@Override
-	public void putBytes(byte[] buf) throws IOException {
-		putBytes(ByteBuffer.wrap(buf));
-		
-	}
+//	@Override
+//	public void putBytes(ByteBuffer buf) throws IOException {
+//		int offset=(int) channel2.position();
+//		System.out.println("put bytes "+buf.position()+" limit:"+buf.limit()+ " writePos "+offset);
+//		for(int i=0;i<buf.limit();i++)
+//		{
+//			unsafe.putByte(offset + addr+i, buf.get(i));
+//		}
+//		channel2.position(offset+buf.limit());
+//	
+//	}
+//	@Override
+//	public void putBytes(byte[] buf) throws IOException {
+//		putBytes(ByteBuffer.wrap(buf));
+//		
+//	}
 
 	@Override
 	public int transferTo(SocketChannel socketChanel) throws IOException {
@@ -113,32 +113,32 @@ public class MappedFileConDataBuffer3 implements ConDataBuffer {
 		return writed;
 	}
 
-	@Override
-	public int writingPos() throws IOException {
- 
-			return (int) channel2.position();
-		 
-	}
-
-	@Override
-	public int readPos() {
-		return readPos;
-	}
-
-	@Override
-	public int totalSize() {
-		 		return totalSize;
-	}
-
-	@Override
-	public void setWritingPos(int writingPos) throws IOException {
-		this.channel2.position(writingPos);
-	}
-
-	@Override
-	public void setReadingPos(int readingPos) {
-		this.readPos=readingPos;
-	}
+//	@Override
+//	public int writingPos() throws IOException {
+// 
+//			return (int) channel2.position();
+//		 
+//	}
+//
+//	@Override
+//	public int readPos() {
+//		return readPos;
+//	}
+//
+//	@Override
+//	public int totalSize() {
+//		 		return totalSize;
+//	}
+//
+//	@Override
+//	public void setWritingPos(int writingPos) throws IOException {
+//		this.channel2.position(writingPos);
+//	}
+//
+//	@Override
+//	public void setReadingPos(int readingPos) {
+//		this.readPos=readingPos;
+//	}
 	@Override
 	public boolean isFull() throws IOException {
 		return channel2.position()==this.totalSize;
@@ -153,55 +153,117 @@ public class MappedFileConDataBuffer3 implements ConDataBuffer {
 		}
 	}
 
-	@Override
-	public void clear() {
-
-	}
-
-	@Override
-	public byte getByte(int index) throws IOException {
-		return unsafe.getByte(index + addr);
-	}
-	@Override
-	public ByteBuffer getBytes(int index,int length) throws IOException {
-		ByteBuffer dst=ByteBuffer.allocate(length);
-        for(int i=0;i<length;i++)
-        {
-        	dst.put(unsafe.getByte(index +i+ addr));
-        }
-		dst.flip();
-		return dst;
-		
-	}
-	@Override
-	public ByteBuffer beginWrite(int length) {
-		//TODO
-		//ByteBuffer copyBuf=ByteBuffer.allocate(length);
-		ByteBuffer copyBuf = MyCatMemoryAllocator.getINSTANCE().directBuffer(length).nioBuffer(0,length);
-		return copyBuf;
-	}
+//	@Override
+//	public void clear() {
+//
+//	}
+//
+//	@Override
+//	public byte getByte(int index) throws IOException {
+//		return unsafe.getByte(index + addr);
+//	}
+//	@Override
+//	public ByteBuffer getBytes(int index,int length) throws IOException {
+//		ByteBuffer dst=ByteBuffer.allocate(length);
+//        for(int i=0;i<length;i++)
+//        {
+//        	dst.put(unsafe.getByte(index +i+ addr));
+//        }
+//		dst.flip();
+//		return dst;
+//		
+//	}
 	
-	@Override
-	public void endWrite(ByteBuffer buffer) throws IOException {
- 
-			//System.out.println("end write 1 ,buf[ "+buffer.position()+","+buffer.limit()+"] writePos "+channel2.position()+" read pos "+this.readPos);
-				this.putBytes(buffer);
-			//System.out.println("end write 2,total "+buffer.limit()+" writePos "+channel2.position()+" read pos "+this.readPos);
-		 
-		
-		 
-		
-	}
 	private static Method getMethod(Class<?> cls, String name, Class<?>... params) throws Exception {
 		Method m = cls.getDeclaredMethod(name, params);
 		m.setAccessible(true);
 		return m;
 	}
-
-	protected void unmap() throws Exception {
-		unmmap.invoke(null, addr, this.totalSize());
+@Override
+public int transferToWithDirectTransferMode(SocketChannel socketChanel) throws IOException {
+	// TODO Auto-generated method stub
+	return 0;
+}
+@Override
+public int getTotalSize() {
+	// TODO Auto-generated method stub
+	return 0;
+}
+@Override
+public int getWritePos() {
+	// TODO Auto-generated method stub
+	return 0;
+}
+@Override
+public void setWritePos(int writePos) {
+	// TODO Auto-generated method stub
 	
-	}
+}
+@Override
+public int getReadPos() {
+	// TODO Auto-generated method stub
+	return 0;
+}
+@Override
+public void setReadPos(int readPos) {
+	// TODO Auto-generated method stub
+	
+}
+@Override
+public int getLastWritePos() {
+	// TODO Auto-generated method stub
+	return 0;
+}
+@Override
+public void setLastWritePos(int lastWritePos) {
+	// TODO Auto-generated method stub
+	
+}
+@Override
+public byte getByte(int index) {
+	// TODO Auto-generated method stub
+	return 0;
+}
+@Override
+public byte getByte() {
+	// TODO Auto-generated method stub
+	return 0;
+}
+@Override
+public void getBytes(byte[] ab) {
+	// TODO Auto-generated method stub
+	
+}
+@Override
+public void putBytes(byte[] buf) {
+	// TODO Auto-generated method stub
+	
+}
+@Override
+public void putBytes(byte[] src, int offset, int length) {
+	// TODO Auto-generated method stub
+	
+}
+@Override
+public void putByte(byte buf) {
+	// TODO Auto-generated method stub
+	
+}
+@Override
+public void compact() {
+	// TODO Auto-generated method stub
+	
+}
+@Override
+public void clear() {
+	// TODO Auto-generated method stub
+	
+}
+
+//	protected void unmap() throws Exception {
+//		unmmap.invoke(null, addr, this.totalSize());
+//	
+//	}
 
 
 }

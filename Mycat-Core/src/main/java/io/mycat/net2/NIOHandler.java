@@ -1,7 +1,6 @@
 package io.mycat.net2;
 
 import java.io.IOException;
-
 /**
  * NIOHandler是无状态的，多个连接共享一个，用于处理连接的事件，每个方法需要不阻塞，尽快返回结果
  * 

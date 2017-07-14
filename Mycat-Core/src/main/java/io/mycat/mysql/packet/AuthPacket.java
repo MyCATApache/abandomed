@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 import io.mycat.mysql.Capabilities;
+import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
 import io.mycat.util.StreamUtil;
 
@@ -61,8 +62,8 @@ public class AuthPacket extends MySQLPacket {
     public byte[] password;
     public String database;
 
-    public void read(ByteBuffer bufferArray) throws IOException {
-        MySQLMessage mm = new MySQLMessage(bufferArray);
+    public void read(ConDataBuffer byteBuffer) throws IOException {
+        MySQLMessage mm = new MySQLMessage(byteBuffer);
         packetLength = mm.readUB3();
         packetId = mm.read();
         clientFlags = mm.readUB4();
@@ -114,7 +115,7 @@ public class AuthPacket extends MySQLPacket {
 
     @Override
     public int calcPacketSize() {
-        int size = 32;// 4+4+1+23;
+        int size = 32;//4+4+1+23;
         size += (user == null) ? 1 : user.length() + 1;
         size += (password == null) ? 1 : BufferUtil.getLength(password);
         size += (database == null) ? 1 : database.length() + 1;

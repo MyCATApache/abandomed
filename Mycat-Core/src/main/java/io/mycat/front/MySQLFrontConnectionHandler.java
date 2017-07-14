@@ -64,9 +64,9 @@ public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnect
     @Override
     public void handleReadEvent(final MySQLFrontConnection cnxn) throws IOException {
         LOGGER.debug("handleReadEvent(): {}", cnxn);
-        final ConDataBuffer buffer = cnxn.getReadDataBuffer();
+        final ConDataBuffer buffer = cnxn.getDataBuffer();
         int offset = cnxn.getCurrentPacketStartPos();
-        int limit = buffer.writingPos();
+        int limit = buffer.getWritePos();
         int length = MySQLConnection.getPacketLength(buffer, offset);
         final byte packetType = buffer.getByte(offset + MySQLConnection.msyql_packetHeaderSize);
         final int pkgStartPos = offset;
@@ -76,13 +76,11 @@ public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnect
             LOGGER.info("C#{}B#{} received a packet: offset = {}, length = {}, type = {}, cur total length = {}, packet bytes\n{}",
                     cnxn.getId(), buffer.hashCode(), pkgStartPos, length, packetType, limit, hexs);
         }
+        offset += length;
         cnxn.setCurrentPacketLength(length);
         cnxn.setCurrentPacketStartPos(pkgStartPos);
         cnxn.setCurrentPacketType(packetType);
         cnxn.driveState();
-        offset += length;
-//        buffer.setReadingPos(offset);
-        cnxn.setCurrentPacketStartPos(offset);
     }
 
     @Override

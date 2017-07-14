@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.engine.ErrorCode;
-import io.mycat.engine.SQLCommandHandler;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.net2.ConDataBuffer;
 

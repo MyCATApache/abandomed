@@ -27,6 +27,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
 
 /**
@@ -72,7 +73,7 @@ public class RowDataPacket extends MySQLPacket {
         fieldCount = fieldCount + add;
     }
 
-    public void read(ByteBuffer buffer) {
+    public void read(ConDataBuffer buffer) {
         MySQLMessage mm = new MySQLMessage(buffer);
         packetLength = mm.readUB3();
         packetId = mm.read();

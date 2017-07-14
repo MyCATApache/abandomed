@@ -3,6 +3,8 @@ package io.mycat.mysql.state;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.net2.NetSystem;
+import io.mycat.net2.states.ReadWaitingState;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,11 @@ public class ConnectingState extends AbstractMysqlConnectionState {
         try {
             mySQLFrontConnection.setNextState(HandshakeState.INSTANCE);
             mySQLFrontConnection.sendAuthPackge();
+            mySQLFrontConnection.setWriteCompleteListener(()->{
+            	mySQLFrontConnection.clearCurrentPacket();
+            	mySQLFrontConnection.getDataBuffer().clear();
+            	mySQLFrontConnection.setNextConnState(ReadWaitingState.INSTANCE);
+            });
         } catch (Throwable e) {
             LOGGER.warn("frontend InitialState error", e);
             mySQLFrontConnection.changeState(CloseState.INSTANCE, "register error");

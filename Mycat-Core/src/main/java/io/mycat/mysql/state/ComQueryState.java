@@ -1,14 +1,16 @@
 package io.mycat.mysql.state;
 
 
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.backend.callback.BackendComQueryCallback;
 import io.mycat.engine.impl.FrontendComQueryCommandHandler;
 import io.mycat.front.MySQLFrontConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
+import io.mycat.net2.ConDataBuffer;
 
 /**
  * 查询状态
@@ -27,11 +29,11 @@ public class ComQueryState extends AbstractMysqlConnectionState {
 
     @Override
     protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
-        LOGGER.debug("Frontend in ComQueryState");
+    	LOGGER.debug("Frontend in ComQueryState");
         try {
             frontendComQueryCommandHandler.processCmd(
                     mySQLFrontConnection,
-                    mySQLFrontConnection.getReadDataBuffer(),
+                    mySQLFrontConnection.getDataBuffer(),
                     mySQLFrontConnection.getCurrentPacketType(),
                     mySQLFrontConnection.getCurrentPacketStartPos(),
                     mySQLFrontConnection.getCurrentPacketLength()
@@ -41,16 +43,15 @@ public class ComQueryState extends AbstractMysqlConnectionState {
             mySQLFrontConnection.changeState(CloseState.INSTANCE, "program error");
             throw new StateException(e);
         }
-
     }
 
     @Override
     protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
-        LOGGER.debug("Backend in ComQueryState");
+    	LOGGER.debug("Backend in ComQueryState");
         try {
             backendComQueryCallback.handleResponse(
                     mySQLBackendConnection,
-                    mySQLBackendConnection.getReadDataBuffer(),
+                    mySQLBackendConnection.getDataBuffer(),
                     mySQLBackendConnection.getCurrentPacketType(),
                     mySQLBackendConnection.getCurrentPacketStartPos(),
                     mySQLBackendConnection.getCurrentPacketLength()

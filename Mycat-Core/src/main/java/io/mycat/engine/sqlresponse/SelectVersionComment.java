@@ -24,14 +24,12 @@
 package io.mycat.engine.sqlresponse;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.Fields;
 import io.mycat.mysql.packet.EOFPacket;
 import io.mycat.mysql.packet.FieldPacket;
 import io.mycat.mysql.packet.ResultSetHeaderPacket;
-import io.mycat.mysql.packet.RowDataPacket;
 import io.mycat.util.PacketUtil;
 
 /**
@@ -58,34 +56,35 @@ public final class SelectVersionComment {
     }
 
     public static void response(MySQLFrontConnection c) throws IOException {
-    	ByteBuffer byteBuf= c.getWriteDataBuffer().beginWrite(1024*3);
-        // write header
-        header.write(byteBuf,header.calcPacketSize());
-
-        // write fields
-        for (FieldPacket field : fields) {
-            field.write(byteBuf,field.calcPacketSize());
-
-        }
-
-        // write eof
-        eof.write(byteBuf,eof.calcPacketSize());
-
-        // write rows
-        byte packetId = eof.packetId;
-        RowDataPacket row = new RowDataPacket(FIELD_COUNT);
-        row.add(VERSION_COMMENT);
-        row.packetId = ++packetId;
-        row.write(byteBuf,row.calcPacketSize());
-
-        // write last eof
-        EOFPacket lastEof = new EOFPacket();
-        lastEof.packetId = ++packetId;
-        lastEof.write(byteBuf,lastEof.calcPacketSize());
-
-        // post write
-        c.getWriteDataBuffer().endWrite(byteBuf);
-        c.enableWrite(true);
+    	throw new RuntimeException("FakeResultSet  in runtimeException");
+//    	ByteBuffer byteBuf= c.getWriteDataBuffer().beginWrite(1024*3);
+//        // write header
+//        header.write(byteBuf,header.calcPacketSize());
+//
+//        // write fields
+//        for (FieldPacket field : fields) {
+//            field.write(byteBuf,field.calcPacketSize());
+//
+//        }
+//
+//        // write eof
+//        eof.write(byteBuf,eof.calcPacketSize());
+//
+//        // write rows
+//        byte packetId = eof.packetId;
+//        RowDataPacket row = new RowDataPacket(FIELD_COUNT);
+//        row.add(VERSION_COMMENT);
+//        row.packetId = ++packetId;
+//        row.write(byteBuf,row.calcPacketSize());
+//
+//        // write last eof
+//        EOFPacket lastEof = new EOFPacket();
+//        lastEof.packetId = ++packetId;
+//        lastEof.write(byteBuf,lastEof.calcPacketSize());
+//
+//        // post write
+//        c.getWriteDataBuffer().endWrite(byteBuf);
+//        c.setNextConnState(WriteWaitingState.INSTANCE);
 
     }
 

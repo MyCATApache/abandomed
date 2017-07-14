@@ -24,7 +24,6 @@
 package io.mycat.net2;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SocketChannel;
@@ -66,23 +65,23 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 		}
 		return tranfered;
 	}
-
-	@Override
-	public void putBytes(ByteBuffer buf) throws IOException {
-		int position=mapBuf.position();
-		int writed=channel.write(buf, position);
-		if(buf.hasRemaining())
-		{
-			throw new IOException("can't write whole buf ,writed "+writed+" remains "+buf.remaining());
-		}
-		mapBuf.position(position+writed);
-		
-	}
-	@Override
-	public void putBytes(byte[] buf) throws IOException {
-		this.mapBuf.put(buf);
-		
-	}
+//
+//	@Override
+//	public void putBytes(ByteBuffer buf) throws IOException {
+//		int position=mapBuf.position();
+//		int writed=channel.write(buf, position);
+//		if(buf.hasRemaining())
+//		{
+//			throw new IOException("can't write whole buf ,writed "+writed+" remains "+buf.remaining());
+//		}
+//		mapBuf.position(position+writed);
+//		
+//	}
+//	@Override
+//	public void putBytes(byte[] buf) throws IOException {
+//		this.mapBuf.put(buf);
+//		
+//	}
 
 	@Override
 	public int transferTo(SocketChannel socketChanel) throws IOException {
@@ -93,30 +92,30 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 		return writed;
 	}
 
-	@Override
-	public int writingPos() {
-		return mapBuf.position();
-	}
-
-	@Override
-	public int readPos() {
-		return readPos;
-	}
-
-	@Override
-	public int totalSize() {
-		 		return totalSize;
-	}
-
-	@Override
-	public void setWritingPos(int writingPos) {
-		mapBuf.position(writingPos);
-	}
-
-	@Override
-	public void setReadingPos(int readingPos) {
-		this.readPos=readingPos;
-	}
+//	@Override
+//	public int writingPos() {
+//		return mapBuf.position();
+//	}
+//
+//	@Override
+//	public int readPos() {
+//		return readPos;
+//	}
+//
+//	@Override
+//	public int totalSize() {
+//		 		return totalSize;
+//	}
+//
+//	@Override
+//	public void setWritingPos(int writingPos) {
+//		mapBuf.position(writingPos);
+//	}
+//
+//	@Override
+//	public void setReadingPos(int readingPos) {
+//		this.readPos=readingPos;
+//	}
 	@Override
 	public boolean isFull() {
 		return mapBuf.position()==this.totalSize;
@@ -131,37 +130,125 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 		}
 	}
 
-	@Override
-	public void clear() {
-
-	}
+//	@Override
+//	public void clear() {
+//
+//	}
 
 	@Override
 	public byte getByte(int index) {
 		return mapBuf.get(index);
 	}
+//	@Override
+//	public ByteBuffer getBytes(int index,int length) throws IOException {
+//		int oldPos=mapBuf.position();
+//		mapBuf.position(index);
+//		ByteBuffer copyBuf=mapBuf.slice();
+//		copyBuf.limit(length);
+//		mapBuf.position(oldPos);
+//		return copyBuf;
+//		
+//	}
+//	@Override
+//	public ByteBuffer beginWrite(int length) {
+//		ByteBuffer copyBuf=mapBuf.slice();
+//		copyBuf.limit(length);
+//		return copyBuf;
+//	}
+//	
+//	@Override
+//	public void endWrite(ByteBuffer buffer) {
+//		 mapBuf.position(mapBuf.position()+buffer.position());
+//		//System.out.println("end write ,total "+buffer.limit()+" writePos "+mapBuf.position()+" read pos "+this.readPos);
+//	}
+
 	@Override
-	public ByteBuffer getBytes(int index,int length) throws IOException {
-		int oldPos=mapBuf.position();
-		mapBuf.position(index);
-		ByteBuffer copyBuf=mapBuf.slice();
-		copyBuf.limit(length);
-		mapBuf.position(oldPos);
-		return copyBuf;
+	public int transferToWithDirectTransferMode(SocketChannel socketChanel) throws IOException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getTotalSize() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getWritePos() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setWritePos(int writePos) {
+		// TODO Auto-generated method stub
 		
 	}
-	@Override
-	public ByteBuffer beginWrite(int length) {
-		ByteBuffer copyBuf=mapBuf.slice();
-		copyBuf.limit(length);
-		return copyBuf;
-	}
-	
-	@Override
-	public void endWrite(ByteBuffer buffer) {
-		 mapBuf.position(mapBuf.position()+buffer.position());
-		//System.out.println("end write ,total "+buffer.limit()+" writePos "+mapBuf.position()+" read pos "+this.readPos);
-	}
-	
 
+	@Override
+	public int getReadPos() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setReadPos(int readPos) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getLastWritePos() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setLastWritePos(int lastWritePos) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public byte getByte() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void getBytes(byte[] ab) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void putBytes(byte[] buf) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void putBytes(byte[] src, int offset, int length) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void putByte(byte buf) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void compact() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void clear() {
+		// TODO Auto-generated method stub
+		
+	}
 }

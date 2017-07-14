@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import io.mycat.SQLEngineCtx;
-
 public class NIOReactorPool {
 	private final NIOReactor[] reactors;
 	private volatile int nextReactor;

@@ -6,6 +6,8 @@ import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.mysql.state.CloseState;
 import io.mycat.mysql.state.IdleState;
 import io.mycat.net2.ConDataBuffer;
+import io.mycat.net2.states.ReadWaitingState;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,16 +23,16 @@ public class AuthenticateRespCallback extends ResponseCallbackAdapter {
 
     @Override
     public void handleResponse(MySQLBackendConnection conn, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
-        if (packageType == MySQLPacket.ERROR_PACKET) {
+    	LOGGER.debug("in AuthenticateRespCallback method ");
+    	if (packageType == MySQLPacket.ERROR_PACKET) {
             conn.changeState(CloseState.INSTANCE, null);
         } else if (packageType == MySQLPacket.OK_PACKET) {
-            conn.getReadDataBuffer().clear();
-            conn.getWriteDataBuffer().clear();
-            conn.clearCurrentPacket();
             conn.setNextState(IdleState.INSTANCE);
             MySQLFrontConnection mySQLFrontConnection = conn.getMySQLFrontConnection();
             if (mySQLFrontConnection != null) {
                 mySQLFrontConnection.executePendingTask();
+            }else{
+            	conn.setNextConnState(ReadWaitingState.INSTANCE);
             }
         }
 

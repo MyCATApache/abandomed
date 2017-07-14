@@ -32,41 +32,52 @@ import io.mycat.backend.MySQLBackendConnection;
 
 /**
  * user session ,mean's a mysql client session or pg client session
- *
  * @author wuzhihui
+ *
  */
-public class UserSession {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserSession.class);
-    private SQLCommandHandler curCmdHandler;
-    private ArrayList<MySQLBackendConnection> backConLst = new ArrayList<MySQLBackendConnection>();
+public class UserSession  {
+	 private static final Logger LOGGER = LoggerFactory.getLogger(UserSession.class);	
+private SQLCommandHandler curCmdHandler;	
+private ArrayList<MySQLBackendConnection> backConLst=new  ArrayList<MySQLBackendConnection>();
 
-    public void changeCmdHandler(SQLCommandHandler newCmdHandler) {
+public void changeCmdHandler(SQLCommandHandler newCmdHandler)
+{
+	
+	this.curCmdHandler=newCmdHandler;
+}
 
-        this.curCmdHandler = newCmdHandler;
-    }
-
-    public SQLCommandHandler getCurCmdHandler() {
-        return curCmdHandler;
-    }
-
-    public void removeBackCon(MySQLBackendConnection con) {
-        if (this.backConLst.remove(con)) {
-            LOGGER.warn("remove back con ,but not found ! " + this);
-        }
-    }
-
-    public void addBackCon(MySQLBackendConnection con) {
-        if (this.backConLst.contains(con)) {
-            throw new RuntimeException(
-                "add a duplicate back connection to session,schema: " + con.getSchema());
-        } else {
-            backConLst.add(con);
-        }
+public SQLCommandHandler getCurCmdHandler() {
+	return curCmdHandler;
+}
 
 
-    }
 
-    public ArrayList<MySQLBackendConnection> getBackendCons() {
-        return backConLst;
-    }
+
+public void removeBackCon(MySQLBackendConnection con)
+{
+	 if(this.backConLst.remove(con))
+	 {
+		 LOGGER.warn("remove back con ,but not found ! "+this); 
+	 }
+		 
+	   
+}
+
+public void addBackCon(MySQLBackendConnection con)
+{
+	 if(this.backConLst.contains(con))
+	 {
+		 throw new RuntimeException("add a duplicate back connection to session,schema: "+con.getSchema());
+	 }else
+	 {
+		 backConLst.add(con);
+	 }
+		   
+			   
+}
+
+public  ArrayList<MySQLBackendConnection> getBackendCons() {
+	return backConLst;
+}
+
 }

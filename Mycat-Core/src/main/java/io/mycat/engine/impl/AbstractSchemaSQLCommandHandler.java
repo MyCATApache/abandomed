@@ -51,6 +51,7 @@ import io.mycat.mysql.packet.MySQLMessage;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.mysql.packet.OkPacket;
 import io.mycat.net2.ConDataBuffer;
+import io.mycat.net2.states.WriteWaitingState;
 
 /**
  * 抽象类，负责处理前段发来的 SQL Command
@@ -64,21 +65,21 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
     @Override
     public void processCmd(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos,
                            int pkgLen) throws IOException {
-        switch (packageType) {
-            case MySQLPacket.COM_QUIT:
-                LOGGER.info("Client quit.");
-                frontCon.changeState(CloseState.INSTANCE,"quit packet");
-                break;
-            case MySQLPacket.COM_INIT_DB:
-                final ByteBuffer byteBuff = dataBuffer.getBytes(pkgStartPos, pkgLen);
-                initDb(frontCon, byteBuff);
-                break;
-            default:
-                doSQLCommand(frontCon, dataBuffer, packageType, pkgStartPos, pkgLen);
-        }
+    	throw new RuntimeException("AbstractSchemaSQLCommandHandler  in runtimeException");
+//        switch (packageType) {
+//            case MySQLPacket.COM_QUIT:
+//                LOGGER.info("Client quit.");
+//                frontCon.changeState(CloseState.INSTANCE,"quit packet");
+//                break;
+//            case MySQLPacket.COM_INIT_DB:
+//                initDb(frontCon, dataBuffer);
+//                break;
+//            default:
+//                doSQLCommand(frontCon, dataBuffer, packageType, pkgStartPos, pkgLen);
+//        }
     }
 
-    private void initDb(final MySQLFrontConnection frontCon, final ByteBuffer byteBuffer) throws IOException {
+    private void initDb(final MySQLFrontConnection frontCon, final ConDataBuffer byteBuffer) throws IOException {
         final MySQLMessage mm = new MySQLMessage(byteBuffer);
         mm.position(5);
         final String db = mm.readString();
@@ -99,8 +100,7 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
                               int pkgStartPos, int pkgLen) throws IOException {
         {
             //取得语句
-            ByteBuffer byteBuff = dataBuffer.getBytes(pkgStartPos, pkgLen);
-            MySQLMessage mm = new MySQLMessage(byteBuff);
+            MySQLMessage mm = new MySQLMessage(dataBuffer);
             mm.position(5);
             String sql = mm.readString(frontCon.getCharset());
             /**
@@ -253,8 +253,8 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
             /**
              * 否则直接写到后端即可
              */
-            existCon.getWriteDataBuffer().putBytes(dataBuffer.getBytes(pkgStartPos, pkgLen));
-            existCon.enableWrite(false);
+//            existCon.getDataBuffer().putBytes(dataBuffer.getBytes(pkgStartPos, pkgLen));
+            existCon.connDriverMachine(WriteWaitingState.INSTANCE);
             existCon.setUserCallback(directTransCallback);
         }
     }

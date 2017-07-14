@@ -25,6 +25,7 @@ package io.mycat.mysql.packet;
 
 import java.nio.ByteBuffer;
 
+import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
 
 /**
@@ -51,8 +52,8 @@ public class EOFPacket extends MySQLPacket {
     public int warningCount;
     public int status = 2;
 
-    public void read(ByteBuffer byteBuf) {
-        MySQLMessage mm = new MySQLMessage(byteBuf);
+    public void read(ConDataBuffer byteBuffer) {
+        MySQLMessage mm = new MySQLMessage(byteBuffer);
         packetLength = mm.readUB3();
         packetId = mm.read();
         fieldCount = mm.read();

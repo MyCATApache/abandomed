@@ -42,42 +42,18 @@ public class ByteBufConDataBuffer implements ConDataBuffer {
 
     }
 
-    @Override
-    public void putBytes(ByteBuffer buf) throws IOException {
-        buffer.writeBytes(buf);
-    }
+//    @Override
+//    public ByteBuffer beginWrite(int length) throws IOException {
+//        System.out.println("beginWrite1 read index = " + buffer.readerIndex() + "write index = " + buffer.writerIndex());
+//        ByteBuffer byteBuffer =ByteBuffer.allocateDirect(length); //buffer.internalNioBuffer(buffer.writerIndex(),length);
+//        System.out.println("beginWrite2 read index = " + buffer.readerIndex() + "write index = " + buffer.writerIndex());
+//        return byteBuffer;
+//    }
 
-    @Override
-    public void putBytes(byte[] buf) throws IOException {
-        buffer.writeBytes(buf);
-    }
-
-    @Override
-    public ByteBuffer beginWrite(int length) throws IOException {
-        System.out.println("beginWrite1 read index = " + buffer.readerIndex() + "write index = " + buffer.writerIndex());
-        ByteBuffer byteBuffer =ByteBuffer.allocateDirect(length); //buffer.internalNioBuffer(buffer.writerIndex(),length);
-        System.out.println("beginWrite2 read index = " + buffer.readerIndex() + "write index = " + buffer.writerIndex());
-        return byteBuffer;
-    }
-
-    @Override
-    public void endWrite(ByteBuffer src) throws IOException {
-        buffer.writeBytes(src);
-    }
-
-    @Override
-    public byte getByte(int index) throws IOException {
-        return buffer.getByte(index);
-    }
-
-    @Override
-    public ByteBuffer getBytes(int index, int length) throws IOException {
-        buffer.readerIndex(index);
-        buffer.writerIndex(index+length);
-        ByteBuffer byteBuffer = buffer.nioBuffer(0,length);
-        buffer.readBytes(byteBuffer);
-        return byteBuffer;
-    }
+//    @Override
+//    public void endWrite(ByteBuffer src) throws IOException {
+//        buffer.writeBytes(src);
+//    }
 
     @Override
     public int transferTo(SocketChannel socketChanel) throws IOException {
@@ -86,31 +62,6 @@ public class ByteBufConDataBuffer implements ConDataBuffer {
         //System.out.println("transferTo2 read index = " + buffer.readerIndex() + "write index = " + buffer.writerIndex());
         return len;
 
-    }
-
-    @Override
-    public int writingPos() throws IOException {
-        return buffer.writerIndex();
-    }
-
-    @Override
-    public int readPos() {
-        return buffer.readerIndex();
-    }
-
-    @Override
-    public int totalSize() {
-        return maxCapacity;
-    }
-
-    @Override
-    public void setWritingPos(int writingPos) throws IOException {
-            buffer.setIndex(buffer.readerIndex(),writingPos);
-    }
-
-    @Override
-    public void setReadingPos(int readingPos) {
-        buffer.setIndex(readingPos,buffer.writerIndex());
     }
 
     @Override
@@ -123,10 +74,6 @@ public class ByteBufConDataBuffer implements ConDataBuffer {
         //buffer.release();
     }
 
-    @Override
-    public void clear() {
-
-    }
 
     public ByteBuf getBuffer() {
         return buffer;
@@ -144,5 +91,102 @@ public class ByteBufConDataBuffer implements ConDataBuffer {
     public int getMaxCapacity() {
         return maxCapacity;
     }
+
+	@Override
+	public int transferToWithDirectTransferMode(SocketChannel socketChanel) throws IOException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getTotalSize() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int getWritePos() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setWritePos(int writePos) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getReadPos() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setReadPos(int readPos) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getLastWritePos() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void setLastWritePos(int lastWritePos) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public byte getByte(int index) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public byte getByte() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public void getBytes(byte[] ab) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void putBytes(byte[] buf) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void putBytes(byte[] src, int offset, int length) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void putByte(byte buf) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void compact() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void clear() {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 }

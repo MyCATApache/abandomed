@@ -33,8 +33,9 @@ import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.engine.ErrorCode;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.net2.ConDataBuffer;
-import io.mycat.net2.Connection;
 import io.mycat.net2.ConnectionException;
+import io.mycat.net2.states.ClosedState;
+import io.mycat.net2.states.ClosingState;
 /**
  * direct transfer bakend data to front connection
  * must attach (setAttachement) front connection on backend connection 
@@ -80,7 +81,7 @@ public class DirectTransTofrontCallBack  implements BackConnectionCallback{
 	@Override
 	public void connectionClose(MySQLBackendConnection conn, String reason) {
 		LOGGER.info("connection closed "+conn);
-		if(conn.getState()!=Connection.STATE_CONNECTING)
+		if(ClosingState.INSTANCE.equals(conn.getConnState())||ClosedState.INSTANCE.equals(conn.getConnState()))
 		{
 		getFrontCon(conn).getSession().removeBackCon(conn);
 		}

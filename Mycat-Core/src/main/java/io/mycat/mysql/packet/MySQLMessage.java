@@ -26,10 +26,11 @@ package io.mycat.mysql.packet;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+
+import io.mycat.net2.ConDataBuffer;
 
 /**
  * @author mycat
@@ -38,11 +39,11 @@ public class MySQLMessage {
     public static final long NULL_LENGTH = -1;
     private static final byte[] EMPTY_BYTES = new byte[0];
     private final int length;
-    private final ByteBuffer byteBuffer;
+    private final ConDataBuffer byteBuffer;
 
-    public MySQLMessage(ByteBuffer byteBuffer) {
+    public MySQLMessage(ConDataBuffer byteBuffer) {
         this.byteBuffer = byteBuffer;
-        this.length = byteBuffer.capacity();
+        this.length = byteBuffer.getWritePos();
         
     }
 
@@ -51,7 +52,7 @@ public class MySQLMessage {
     }
 
     public int position() {
-        return byteBuffer.position();
+        return byteBuffer.getReadPos();
     }
 
     // public byte[] bytes() {
@@ -59,23 +60,23 @@ public class MySQLMessage {
     // }
 
     public void move(int i) {
-    	byteBuffer.position(byteBuffer.position()+i);
+    	byteBuffer.setReadPos(byteBuffer.getReadPos()+i);
     }
 
     public void position(int i) {
-    	byteBuffer.position(i);
+    	byteBuffer.setReadPos(i);
     }
 
     public boolean hasRemaining() {
-        return  byteBuffer.hasRemaining();
+        return  byteBuffer.getWritePos()-byteBuffer.getReadPos() > 0;
     }
 
     public byte read(int i) {
-        return byteBuffer.get(i);
+        return byteBuffer.getByte(i);
     }
 
     public byte read() {
-        return byteBuffer.get();
+        return byteBuffer.getByte();
     }
 
     public int readUB2() {
@@ -146,7 +147,7 @@ public class MySQLMessage {
    
 
     public byte[] readBytes() {
-        int length = this.byteBuffer.remaining();
+        int length = byteBuffer.getWritePos()-byteBuffer.getReadPos();
         if (length <= 0) {
         	 return EMPTY_BYTES;
         }
@@ -155,18 +156,18 @@ public class MySQLMessage {
 
     public byte[] readBytes(int length) {
     	byte[] ab = new byte[length];
-        this.byteBuffer.get(ab);
+        this.byteBuffer.getBytes(ab);
         return ab;
     }
 
     public byte[] readBytesWithNull() {
-    	 int length = this.byteBuffer.remaining();
+    	 int length = byteBuffer.getWritePos()-byteBuffer.getReadPos();
          if (length <= 0) {
          	 return EMPTY_BYTES;
          }
         int offset = -1;
-        int position=byteBuffer.position();
-        int limit=byteBuffer.limit();
+        int position= byteBuffer.getReadPos();
+        int limit=byteBuffer.getWritePos();
         for (int i = position; i < limit; i++) {
             if (read(i) == 0) {
                 offset = i;
@@ -177,17 +178,17 @@ public class MySQLMessage {
         case -1:
             byte[] ab1 = new byte[limit - position];
             // System.arraycopy(b, position, ab1, 0, ab1.length);
-            this.byteBuffer.get(ab1);
+            this.byteBuffer.getBytes(ab1);
             return ab1;
         case 0:
-        	byteBuffer.position(position+1);
+        	move(position+1);
             return EMPTY_BYTES;
         default:
             byte[] ab2 = new byte[offset - position];
             // System.arraycopy(b, position, ab2, 0, ab2.length);
-            this.byteBuffer.get(ab2);
+            this.byteBuffer.getBytes(ab2);
             //??position = offset + 1;
-            byteBuffer.position(offset+1);
+            position(offset+1);
             return ab2;
         }
     }
@@ -202,7 +203,7 @@ public class MySQLMessage {
         }
 
         byte[] ab = new byte[length];
-        this.byteBuffer.get(ab);
+        this.byteBuffer.getBytes(ab);
         return ab;
     }
 
@@ -211,12 +212,12 @@ public class MySQLMessage {
     }
 
     public String readString(String charset) throws UnsupportedEncodingException {
-    	int remains=byteBuffer.remaining();
+    	int remains=byteBuffer.getWritePos()-byteBuffer.getReadPos();
         if (remains==0) {
             return null;
         }
         byte[] ab = new byte[remains];
-        this.byteBuffer.get(ab);
+        this.byteBuffer.getBytes(ab);
         
         return new String(ab,charset);
     }
@@ -245,7 +246,7 @@ public class MySQLMessage {
             return null;
         }
         byte[] ab = new byte[length - this.position()];
-        this.byteBuffer.get(ab);
+        this.byteBuffer.getBytes(ab);
         String s = new String(ab,charset);
         return s;
     }

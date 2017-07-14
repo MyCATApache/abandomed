@@ -60,11 +60,7 @@ public final class StringUtil {
 
 		@Override
 		public byte get(final int i){
-			try {
-				return (buffer.getByte(i));
-			} catch (final IOException e) {
-				throw new RuntimeException(e);
-			}
+			return (buffer.getByte(i));
 		}
 		
 	}
@@ -181,11 +177,7 @@ public final class StringUtil {
     }
     
     public final static String dumpAsHex(final ConDataBuffer buffer){
-    	try {
-			return (dumpAsHex(buffer, 0, buffer.writingPos()));
-		} catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
+    	return (dumpAsHex(buffer, 0, buffer.getWritePos()));
     }
     
     public final static String dumpAsHex(final ConDataBuffer buffer, final int length){

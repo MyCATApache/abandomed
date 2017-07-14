@@ -1,5 +1,8 @@
 package io.mycat.mysql.state;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.MySQLConnection;
@@ -10,6 +13,7 @@ import io.mycat.mysql.MySQLConnection;
  * @author ynfeng
  */
 public abstract class AbstractMysqlConnectionState implements MysqlConnectionState {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ComQueryRowState.class);
 
     @Override
     public void handle(MySQLConnection mySQLConnection, Object attachment) {

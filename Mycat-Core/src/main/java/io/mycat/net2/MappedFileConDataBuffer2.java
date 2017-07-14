@@ -57,24 +57,24 @@ public class MappedFileConDataBuffer2 implements ConDataBuffer {
 		return tranfered;
 	}
 
-	@Override
-	public void putBytes(ByteBuffer buf) throws IOException {
-		//buf.flip();
-		int writed=channel.write(buf);
-		if(buf.hasRemaining()||writed==0)
-		{
-			throw new IOException("can't write whole buf ,writed "+writed+" remains "+buf.remaining());
-		}
-	
-	}
-	@Override
-	public void putBytes(byte[] buf) throws IOException {
-		int writed=channel.write(ByteBuffer.wrap(buf));
-		if(writed!=buf.length)
-		{
-			throw new java.lang.RuntimeException("not write complete ");
-		}
-	}
+//	@Override
+//	public void putBytes(ByteBuffer buf) throws IOException {
+//		//buf.flip();
+//		int writed=channel.write(buf);
+//		if(buf.hasRemaining()||writed==0)
+//		{
+//			throw new IOException("can't write whole buf ,writed "+writed+" remains "+buf.remaining());
+//		}
+//	
+//	}
+//	@Override
+//	public void putBytes(byte[] buf) throws IOException {
+//		int writed=channel.write(ByteBuffer.wrap(buf));
+//		if(writed!=buf.length)
+//		{
+//			throw new java.lang.RuntimeException("not write complete ");
+//		}
+//	}
 
 	@Override
 	public int transferTo(SocketChannel socketChanel) throws IOException {
@@ -95,36 +95,36 @@ public class MappedFileConDataBuffer2 implements ConDataBuffer {
 		return writed;
 	}
 
-	@Override
-	public int writingPos() {
-		try {
-			return (int) channel.position();
-		} catch (IOException e) {
-			 
-			e.printStackTrace();
-		}
-		return -1;
-	}
-
-	@Override
-	public int readPos() {
-		return readPos;
-	}
-
-	@Override
-	public int totalSize() {
-		 		return totalSize;
-	}
-
-	@Override
-	public void setWritingPos(int writingPos) throws IOException {
-		this.channel.position(writingPos);
-	}
-
-	@Override
-	public void setReadingPos(int readingPos) {
-		this.readPos=readingPos;
-	}
+//	@Override
+//	public int writingPos() {
+//		try {
+//			return (int) channel.position();
+//		} catch (IOException e) {
+//			 
+//			e.printStackTrace();
+//		}
+//		return -1;
+//	}
+//
+//	@Override
+//	public int readPos() {
+//		return readPos;
+//	}
+//
+//	@Override
+//	public int totalSize() {
+//		 		return totalSize;
+//	}
+//
+//	@Override
+//	public void setWritingPos(int writingPos) throws IOException {
+//		this.channel.position(writingPos);
+//	}
+//
+//	@Override
+//	public void setReadingPos(int readingPos) {
+//		this.readPos=readingPos;
+//	}
 	@Override
 	public boolean isFull() throws IOException {
 		return channel.position()==this.totalSize;
@@ -138,46 +138,128 @@ public class MappedFileConDataBuffer2 implements ConDataBuffer {
 			 
 		}
 	}
-
+	@Override
+	public int transferToWithDirectTransferMode(SocketChannel socketChanel) throws IOException {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public int getTotalSize() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public int getWritePos() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public void setWritePos(int writePos) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public int getReadPos() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public void setReadPos(int readPos) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public int getLastWritePos() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public void setLastWritePos(int lastWritePos) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public byte getByte(int index) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public byte getByte() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+	@Override
+	public void getBytes(byte[] ab) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void putBytes(byte[] buf) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void putBytes(byte[] src, int offset, int length) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void putByte(byte buf) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public void compact() {
+		// TODO Auto-generated method stub
+		
+	}
 	@Override
 	public void clear() {
-
-	}
-
-	@Override
-	public byte getByte(int index) throws IOException {
-		ByteBuffer dst=ByteBuffer.allocate(1);
-		this.channel.read(dst, index);
-		return dst.get(0);
-	}
-	@Override
-	public ByteBuffer getBytes(int index,int length) throws IOException {
-		ByteBuffer dst=ByteBuffer.allocate(length);
-		channel.read(dst,index);
-		dst.flip();
-		return dst;
-		
-	}
-	@Override
-	public ByteBuffer beginWrite(int length) {
-		ByteBuffer copyBuf=ByteBuffer.allocate(length);
-		//copyBuf.limit(length);
-		return copyBuf;
-	}
-	
-	@Override
-	public void endWrite(ByteBuffer buffer) throws IOException {
- 
-			//System.out.println("end write 1 ,buf[ "+buffer.position()+","+buffer.limit()+"] writePos "+channel.position()+" read pos "+this.readPos);
-			buffer.flip();
-			//int writed=channel.write(buffer);
-			channel.write(buffer);
-			//System.out.println("end write 2,total "+writed+" writePos "+channel.position()+" read pos "+this.readPos);
-		 
-		
-		 
+		// TODO Auto-generated method stub
 		
 	}
 	
+
+//	@Override
+//	public void clear() {
+//
+//	}
+//
+//	@Override
+//	public byte getByte(int index) throws IOException {
+//		ByteBuffer dst=ByteBuffer.allocate(1);
+//		this.channel.read(dst, index);
+//		return dst.get(0);
+//	}
+//	@Override
+//	public ByteBuffer getBytes(int index,int length) throws IOException {
+//		ByteBuffer dst=ByteBuffer.allocate(length);
+//		channel.read(dst,index);
+//		dst.flip();
+//		return dst;
+//		
+//	}
+	
+//	@Override
+//	public ByteBuffer beginWrite(int length) {
+//		ByteBuffer copyBuf=ByteBuffer.allocate(length);
+//		//copyBuf.limit(length);
+//		return copyBuf;
+//	}
+//	
+//	@Override
+//	public void endWrite(ByteBuffer buffer) throws IOException {
+// 
+//			//System.out.println("end write 1 ,buf[ "+buffer.position()+","+buffer.limit()+"] writePos "+channel.position()+" read pos "+this.readPos);
+//			buffer.flip();
+//			//int writed=channel.write(buffer);
+//			channel.write(buffer);
+//			//System.out.println("end write 2,total "+writed+" writePos "+channel.position()+" read pos "+this.readPos);
+//		 
+//		
+//		 
+//		
+//	}
+
 
 }

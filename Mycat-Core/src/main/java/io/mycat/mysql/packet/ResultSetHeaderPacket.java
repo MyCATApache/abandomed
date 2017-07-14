@@ -25,6 +25,7 @@ package io.mycat.mysql.packet;
 
 import java.nio.ByteBuffer;
 
+import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
 
 /**
@@ -55,7 +56,7 @@ public class ResultSetHeaderPacket extends MySQLPacket {
     public int fieldCount;
     public long extra;
 
-    public void read(ByteBuffer buffer) {
+    public void read(ConDataBuffer buffer) {
         MySQLMessage mm = new MySQLMessage(buffer);
         this.packetLength = mm.readUB3();
         this.packetId = mm.read();

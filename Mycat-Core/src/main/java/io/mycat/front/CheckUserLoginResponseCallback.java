@@ -24,19 +24,18 @@
 package io.mycat.front;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
-import io.mycat.mysql.state.CloseState;
-import io.mycat.mysql.state.IdleState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.engine.ErrorCode;
 import io.mycat.engine.SQLCommandHandler;
 import io.mycat.mysql.packet.AuthPacket;
-import io.mycat.mysql.packet.MySQLPacket;
+import io.mycat.mysql.state.CloseState;
+import io.mycat.mysql.state.IdleState;
 import io.mycat.net2.ConDataBuffer;
-import io.mycat.net2.Connection;
+import io.mycat.net2.states.ClosingState;
+import io.mycat.net2.states.ReadWaitingState;
 import io.mycat.util.CharsetUtil;
 
 /**
@@ -50,9 +49,8 @@ public class CheckUserLoginResponseCallback implements SQLCommandHandler {
 
     public void processCmd(MySQLFrontConnection con, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos,
                            int pkgLen) throws IOException {
-        ByteBuffer byteBuff = dataBuffer.getBytes(pkgStartPos, pkgLen);
         AuthPacket auth = new AuthPacket();
-        auth.read(byteBuff);
+        auth.read(dataBuffer);
 
         // Fake check user
         LOGGER.debug("Check user name. " + auth.user);
@@ -91,16 +89,20 @@ public class CheckUserLoginResponseCallback implements SQLCommandHandler {
         if (!con.setFrontSchema(auth.database)) {
             final String errmsg = "No Mycat Schema defined: " + auth.database;
             LOGGER.debug(errmsg);
-            con.writeErrMessage(ErrorCode.ER_NO_DB_ERROR, errmsg);
-            con.setNextState(CloseState.INSTANCE);
+            con.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR,"42000".getBytes(), errmsg);
+            
+            con.setWriteCompleteListener(() -> {
+            	con.setNextState(CloseState.INSTANCE);
+                con.setNextConnState(ClosingState.INSTANCE);
+            });
         } else {
             con.clearCurrentPacket();
             con.write(AUTH_OK);
             con.setWriteCompleteListener(() -> {
-                con.getReadDataBuffer().clear();
-                con.getWriteDataBuffer().clear();
-                con.clearCurrentPacket();
                 con.setNextState(IdleState.INSTANCE);
+                con.clearCurrentPacket();
+            	con.getDataBuffer().clear();
+                con.setNextConnState(ReadWaitingState.INSTANCE);
             });
         }
     }
