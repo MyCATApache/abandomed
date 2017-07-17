@@ -29,17 +29,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.SQLEngineCtx;
+import io.mycat.engine.dataChannel.TransferDirection;
 import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.MySQLConnection;
-import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.ConnectionException;
 import io.mycat.net2.NIOHandler;
-import io.mycat.net2.states.NoReadAndWriteState;
 import io.mycat.net2.states.ParseCmdState;
 import io.mycat.net2.states.ReadWaitingState;
-import io.mycat.net2.states.WriteWaitingState;
 
 /**
  * backend mysql NIO handler (only one for all backend mysql connections)
@@ -77,8 +75,8 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
         	 * 透传发生时,后端状态发生改变,应该从状态机进入.这里退出.
         	 * 
         	 */
-        	if((con.getNextConnState()!=null&&!ParseCmdState.INSTANCE.equals(con.getNextConnState()))
-        			||!ParseCmdState.INSTANCE.equals(con.getConnState())){ 
+        	if((con.getNextNetworkState()!=null&&!ParseCmdState.INSTANCE.equals(con.getNextNetworkState()))
+        			||!ParseCmdState.INSTANCE.equals(con.getNetworkState())){ 
         		return ;
         	}
         	
@@ -86,7 +84,7 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
         	 * 只有在进行透传时,透传标记才设置为 true, 循环处理缓冲区中的数据时,透传标记为false.
         	 * 整个结果集解析完成,最后一个数据包透传完成后,需要结束透传状态.
         	 */
-         	if(!TransferMode.NORMAL.equals(con.getDirectTransferMode())){  //完成一次透传后,
+         	if(!TransferDirection.NONE.equals(con.getTransferDirection())){  //完成一次透传后,
          		
          		if(offset < 0){  //完成一次透传后,如果有半包,并且半包已经透传出去的情况.offset 会小于0
          			if(con.getCurrentPacketLength()< limit){
@@ -162,14 +160,14 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
         	    * 2. 缓冲区不够长 , 缓冲区不够长的情况,已经在连接状态机中控制,这里不再处理
         	    */
                if (!MySQLConnection.validateHeader(offset, limit)) {
-            	   con.setNextConnState(ReadWaitingState.INSTANCE);
+            	   con.setNextNetworkState(ReadWaitingState.INSTANCE);
             	   return;
                }
                
         	   length = MySQLConnection.getPacketLength(dataBuffer, offset);
         	   /* 判断是否半包  */
        		   if (length + offset > limit) {
-       			   con.setNextConnState(ReadWaitingState.INSTANCE);
+       			   con.setNextNetworkState(ReadWaitingState.INSTANCE);
        			   return;
                } else {
                    //完整的包
@@ -180,7 +178,7 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
                    con.setCurrentPacketLength(length);
                    con.setCurrentPacketStartPos(pkgStartPos);
                    con.setCurrentPacketType(packetType);
-                   con.setDirectTransferMode(TransferMode.NORMAL);  //整包透传
+                   con.setDirectTransferMode(TransferMode.COMPLETE_PACKET);  //整包透传
                    con.driveState(false);
                }
         	}      

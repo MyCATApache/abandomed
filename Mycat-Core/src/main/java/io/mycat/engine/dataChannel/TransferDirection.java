@@ -7,7 +7,7 @@ package io.mycat.engine.dataChannel;
  */
 public enum TransferDirection {
 	
-	FRONT,      // 像前端传输
-	BACKEND     // 像后端传输
-
+	TOFRONT,       // 像前端传输
+	TOBACKEND,     // 像后端传输
+	NONE         // 当前状态没有透传
 }

@@ -184,7 +184,7 @@ public class SQLResultsCacheService {
              */
             command.arg = hintSQLInfo.getExecSQL().getBytes(existCon.getCharset());
             LOGGER.debug(" here has bug , please fix it ");  //TODO existCon.getWriteDataBuffer().putBytes(command.write(existCon));
-            existCon.setNextConnState(WriteWaitingState.INSTANCE);
+            existCon.setNextNetworkState(WriteWaitingState.INSTANCE);
             /**设置后端连接池结果集处理handler,sqlResultCache缓存结果集类*/
             existCon.setUserCallback(new SQLResCacheHintHandler(hintSQLInfo, sqlResultCache));
         }

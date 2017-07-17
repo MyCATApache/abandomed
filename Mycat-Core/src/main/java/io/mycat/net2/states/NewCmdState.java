@@ -16,7 +16,7 @@ import io.mycat.net2.Connection;
  * @author yanjunli
  *
  */
-public class NewCmdState implements ConnState {
+public class NewCmdState implements NetworkState {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(NewCmdState.class);
     public static final NewCmdState INSTANCE = new NewCmdState();
@@ -36,9 +36,9 @@ public class NewCmdState implements ConnState {
 			conn.setWriteCompleteListener(null);
 		}
 		
-		if(conn.getNextConnState()!=null){
-			conn.setConnState(conn.getNextConnState());
-			conn.setNextConnState(null);		
+		if(conn.getNextNetworkState()!=null){
+			conn.setNetworkState(conn.getNextNetworkState());
+			conn.setNextNetworkState(null);		
 		}else{
 			/* 命令解析完成后,应该制定后续状态,这里打印出 error 日志      */
 			LOGGER.error("Current conn in ReadWaitingState. conn is "+conn.getClass());

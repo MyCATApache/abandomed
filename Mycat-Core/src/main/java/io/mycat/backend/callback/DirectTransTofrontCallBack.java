@@ -81,7 +81,7 @@ public class DirectTransTofrontCallBack  implements BackConnectionCallback{
 	@Override
 	public void connectionClose(MySQLBackendConnection conn, String reason) {
 		LOGGER.info("connection closed "+conn);
-		if(ClosingState.INSTANCE.equals(conn.getConnState())||ClosedState.INSTANCE.equals(conn.getConnState()))
+		if(ClosingState.INSTANCE.equals(conn.getNetworkState())||ClosedState.INSTANCE.equals(conn.getNetworkState()))
 		{
 		getFrontCon(conn).getSession().removeBackCon(conn);
 		}

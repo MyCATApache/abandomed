@@ -99,7 +99,7 @@ public final class NIOReactor {
 							LOGGER.debug("select-key-readyOps = {}, attachment = {}", key.readyOps(), att);
 							if (att != null && key.isValid()) {
 								con = (Connection) att;
-								con.connDriverMachine();
+								con.networkDriverMachine();
 							} else {
 								key.cancel();
 							}
@@ -161,7 +161,7 @@ public final class NIOReactor {
 				try {
 					c.setSelector(selector);
 					c.setMyBufferPool(myBufferPool);
-					c.connDriverMachine();
+					c.networkDriverMachine();
 				} catch (Throwable e) {
 					LOGGER.warn("register error ", e);
 					c.close("register err");

@@ -40,7 +40,7 @@ public class BackendComQueryColumnDefCallback extends ResponseCallbackAdapter {
         	//当前半包不透传
 			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, false, false);
 			break;
-        case NORMAL:
+        case NONE:
         	break;
         }
     	

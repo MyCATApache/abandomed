@@ -254,7 +254,7 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
              * 否则直接写到后端即可
              */
 //            existCon.getDataBuffer().putBytes(dataBuffer.getBytes(pkgStartPos, pkgLen));
-            existCon.connDriverMachine(WriteWaitingState.INSTANCE);
+        	existCon.networkDriverMachine(WriteWaitingState.INSTANCE);
             existCon.setUserCallback(directTransCallback);
         }
     }

@@ -13,7 +13,7 @@ import io.mycat.net2.Connection;
  * @author yanjunli
  *
  */
-public interface ConnState {
+public interface NetworkState {
 	
 	/**
 	 * 状态机处理

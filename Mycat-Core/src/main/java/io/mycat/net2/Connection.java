@@ -1,7 +1,6 @@
 package io.mycat.net2;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -10,15 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.backend.WriteCompleteListener;
+import io.mycat.engine.dataChannel.TransferDirection;
 import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.net2.states.ClosedState;
 import io.mycat.net2.states.ClosingState;
-import io.mycat.net2.states.ConnState;
 import io.mycat.net2.states.ListeningState;
+import io.mycat.net2.states.NetworkState;
 import io.mycat.net2.states.WriteWaitingState;
 import io.mycat.net2.states.network.TRANSMIT_RESULT;
 import io.mycat.net2.states.network.TRY_READ_RESULT;
-import io.mycat.util.StringUtil;
 
 /**
  * @author wuzh
@@ -59,8 +58,8 @@ public abstract class Connection implements ClosableConnection {
     private long lastPerfCollectTime;
     protected NIOHandler handler;
     
-    private ConnState connState = ListeningState.INSTANCE; 
-    private ConnState nextConnState;  /** which state to go into after finishing current write */    
+    private NetworkState networkState = ListeningState.INSTANCE; 
+    private NetworkState nextNetworkState;  /** which state to go into after finishing current write */    
     
     private Selector selector;
     private ReactorBufferPool myBufferPool;
@@ -68,9 +67,8 @@ public abstract class Connection implements ClosableConnection {
     
     private byte[] tmpWriteBytes;  // 该字段用于 在非透传模式下,net buffer 大小小于写出报文大小时,临时记录报文数据.用于分批 写出到 net buffer
     private int tmplastwritePos;   // 写缓冲区可用时, tmpWriteBytes 上次写到 net buffer 缓冲区中的位置
-    private TransferMode directTransferMode = TransferMode.NORMAL;
-    
-    
+    private TransferMode directTransferMode = TransferMode.NONE;            //透传模式
+    private TransferDirection transferDirection = TransferDirection.NONE;   //透传方向
         
     public Connection(SocketChannel channel) {
         this.channel = channel;
@@ -81,23 +79,23 @@ public abstract class Connection implements ClosableConnection {
         this.lastPerfCollectTime = startupTime;
     }
     
-	public void connDriverMachine(){
-		connDriverMachine(null);
+	public void networkDriverMachine(){
+		networkDriverMachine(null);
 	}
     
     /**
      * 状态机可以由内部驱动,也可以由外部驱动
      * 内部驱动设置state,外部驱动设置 nextstate
      */
-    public void connDriverMachine(ConnState states){
+    public void networkDriverMachine(NetworkState states){
     	
     	if(states!=null){
-    		this.connState = states;
+    		this.networkState = states;
     	}
 
     	try {
     		/* 循环方式,替代递归 */
-    		while(connState.handler(this, processKey, channel, selector)){}
+    		while(networkState.handler(this, processKey, channel, selector)){}
 		} catch (Exception e) {
 			LOGGER.error("server error", e);
 			close(" close connection!");
@@ -224,7 +222,7 @@ public abstract class Connection implements ClosableConnection {
 
  
     public boolean isConnected() {
-        return (!this.connState.equals(ClosedState.INSTANCE) && !connState.equals(ClosingState.INSTANCE) && !connState.equals(ListeningState.INSTANCE));
+        return (!this.networkState.equals(ClosedState.INSTANCE) && !networkState.equals(ClosingState.INSTANCE) && !networkState.equals(ListeningState.INSTANCE));
     }
 
     @SuppressWarnings("unchecked")
@@ -283,8 +281,9 @@ public abstract class Connection implements ClosableConnection {
     	}else{
     		tmpWriteBytes = data;
        	}
-    	this.directTransferMode = TransferMode.NORMAL;
-    	setNextConnState(WriteWaitingState.INSTANCE);
+    	this.directTransferMode = TransferMode.NONE;
+    	this.transferDirection = TransferDirection.NONE;
+    	setNextNetworkState(WriteWaitingState.INSTANCE);
     }
   	
     /*
@@ -292,7 +291,7 @@ public abstract class Connection implements ClosableConnection {
      *   TRANSMIT_COMPLETE   All done writing.
      *   TRANSMIT_INCOMPLETE More data remaining to write.
      *   TRANSMIT_SOFT_ERROR Can't write any more right now.
-     *   TRANSMIT_HARD_ERROR Can't write (connstate is set to conn_closing)
+     *   TRANSMIT_HARD_ERROR Can't write (networkState is set to conn_closing)
      */
     public TRANSMIT_RESULT write() throws IOException {
     	
@@ -300,7 +299,7 @@ public abstract class Connection implements ClosableConnection {
         final ConDataBuffer buffer = this.dataBuffer;
         int written = 0;
         int remains = 0;
-        if(TransferMode.NORMAL.equals(directTransferMode)){
+        if(TransferDirection.NONE.equals(transferDirection)){
         	/**
         	 * 在非透传模式下,如果 local buffer > net buffer 剩余长度,分批透传
         	 */
@@ -360,8 +359,8 @@ public abstract class Connection implements ClosableConnection {
 		this.attachement = attachement;
 	}
 
-    public void setConnState(ConnState newState) {
-        this.connState = newState;
+    public void setNetworkState(NetworkState newState) {
+        this.networkState = newState;
     }
 
     private void closeSocket() {
@@ -381,8 +380,8 @@ public abstract class Connection implements ClosableConnection {
         }
     }
 
-	public ConnState getConnState() {
-        return connState;
+	public NetworkState getNetworkState() {
+        return networkState;
     }
 
     public Direction getDirection() {
@@ -403,7 +402,7 @@ public abstract class Connection implements ClosableConnection {
 
     @Override
     public String toString() {
-        return "Connection [host=" + host + ",  port=" + port + ", id=" + id + ", state=" + connState + ", direction="
+        return "Connection [host=" + host + ",  port=" + port + ", id=" + id + ", state=" + networkState + ", direction="
                 + direction + ", startupTime=" + startupTime + ", lastReadTime=" + lastReadTime + ", lastWriteTime="
                 + lastWriteTime + "]";
     }
@@ -415,14 +414,14 @@ public abstract class Connection implements ClosableConnection {
 		return reactor.equals(reacotr);
 	}
 
-	public ConnState getNextConnState() {
-		return nextConnState;
+	public NetworkState getNextNetworkState() {
+		return nextNetworkState;
 	}
 
-	public void setNextConnState(ConnState nextConnState) {
+	public void setNextNetworkState(NetworkState nextConnState) {
 		LOGGER.debug("nextConnState is change to "+nextConnState
-					+"  current nextConnState is " +this.nextConnState + this.getClass().getSimpleName());
-		this.nextConnState = nextConnState;
+					+"  current nextConnState is " +this.nextNetworkState + this.getClass().getSimpleName());
+		this.nextNetworkState = nextConnState;
 	}
 
 	public Selector getSelector() {
@@ -475,6 +474,14 @@ public abstract class Connection implements ClosableConnection {
 
 	public byte[] getTmpWriteBytes() {
 		return tmpWriteBytes;
+	}
+
+	public TransferDirection getTransferDirection() {
+		return transferDirection;
+	}
+
+	public void setTransferDirection(TransferDirection transferDirection) {
+		this.transferDirection = transferDirection;
 	}
     
 }

@@ -55,6 +55,6 @@ public class FrontendComQueryCommandHandler extends AbstractComQueryCommandHandl
             backendConnection.getShareBuffer().setReadPos(frontCon.getCurrentPacketLength());
             backendConnection.driveState();
         }
-        frontCon.setNextConnState(NoReadAndWriteState.INSTANCE);
+        frontCon.setNextNetworkState(NoReadAndWriteState.INSTANCE);
     }
 }

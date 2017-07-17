@@ -38,7 +38,7 @@ public class ConnectingState extends AbstractMysqlConnectionState {
             mySQLFrontConnection.setWriteCompleteListener(()->{
             	mySQLFrontConnection.clearCurrentPacket();
             	mySQLFrontConnection.getDataBuffer().clear();
-            	mySQLFrontConnection.setNextConnState(ReadWaitingState.INSTANCE);
+            	mySQLFrontConnection.setNextNetworkState(ReadWaitingState.INSTANCE);
             });
         } catch (Throwable e) {
             LOGGER.warn("frontend InitialState error", e);

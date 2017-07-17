@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import io.mycat.net2.Connection;
 
-public class WriteWaitingState implements ConnState {
+public class WriteWaitingState implements NetworkState {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(WriteWaitingState.class);
     public static final WriteWaitingState INSTANCE = new WriteWaitingState();
@@ -34,7 +34,7 @@ public class WriteWaitingState implements ConnState {
         if (needWakeup) {
             processKey.selector().wakeup();
         }
-		conn.setConnState(WriteState.INSTANCE);
+		conn.setNetworkState(WriteState.INSTANCE);
 		return false;
 	}
 

@@ -61,7 +61,7 @@ public class PassThrouthtoFrontDataHandler implements DataHandler {
     		}
 			
 			break;
-		case NORMAL:
+		case NONE:
 			break;
 		case COMPLETE_PACKET:
 			backendDataBuffer.setReadPos(in.getCurrentPacketLength());  //设置读取位置
@@ -69,12 +69,12 @@ public class PassThrouthtoFrontDataHandler implements DataHandler {
 		}
 
 		MySQLFrontConnection  frontConn = backendConn.getMySQLFrontConnection();  //TODO 放入到当前会话上下文中?
-		backendConn.setNextConnState(NoReadAndWriteState.INSTANCE);
+		backendConn.setNextNetworkState(NoReadAndWriteState.INSTANCE);
 		//后端状态有可能是上一个包的状态, 这种情况出现在 最后一个包无法解析出报文类型的情况,这种情况最后一个包的前几个字节不传输.
 		frontConn.setNextState(backendConn.getCurrentState());
 		LOGGER.debug("Frontend in "+frontConn.getCurrentState().getClass().getSimpleName());
 		
-    	frontConn.connDriverMachine(WriteWaitingState.INSTANCE);
+		frontConn.networkDriverMachine(WriteWaitingState.INSTANCE);
         ConDataBuffer frontdatabuffer = frontConn.getDataBuffer();
         
             	
@@ -89,16 +89,16 @@ public class PassThrouthtoFrontDataHandler implements DataHandler {
         	frontConn.setDataBuffer(frontdatabuffer);
 
             //写完成后开启后端的读
-        	frontConn.getBackendConnection().connDriverMachine(ReadWaitingState.INSTANCE);
+        	frontConn.getBackendConnection().networkDriverMachine(ReadWaitingState.INSTANCE);
         	frontConn.clearCurrentPacket();
         	if(TransferMode.SHORT_HALF_PACKET.equals(mode)){
         		backendConn.clearCurrentPacket();
         	}
         	if(isAllFinish){
         		frontConn.setNextState(IdleState.INSTANCE);
-        		frontConn.setNextConnState(ReadWaitingState.INSTANCE);
+        		frontConn.setNextNetworkState(ReadWaitingState.INSTANCE);
         	}else{
-        		frontConn.setNextConnState(NoReadAndWriteState.INSTANCE);
+        		frontConn.setNextNetworkState(NoReadAndWriteState.INSTANCE);
         	}
         });
 	}

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import io.mycat.net2.Connection;
 
-public class ClosedState implements ConnState {
+public class ClosedState implements NetworkState {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ClosingState.class);
     public static final ClosedState INSTANCE = new ClosedState();

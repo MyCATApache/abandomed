@@ -32,7 +32,7 @@ public class AuthenticateRespCallback extends ResponseCallbackAdapter {
             if (mySQLFrontConnection != null) {
                 mySQLFrontConnection.executePendingTask();
             }else{
-            	conn.setNextConnState(ReadWaitingState.INSTANCE);
+            	conn.setNextNetworkState(ReadWaitingState.INSTANCE);
             }
         }
 

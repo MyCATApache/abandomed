@@ -93,7 +93,7 @@ public class CheckUserLoginResponseCallback implements SQLCommandHandler {
             
             con.setWriteCompleteListener(() -> {
             	con.setNextState(CloseState.INSTANCE);
-                con.setNextConnState(ClosingState.INSTANCE);
+                con.setNextNetworkState(ClosingState.INSTANCE);
             });
         } else {
             con.clearCurrentPacket();
@@ -102,7 +102,7 @@ public class CheckUserLoginResponseCallback implements SQLCommandHandler {
                 con.setNextState(IdleState.INSTANCE);
                 con.clearCurrentPacket();
             	con.getDataBuffer().clear();
-                con.setNextConnState(ReadWaitingState.INSTANCE);
+                con.setNextNetworkState(ReadWaitingState.INSTANCE);
             });
         }
     }

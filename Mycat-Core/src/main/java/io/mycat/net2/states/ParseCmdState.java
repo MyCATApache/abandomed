@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import io.mycat.net2.Connection;
 
-public class ParseCmdState implements ConnState{
+public class ParseCmdState implements NetworkState{
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ParseCmdState.class);
     public static final ParseCmdState INSTANCE = new ParseCmdState();
@@ -23,9 +23,9 @@ public class ParseCmdState implements ConnState{
 			throws IOException {
 		LOGGER.debug("Current conn in ParseCmdState. conn is "+conn.getClass());
 		conn.getHandler().handleReadEvent(conn);
-		if(conn.getNextConnState()!=null){
-			conn.setConnState(conn.getNextConnState());
-			conn.setNextConnState(null);
+		if(conn.getNextNetworkState()!=null){
+			conn.setNetworkState(conn.getNextNetworkState());
+			conn.setNextNetworkState(null);
 		}
 		return true;
 	}

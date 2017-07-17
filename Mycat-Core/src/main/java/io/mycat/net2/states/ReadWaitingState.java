@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import io.mycat.net2.Connection;
 
-public class ReadWaitingState implements ConnState {
+public class ReadWaitingState implements NetworkState {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReadWaitingState.class);
     public static final ReadWaitingState INSTANCE = new ReadWaitingState();
@@ -32,7 +32,7 @@ public class ReadWaitingState implements ConnState {
         if (needWakeup) {
             processKey.selector().wakeup();
         }
-	   conn.setConnState(ReadState.INSTANCE);   //继续解析剩下的数据
+	   conn.setNetworkState(ReadState.INSTANCE);   //继续解析剩下的数据
 	   return false;
 	}
 

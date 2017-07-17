@@ -24,7 +24,7 @@ public class CloseState extends AbstractMysqlConnectionState {
     @Override
     protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in CloseState");
-        mySQLFrontConnection.setNextConnState(ClosingState.INSTANCE);
+        mySQLFrontConnection.setNextNetworkState(ClosingState.INSTANCE);
     }
 
     @Override

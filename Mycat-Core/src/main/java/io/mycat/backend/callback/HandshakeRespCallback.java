@@ -28,7 +28,7 @@ public class HandshakeRespCallback extends ResponseCallbackAdapter {
         conn.setWriteCompleteListener(()->{
         	conn.clearCurrentPacket();
         	conn.getDataBuffer().clear();
-        	conn.setNextConnState(ReadWaitingState.INSTANCE);
+        	conn.setNextNetworkState(ReadWaitingState.INSTANCE);
         });
     }
 

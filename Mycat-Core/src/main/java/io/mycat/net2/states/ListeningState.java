@@ -12,7 +12,7 @@ import io.mycat.net2.Connection;
 import io.mycat.net2.DirectConDataBuffer;
 import io.mycat.net2.NetSystem;
 
-public class ListeningState implements ConnState {
+public class ListeningState implements NetworkState {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ListeningState.class);
     public static final ListeningState INSTANCE = new ListeningState();
@@ -26,7 +26,7 @@ public class ListeningState implements ConnState {
 		LOGGER.debug("Current conn in ListeningState. conn is "+conn.getClass());
 		NetSystem.getInstance().addConnection(conn);
 		conn.setProcessKey(channel.register(selector, SelectionKey.OP_READ, conn));
-        conn.setConnState(ReadState.INSTANCE);
+        conn.setNetworkState(ReadState.INSTANCE);
         //TODO
         /**使用MyCatMemoryAllocator分配Direct Buffer,再进行SocketChannel通信时候，
          * 网络读写都会减少一次数据的拷贝,而使用FileChanel与SocketChannel数据交换时
@@ -34,12 +34,12 @@ public class ListeningState implements ConnState {
          * 后面考虑会使用netty中ByteBuf中的DirectBuffer进行网络IO通信。效率更高
          * */
 //        conn.setReadDataBuffer(new DirectConDataBuffer(1024 ));
-        conn.setDataBuffer(new DirectConDataBuffer(500 ));
+        conn.setDataBuffer(new DirectConDataBuffer(2048 ));
         //新的client进来后，处理Server发送Client的handshake init packet
         conn.getHandler().onConnected(conn);  //连接事件处理完成后,驱动状态机
-        if(conn.getNextConnState()!=null){
-			conn.setConnState(conn.getNextConnState());
-			conn.setNextConnState(null);
+        if(conn.getNextNetworkState()!=null){
+			conn.setNetworkState(conn.getNextNetworkState());
+			conn.setNextNetworkState(null);
 			return true;
 		}
         return false;

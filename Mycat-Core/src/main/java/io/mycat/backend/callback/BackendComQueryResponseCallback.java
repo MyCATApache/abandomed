@@ -56,7 +56,7 @@ public class BackendComQueryResponseCallback extends ResponseCallbackAdapter {
 			SQLEngineCtx.INSTANCE().getDataTransferChannel()
         	.transferToFront(mySQLBackendConnection, false, false);
 			break;
-        case NORMAL:
+        case NONE:
         	break;
         }
     }

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import io.mycat.net2.Connection;
 
-public class NoReadAndWriteState implements ConnState {
+public class NoReadAndWriteState implements NetworkState {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(NoReadAndWriteState.class);
     public static final NoReadAndWriteState INSTANCE = new NoReadAndWriteState();
@@ -33,9 +33,9 @@ public class NoReadAndWriteState implements ConnState {
         if (needWakeup) {
             processKey.selector().wakeup();
         }
-        if(conn.getNextConnState()!=null){
-			conn.setConnState(conn.getNextConnState());
-			conn.setNextConnState(null);
+        if(conn.getNextNetworkState()!=null){
+			conn.setNetworkState(conn.getNextNetworkState());
+			conn.setNextNetworkState(null);
 			return true;
 		}else{
 			return false;

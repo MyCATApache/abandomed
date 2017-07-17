@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import io.mycat.net2.Connection;
 import io.mycat.net2.states.network.TRY_READ_RESULT;
 
-public class ReadState implements ConnState {
+public class ReadState implements NetworkState {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReadState.class);
     public static final ReadState INSTANCE = new ReadState();
@@ -27,16 +27,16 @@ public class ReadState implements ConnState {
 		res = conn.try_read_network();     /* writePos 指针向前移动   */
 	    switch(res){
 	    case READ_NO_DATA_RECEIVED:
-		   conn.setConnState(ReadWaitingState.INSTANCE);
+		   conn.setNetworkState(ReadWaitingState.INSTANCE);
 		   break;
 	    case READ_DATA_RECEIVED:   /* 数据读取完成,开始解析命令 */
-		   conn.setConnState(ParseCmdState.INSTANCE);
+		   conn.setNetworkState(ParseCmdState.INSTANCE);
 		   break;
 	    case READ_ERROR:
-		   conn.setConnState(ClosingState.INSTANCE);
+		   conn.setNetworkState(ClosingState.INSTANCE);
 		   break;
 	    case READ_MEMORY_ERROR: /* Failed to allocate more memory */
-		   conn.setConnState(ClosingState.INSTANCE);
+		   conn.setNetworkState(ClosingState.INSTANCE);
 		   break;
 	    }
 		return true;
