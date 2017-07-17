@@ -25,6 +25,7 @@ package io.mycat.front;
 
 import java.io.IOException;
 
+import io.mycat.buffer.MycatByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,7 @@ public class CheckUserLoginResponseCallback implements SQLCommandHandler {
     private static final byte[] AUTH_OK = new byte[]{7, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0};
     private static final Logger LOGGER = LoggerFactory.getLogger(CheckUserLoginResponseCallback.class);
 
-    public void processCmd(MySQLFrontConnection con, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos,
+    public void processCmd(MySQLFrontConnection con, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos,
                            int pkgLen) throws IOException {
         AuthPacket auth = new AuthPacket();
         auth.read(dataBuffer);

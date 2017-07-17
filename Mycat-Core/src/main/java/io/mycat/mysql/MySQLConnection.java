@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
+import io.mycat.buffer.MycatByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,14 +41,15 @@ import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.Connection;
 import io.mycat.net2.states.WriteWaitingState;
 import io.mycat.util.RandomUtil;
+
 /**
- * Mysql connection 
- * @author wuzhihui
+ * Mysql connection
  *
+ * @author wuzhihui
  */
-public class MySQLConnection extends Connection implements StatefulConnection{
+public class MySQLConnection extends Connection implements StatefulConnection {
     protected final static Logger LOGGER = LoggerFactory.getLogger(MySQLConnection.class);
-    
+
     public static int NORMAL = 0;            //正常非透传状态
     public static int HALF_PACKET = 1;       //半包透传状态
     public static int COMPLETE_PACKET = 2;   //整包透传状态
@@ -66,8 +68,8 @@ public class MySQLConnection extends Connection implements StatefulConnection{
     protected String charset;
     protected int charsetIndex;
     protected byte[] seed;
-    private ConDataBuffer shareBuffer;
-    
+    private MycatByteBuffer shareBuffer;
+
     public MySQLConnection(SocketChannel channel) {
         super(channel);
         this.state = InitialState.INSTANCE;
@@ -90,10 +92,8 @@ public class MySQLConnection extends Connection implements StatefulConnection{
      * @return 报文长度(Header长度+内容长度)
      * @throws IOException
      */
-    public static final int getPacketLength(ConDataBuffer buffer, int offset) throws IOException {
-        int length = buffer.getByte(offset) & 0xff;
-        length |= (buffer.getByte(++offset) & 0xff) << 8;
-        length |= (buffer.getByte(++offset) & 0xff) << 16;
+    public static final int getPacketLength(MycatByteBuffer buffer, int offset) throws IOException {
+        int length = (int) buffer.getFixInt(offset, 3);
         return length + msyql_packetHeaderSize;
     }
 
@@ -160,38 +160,38 @@ public class MySQLConnection extends Connection implements StatefulConnection{
 
     /**
      * 发送mysql 报文时,直接发送报文.不再通过queue
+     *
      * @param pkg
      * @throws IOException
      */
-	public void writeMsqlPackage(MySQLPacket pkg) throws IOException
-	{
-		int pkgSize = pkg.calcPacketSize();
-		byte[] data = new byte[pkgSize+3+1];
-		ByteBuffer buffer = ByteBuffer.allocate(pkgSize+3+1);
+    public void writeMsqlPackage(MySQLPacket pkg) throws IOException {
+        int pkgSize = pkg.calcPacketSize();
+        byte[] data = new byte[pkgSize + 3 + 1];
+        ByteBuffer buffer = ByteBuffer.allocate(pkgSize + 3 + 1);
         pkg.write(buffer, pkgSize);
         buffer.flip();
         buffer.get(data);
         write(data);
         buffer = null;
-	}
-	
+    }
+
     public void writeErrMessage(int errno, String info) throws IOException {
         ErrorPacket err = new ErrorPacket();
         err.packetId = 2;
         err.errno = errno;
         err.message = info.getBytes();
-       this.writeMsqlPackage(err);
+        this.writeMsqlPackage(err);
     }
-    
-    public void writeErrMessage(int errno,byte[] sqlstate, String info) throws IOException {
+
+    public void writeErrMessage(int errno, byte[] sqlstate, String info) throws IOException {
         ErrorPacket err = new ErrorPacket();
         err.packetId = 2;
         err.errno = errno;
         err.message = info.getBytes();
         err.sqlState = sqlstate;
-       this.writeMsqlPackage(err);
+        this.writeMsqlPackage(err);
     }
-    
+
     public String getUser() {
         return user;
     }
@@ -208,10 +208,11 @@ public class MySQLConnection extends Connection implements StatefulConnection{
         this.password = password;
     }
 
-   
+
     public String getCharset() {
-		return charset;
-	}
+        return charset;
+    }
+
     public void setCharset(int charsetIndex, String charsetName) {
         this.charsetIndex = charsetIndex;
         this.charset = charsetName;
@@ -240,7 +241,8 @@ public class MySQLConnection extends Connection implements StatefulConnection{
     public void setCurrentPacketStartPos(int currentPacketStartPos) {
         this.currentPacketStartPos = currentPacketStartPos;
     }
-	/**
+
+    /**
      * 清除关于当前包的记录状态
      */
     public void clearCurrentPacket() {
@@ -279,12 +281,12 @@ public class MySQLConnection extends Connection implements StatefulConnection{
         return state;
     }
 
-	public ConDataBuffer getShareBuffer() {
-		return shareBuffer;
-	}
+    public MycatByteBuffer getShareBuffer() {
+        return shareBuffer;
+    }
 
-	public void setShareBuffer(ConDataBuffer shareBuffer) {
-		this.shareBuffer = shareBuffer;
-	}
+    public void setShareBuffer(MycatByteBuffer shareBuffer) {
+        this.shareBuffer = shareBuffer;
+    }
 
 }

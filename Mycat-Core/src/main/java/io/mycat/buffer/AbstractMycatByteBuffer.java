@@ -23,39 +23,6 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     abstract long getInt(int index, int length);
 
     /**
-     * 从指定位置读取bytes
-     *
-     * @param index  位置
-     * @param length 长度
-     * @return 字节数组
-     */
-    abstract byte[] getBytes(int index, int length);
-
-    /**
-     * 从指定位置读取byte
-     *
-     * @param index 位置
-     * @return 字节
-     */
-    abstract byte getByte(int index);
-
-    /**
-     * 从指定位置开始写入字节数组
-     *
-     * @param index 位置
-     * @param bytes 字节数组
-     */
-    abstract void putBytes(int index, byte[] bytes);
-
-    /**
-     * 向指定位置写入字节
-     *
-     * @param index
-     * @param val
-     */
-    abstract void putByte(int index, byte val);
-
-    /**
      * 获取lenenc占用的字节长度
      *
      * @param lenenc 值
@@ -74,17 +41,17 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     }
 
     @Override
-    public boolean hasRemaining() {
+    public boolean hasReadableBytes() {
         return readIndex < writeIndex;
     }
 
     @Override
-    public int remaining() {
+    public int readableBytes() {
         return writeIndex - readIndex;
     }
 
     @Override
-    public int freeBytes() {
+    public int writableBytes() {
         return capacity() - writeIndex;
     }
 
@@ -319,6 +286,40 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     public MycatByteBuffer writeNULString(String val) {
         putNULString(writeIndex, val);
         writeIndex += val.getBytes().length + 1;
+        return this;
+    }
+
+    @Override
+    public byte[] readBytes(int length) {
+        byte[] bytes = this.getBytes(readIndex, length);
+        readIndex += length;
+        return bytes;
+    }
+
+    @Override
+    public MycatByteBuffer writeBytes(byte[] bytes) {
+        this.writeBytes(bytes.length, bytes);
+        return this;
+    }
+
+    @Override
+    public MycatByteBuffer writeBytes(int length, byte[] bytes) {
+        this.putBytes(writeIndex, length, bytes);
+        writeIndex += length;
+        return this;
+    }
+
+    @Override
+    public byte readByte() {
+        byte val = getByte(readIndex);
+        readIndex++;
+        return val;
+    }
+
+    @Override
+    public MycatByteBuffer writeByte(byte val) {
+        this.putByte(writeIndex, val);
+        writeIndex++;
         return this;
     }
 }

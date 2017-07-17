@@ -2,6 +2,7 @@ package io.mycat.backend.callback;
 
 import java.io.IOException;
 
+import io.mycat.buffer.MycatByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +16,7 @@ public class BackendComQueryColumnDefCallback extends ResponseCallbackAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(BackendComQueryColumnDefCallback.class);
 
     @Override
-    public void handleResponse(MySQLBackendConnection mySQLBackendConnection, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
+    public void handleResponse(MySQLBackendConnection mySQLBackendConnection, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
     	LOGGER.debug(mySQLBackendConnection.getClass().getSimpleName() + "  in  BackendComQueryColumnDefCallback");
     	switch(mySQLBackendConnection.getDirectTransferMode()){
         case COMPLETE_PACKET:

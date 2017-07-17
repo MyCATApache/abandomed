@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.mysql.Capabilities;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
@@ -62,27 +63,26 @@ public class AuthPacket extends MySQLPacket {
     public byte[] password;
     public String database;
 
-    public void read(ConDataBuffer byteBuffer) throws IOException {
-        MySQLMessage mm = new MySQLMessage(byteBuffer);
-        packetLength = mm.readUB3();
-        packetId = mm.read();
-        clientFlags = mm.readUB4();
-        maxPacketSize = mm.readUB4();
-        charsetIndex = (mm.read() & 0xff);
+    public void read(MycatByteBuffer byteBuffer) throws IOException {
+        packetLength = (int) byteBuffer.readFixInt(3);
+        packetId = byteBuffer.readByte();
+        clientFlags = byteBuffer.readFixInt(4);
+        maxPacketSize =byteBuffer.readFixInt(4);
+        charsetIndex = byteBuffer.readByte();
         // read extra
-        int current = mm.position();
-        int len = (int) mm.readLength();
+        int current = byteBuffer.readIndex();
+//        int len = (int) mm.readLength();
 //        if (len > 0 && len < FILLER.length) {
 //            byte[] ab = new byte[len];
 //            System.arraycopy(mm.bytes(), mm.position(), ab, 0, len);
 //            this.extra = ab;
 //        }
-        mm.position(current + FILLER.length);
-        user = mm.readStringWithNull();
-        password = mm.readBytesWithLength();
-        if (((clientFlags & Capabilities.CLIENT_CONNECT_WITH_DB) != 0) && mm.hasRemaining()) {
-            database = mm.readStringWithNull();
-        }
+//        mm.position(current + FILLER.length);
+//        user = mm.readStringWithNull();
+//        password = mm.readBytesWithLength();
+//        if (((clientFlags & Capabilities.CLIENT_CONNECT_WITH_DB) != 0) && mm.hasRemaining()) {
+//            database = mm.readStringWithNull();
+//        }
     }
 
   

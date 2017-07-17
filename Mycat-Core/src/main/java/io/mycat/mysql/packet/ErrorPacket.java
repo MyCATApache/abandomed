@@ -64,7 +64,7 @@ public class ErrorPacket extends MySQLPacket {
     // MySQLMessage mm = new MySQLMessage(bin.data);
     // fieldCount = mm.read();
     // errno = mm.readUB2();
-    // if (mm.hasRemaining() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
+    // if (mm.hasReadableBytes() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
     // mm.read();
     // sqlState = mm.readBytes(5);
     // }
@@ -77,7 +77,7 @@ public class ErrorPacket extends MySQLPacket {
     // packetId = mm.read();
     // fieldCount = mm.read();
     // errno = mm.readUB2();
-    // if (mm.hasRemaining() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
+    // if (mm.hasReadableBytes() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
     // mm.read();
     // sqlState = mm.readBytes(5);
     // }

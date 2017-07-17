@@ -67,7 +67,7 @@ public class OkPacket extends MySQLPacket {
     // insertId = mm.readLength();
     // serverStatus = mm.readUB2();
     // warningCount = mm.readUB2();
-    // if (mm.hasRemaining()) {
+    // if (mm.hasReadableBytes()) {
     // this.message = mm.readBytesWithLength();
     // }
     // }

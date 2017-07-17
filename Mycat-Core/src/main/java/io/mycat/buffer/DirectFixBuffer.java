@@ -80,7 +80,7 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
     }
 
     @Override
-    byte[] getBytes(int index, int length) {
+    public byte[] getBytes(int index, int length) {
         byteBuffer.limit(length + index);
         byteBuffer.position(index);
         byte[] bytes = new byte[length];
@@ -89,7 +89,7 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
     }
 
     @Override
-    byte getByte(int index) {
+    public byte getByte(int index) {
         byteBuffer.limit(index + 1);
         byteBuffer.position(index);
         byte b = byteBuffer.get();
@@ -97,17 +97,25 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
     }
 
     @Override
-    void putBytes(int index, byte[] bytes) {
-        byteBuffer.limit(index + bytes.length);
-        byteBuffer.position(index);
-        byteBuffer.put(bytes);
+    public MycatByteBuffer putBytes(int index, byte[] bytes) {
+        putBytes(index, bytes.length, bytes);
+        return this;
     }
 
     @Override
-    void putByte(int index, byte val) {
+    public MycatByteBuffer putBytes(int index, int length, byte[] bytes) {
+        byteBuffer.limit(index + length);
+        byteBuffer.position(index);
+        byteBuffer.put(bytes);
+        return this;
+    }
+
+    @Override
+    public MycatByteBuffer putByte(int index, byte val) {
         byteBuffer.limit(index + 1);
         byteBuffer.position(index);
         byteBuffer.put(val);
+        return this;
     }
 
     public ByteBuffer getByteBuffer() {

@@ -1,11 +1,12 @@
 package io.mycat.net2;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
+import io.mycat.buffer.MycatByteBuffer;
+import io.mycat.buffer.MycatByteBufferAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +19,6 @@ import io.mycat.net2.states.ListeningState;
 import io.mycat.net2.states.WriteWaitingState;
 import io.mycat.net2.states.network.TRANSMIT_RESULT;
 import io.mycat.net2.states.network.TRY_READ_RESULT;
-import io.mycat.util.StringUtil;
 
 /**
  * @author wuzh
@@ -45,7 +45,7 @@ public abstract class Connection implements ClosableConnection {
     private SelectionKey processKey;
     public static final int OP_NOT_READ = ~SelectionKey.OP_READ;
     public static final int OP_NOT_WRITE = ~SelectionKey.OP_WRITE;
-    private ConDataBuffer dataBuffer;
+    private MycatByteBuffer dataBuffer;
     protected boolean isClosed;
     protected boolean isSocketClosed;
     protected long startupTime;
@@ -63,7 +63,7 @@ public abstract class Connection implements ClosableConnection {
     private ConnState nextConnState;  /** which state to go into after finishing current write */    
     
     private Selector selector;
-    private ReactorBufferPool myBufferPool;
+    private MycatByteBufferAllocator mycatByteBufferAllocator;
     private WriteCompleteListener writeCompleteListener;
     
     private byte[] tmpWriteBytes;  // 该字段用于 在非透传模式下,net buffer 大小小于写出报文大小时,临时记录报文数据.用于分批 写出到 net buffer
@@ -108,10 +108,10 @@ public abstract class Connection implements ClosableConnection {
      * 处理新的命令
      */
     public TRY_READ_RESULT try_read_network() {
-    	final ConDataBuffer buffer = dataBuffer;
+    	final MycatByteBuffer buffer = dataBuffer;
 		int got = 0;
 		try {
-			got = buffer.transferFrom(channel);
+			got = buffer.transferFromChannel(channel);
 			
 			switch (got) {
 	            case 0: {
@@ -259,10 +259,9 @@ public abstract class Connection implements ClosableConnection {
         // 清理资源占用
         if (dataBuffer != null) {
             try {
-            	dataBuffer.recycle();
+                mycatByteBufferAllocator.recyle(dataBuffer);
             } catch (Exception e) {
-                e.printStackTrace();
-            }
+                e.printStackTrace(); }
             dataBuffer = null;
         }
     }
@@ -277,9 +276,10 @@ public abstract class Connection implements ClosableConnection {
   	 * @throws IOException
   	 */
     public void write(byte[] data) throws IOException{
-    	int remains = dataBuffer.getTotalSize() - dataBuffer.getWritePos();
+        //TODO 是否有BUG?连续多次调用,造成tmpWriteBytes被覆盖，进而丢失数据？
+    	int remains = dataBuffer.writableBytes();
     	if(remains >= data.length){
-    		dataBuffer.putBytes(data);
+    		dataBuffer.writeBytes(data);
     	}else{
     		tmpWriteBytes = data;
        	}
@@ -290,14 +290,14 @@ public abstract class Connection implements ClosableConnection {
     /*
      * Returns:
      *   TRANSMIT_COMPLETE   All done writing.
-     *   TRANSMIT_INCOMPLETE More data remaining to write.
+     *   TRANSMIT_INCOMPLETE More data readableBytes to write.
      *   TRANSMIT_SOFT_ERROR Can't write any more right now.
      *   TRANSMIT_HARD_ERROR Can't write (connstate is set to conn_closing)
      */
     public TRANSMIT_RESULT write() throws IOException {
     	
     	final NetSystem nets = NetSystem.getInstance();
-        final ConDataBuffer buffer = this.dataBuffer;
+        final MycatByteBuffer buffer = this.dataBuffer;
         int written = 0;
         int remains = 0;
         if(TransferMode.NORMAL.equals(directTransferMode)){
@@ -307,21 +307,23 @@ public abstract class Connection implements ClosableConnection {
         	if(tmpWriteBytes!=null&&tmplastwritePos<(tmpWriteBytes.length-1)){
         		dataBuffer.compact();
         		int tempremains = tmpWriteBytes.length - tmplastwritePos;
-        		int localbufferremains = dataBuffer.getTotalSize() - dataBuffer.getWritePos();
+        		int localbufferremains = dataBuffer.writableBytes();//dataBuffer.getTotalSize() - dataBuffer.getWritePos();
         		if(tempremains >= localbufferremains){
-        			dataBuffer.putBytes(tmpWriteBytes,tmplastwritePos,localbufferremains);
+//        			dataBuffer.putBytes(tmpWriteBytes,tmplastwritePos,localbufferremains);
+                    dataBuffer.writeBytes(localbufferremains,tmpWriteBytes);
         			tmplastwritePos += localbufferremains;
         		}else{
-        			dataBuffer.putBytes(tmpWriteBytes,tmplastwritePos,tempremains);
+//        			dataBuffer.putBytes(tmpWriteBytes,tmplastwritePos,tempremains);
+                    dataBuffer.writeBytes(tmpWriteBytes);
         			tmpWriteBytes = null;
         			tmplastwritePos = 0;
         		}
         	}
-        	written = buffer.transferTo(this.channel);
-        	remains = buffer.getWritePos() - buffer.getLastWritePos();
+        	written = buffer.transferToChannel(this.channel);
+        	remains = buffer.readableBytes() ;//buffer.getWritePos() - buffer.getLastWritePos();
         }else{
-        	written = buffer.transferToWithDirectTransferMode(this.channel);
-        	remains = buffer.getReadPos() - buffer.getLastWritePos();
+        	written = buffer.transferToChannel(this.channel);
+        	remains = buffer.readableBytes();//buffer.getReadPos() - buffer.getLastWritePos();
         }
         
        	if(written > 0){
@@ -433,14 +435,6 @@ public abstract class Connection implements ClosableConnection {
 		this.selector = selector;
 	}
 
-	public ReactorBufferPool getMyBufferPool() {
-		return myBufferPool;
-	}
-
-	public void setMyBufferPool(ReactorBufferPool myBufferPool) {
-		this.myBufferPool = myBufferPool;
-	}
-	
 	public SelectionKey getProcessKey() {
 		return processKey;
 	}
@@ -457,11 +451,11 @@ public abstract class Connection implements ClosableConnection {
 		this.writeCompleteListener = writeCompleteListener;
 	}
 
-	public ConDataBuffer getDataBuffer() {
+	public MycatByteBuffer getDataBuffer() {
 		return dataBuffer;
 	}
 
-	public void setDataBuffer(ConDataBuffer dataBuffer) {
+	public void setDataBuffer(MycatByteBuffer dataBuffer) {
 		this.dataBuffer = dataBuffer;
 	}
 	
@@ -476,5 +470,12 @@ public abstract class Connection implements ClosableConnection {
 	public byte[] getTmpWriteBytes() {
 		return tmpWriteBytes;
 	}
-    
+
+    public MycatByteBufferAllocator getMycatByteBufferAllocator() {
+        return mycatByteBufferAllocator;
+    }
+
+    public void setMycatByteBufferAllocator(MycatByteBufferAllocator mycatByteBufferAllocator) {
+        this.mycatByteBufferAllocator = mycatByteBufferAllocator;
+    }
 }

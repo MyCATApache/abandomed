@@ -41,7 +41,7 @@ public interface MycatByteBuffer {
     void mark(int position);
 
     /**
-     *  将readIndex复位至mark标记过的位置
+     * 将readIndex复位至mark标记过的位置
      */
     void reset();
 
@@ -62,21 +62,21 @@ public interface MycatByteBuffer {
      *
      * @return true表示有，false表示没有
      */
-    boolean hasRemaining();
+    boolean hasReadableBytes();
 
     /**
      * 获取未读的数据长度
      *
      * @return 未读长度
      */
-    int remaining();
+    int readableBytes();
 
     /**
      * 获取可写的数据长度
      *
      * @return 可写长度
      */
-    int freeBytes();
+    int writableBytes();
 
     /**
      * 获取容量
@@ -294,7 +294,7 @@ public interface MycatByteBuffer {
      * 在指定位置写入Protocol::LengthEncodedString,详见mysql协议
      * 影响writeIndex
      *
-     * @param val   值
+     * @param val 值
      * @return 本身的实例
      */
     MycatByteBuffer writeLenencString(String val);
@@ -336,4 +336,99 @@ public interface MycatByteBuffer {
      * @return 本身的实例
      */
     MycatByteBuffer writeNULString(String val);
+
+    /**
+     * 从指定位置获取bytes
+     * 不影响读写指针
+     *
+     * @param index  位置
+     * @param length 长度
+     * @return 本身的实例
+     */
+    byte[] getBytes(int index, int length);
+
+    /**
+     * 从指定位置读取bytes
+     * 影响readIndex
+     *
+     * @param length 长度
+     * @return 本身的实例
+     */
+    byte[] readBytes(int length);
+
+    /**
+     * 从指定位置获取byte
+     * 不影响读写指针
+     *
+     * @param index 位置
+     * @return 值
+     */
+    byte getByte(int index);
+
+    /**
+     * 从readIndex读取byte
+     * 影响readIndex
+     *
+     * @return 值
+     */
+    byte readByte();
+
+    /**
+     * 在指定位置写入bytes
+     * 不影响读写指针
+     *
+     * @param index 位置
+     * @param bytes 字节数组
+     * @return 本身的实例
+     */
+    MycatByteBuffer putBytes(int index, byte[] bytes);
+
+    /**
+     * 在指定位置写入length长度的bytes
+     * 不影响读写指针
+     *
+     * @param index  位置
+     * @param length 长度
+     * @param bytes  字节数组
+     * @return 本身的实例
+     */
+    MycatByteBuffer putBytes(int index, int length, byte[] bytes);
+
+    /**
+     * 在指定的位置放入byte,
+     * 不影响读写指针
+     *
+     * @param index 位置
+     * @param val   值
+     * @return 本身的实例
+     */
+    MycatByteBuffer putByte(int index, byte val);
+
+    /**
+     * 在writeIndex位置定入byte,
+     * 影响writeIndex
+     *
+     * @param val 值
+     * @return 本身的实例
+     */
+    MycatByteBuffer writeByte(byte val);
+
+    /**
+     * 从writeIndex位置开始写入bytes
+     * 影响writeIndex
+     *
+     * @param bytes 字节数组
+     * @return 本身的实例
+     */
+    MycatByteBuffer writeBytes(byte[] bytes);
+
+    /**
+     * 从writeIndex位置开始写入length长度的bytes
+     * 影响writeIndex
+     *
+     * @param length 长度
+     * @param bytes  字节数组
+     * @return 本身的实例
+     */
+    MycatByteBuffer writeBytes(int length, byte[] bytes);
 }

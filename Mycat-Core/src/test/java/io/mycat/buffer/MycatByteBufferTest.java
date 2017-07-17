@@ -130,13 +130,13 @@ public class MycatByteBufferTest {
         buffer.clear();
 
         buffer.writeNULString("hello");
-        Assert.assertTrue(buffer.remaining() == 6);
-        Assert.assertTrue(buffer.freeBytes() == CHUNK_SIZE - 6);
+        Assert.assertTrue(buffer.readableBytes() == 6);
+        Assert.assertTrue(buffer.writableBytes() == CHUNK_SIZE - 6);
         Assert.assertTrue((buffer.writeIndex() == 6));
         Assert.assertTrue(buffer.readIndex() == 0);
         Assert.assertTrue(buffer.readNULString().equals("hello"));
         Assert.assertTrue(buffer.readIndex() == 6);
-        Assert.assertFalse(buffer.hasRemaining());
+        Assert.assertFalse(buffer.hasReadableBytes());
         buffer.clear();
 
         String str = randomString(1 << 17);
@@ -158,30 +158,30 @@ public class MycatByteBufferTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void recyleExceptionTest() {
+    public void testRecyleException() {
         MycatByteBuffer buffer = new DirectFixBuffer(ByteBuffer.allocateDirect(10), 10);
         allocator.recyle(buffer);
     }
 
     @Test
-    public void transferTest() throws IOException {
+    public void testTransfer() throws IOException {
         MycatByteBuffer buffer = allocator.allocate();
         SocketChannel socketChannel = new FakeSocketChannel(null);
         buffer.transferFromChannel(socketChannel);
-        Assert.assertTrue(buffer.remaining() == CHUNK_SIZE);
+        Assert.assertTrue(buffer.readableBytes() == CHUNK_SIZE);
         Assert.assertTrue(buffer.readIndex() == 0);
         Assert.assertTrue(buffer.writeIndex() == CHUNK_SIZE);
-        Assert.assertTrue(buffer.freeBytes() == 0);
+        Assert.assertTrue(buffer.writableBytes() == 0);
 
         buffer.transferToChannel(socketChannel);
-        Assert.assertFalse(buffer.hasRemaining());
+        Assert.assertFalse(buffer.hasReadableBytes());
         Assert.assertTrue(buffer.readIndex() == CHUNK_SIZE);
-        Assert.assertNotNull(((DirectFixBuffer)buffer).getByteBuffer());
+        Assert.assertNotNull(((DirectFixBuffer) buffer).getByteBuffer());
         allocator.recyle(buffer);
     }
 
     @Test
-    public void compactTest(){
+    public void testCompact() {
         MycatByteBuffer buffer = allocator.allocate();
         buffer.writeFixString("hello world");
         Assert.assertTrue(buffer.readFixString(6).equals("hello "));
@@ -189,17 +189,37 @@ public class MycatByteBufferTest {
         Assert.assertTrue(buffer.readIndex() == 0);
         Assert.assertTrue(buffer.writeIndex() == 5);
         Assert.assertTrue(buffer.readFixString(5).equals("world"));
-        Assert.assertTrue(buffer.remaining() == 0);
+        Assert.assertTrue(buffer.readableBytes() == 0);
         allocator.recyle(buffer);
     }
 
     @Test
-    public void markTest(){
+    public void testMark() {
         MycatByteBuffer buffer = allocator.allocate();
         buffer.mark(100);
         buffer.reset();
         Assert.assertTrue(buffer.readIndex() == 100);
     }
+
+    @Test
+    public void testBytesReadWrite() {
+        MycatByteBuffer buffer = allocator.allocate();
+        buffer.putBytes(0, "hello".getBytes());
+        Assert.assertTrue(buffer.readIndex() == 0);
+        Assert.assertTrue(buffer.writeIndex() == 0);
+        Assert.assertTrue(new String(buffer.getBytes(0, 5)).equals("hello"));
+        buffer.clear();
+
+        buffer.writeBytes("hello".getBytes());
+        Assert.assertTrue(buffer.readIndex() == 0);
+        Assert.assertTrue(buffer.writeIndex() == 5);
+        Assert.assertTrue(new String(buffer.readBytes(5)).equals("hello"));
+        Assert.assertTrue(buffer.readIndex() == 5);
+        buffer.clear();
+
+        allocator.recyle(buffer);
+    }
+
 
     private String randomString(int length) {
         byte[] bytes = new byte[length];

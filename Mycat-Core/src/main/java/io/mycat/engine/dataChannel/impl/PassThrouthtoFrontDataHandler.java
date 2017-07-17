@@ -2,6 +2,7 @@ package io.mycat.engine.dataChannel.impl;
 
 import java.io.IOException;
 
+import io.mycat.buffer.MycatByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,35 +37,42 @@ public class PassThrouthtoFrontDataHandler implements DataHandler {
 	public void transfer(MySQLConnection in, boolean isTransferLastPacket, boolean isAllFinish) throws IOException {
 		MySQLBackendConnection backendConn = (MySQLBackendConnection)in;
 		TransferMode mode = in.getDirectTransferMode();
-		ConDataBuffer backendDataBuffer = backendConn.getDataBuffer();
+		MycatByteBuffer backendDataBuffer = backendConn.getDataBuffer();
 		switch(mode){
 		case SHORT_HALF_PACKET:
-			backendDataBuffer.setReadPos(in.getCurrentPacketLength());  //设置读取位置
+//			backendDataBuffer.setReadPos(in.getCurrentPacketLength());  //设置读取位置
+			backendDataBuffer.readIndex(in.getCurrentPacketLength());
 			break;
 		case LONG_HALF_PACKET:
 			if(isTransferLastPacket){  //当前半包可以透传  当前半包可以透传时,需要调整 start length
     			// packtype 不变,start = -13,length = length - 缓冲区中剩余长度.  limit = dataBuffer.writingPos();
 				
+//				int halflength = in.getCurrentPacketStartPos() < 0?
+//									backendDataBuffer.getWritePos():
+//										(backendDataBuffer.getWritePos()-in.getCurrentPacketStartPos());
 				int halflength = in.getCurrentPacketStartPos() < 0?
-									backendDataBuffer.getWritePos():
-										(backendDataBuffer.getWritePos()-in.getCurrentPacketStartPos());
-				
-    			in.setCurrentPacketStartPos(in.getCurrentPacketStartPos() - backendDataBuffer.getWritePos());
-    			in.setCurrentPacketLength(in.getCurrentPacketLength() - halflength);
-    			backendDataBuffer.setReadPos(backendDataBuffer.getWritePos());  //设置读取位置
+									backendDataBuffer.writeIndex():
+										(backendDataBuffer.writeIndex()-in.getCurrentPacketStartPos());
+
+//    			in.setCurrentPacketStartPos(in.getCurrentPacketStartPos() - backendDataBuffer.getWritePos());
+    			in.setCurrentPacketStartPos(in.getCurrentPacketStartPos() - backendDataBuffer.writeIndex());
+				in.setCurrentPacketLength(in.getCurrentPacketLength() - halflength);
+//    			backendDataBuffer.setReadPos(backendDataBuffer.getWritePos());  //设置读取位置
+				backendDataBuffer.readIndex(backendDataBuffer.writeIndex());
     		}else{  //当前半包不透传 
     			// packtype 不变,start = 0,length = packlength;
     			int packetLength = in.getCurrentPacketLength() - in.getCurrentPacketStartPos();
     			in.setCurrentPacketLength(packetLength);
     			in.setCurrentPacketStartPos(0);
-    			backendDataBuffer.setReadPos(in.getCurrentPacketStartPos());  //设置读取位置
+//    			backendDataBuffer.setReadPos(in.getCurrentPacketStartPos());  //设置读取位置
+    			backendDataBuffer.readIndex(in.getCurrentPacketStartPos());  //设置读取位置
     		}
-			
 			break;
 		case NORMAL:
 			break;
 		case COMPLETE_PACKET:
-			backendDataBuffer.setReadPos(in.getCurrentPacketLength());  //设置读取位置
+//			backendDataBuffer.setReadPos(in.getCurrentPacketLength());  //设置读取位置
+			backendDataBuffer.readIndex(in.getCurrentPacketLength());  //设置读取位置
 			break;
 		}
 
@@ -75,15 +83,16 @@ public class PassThrouthtoFrontDataHandler implements DataHandler {
 		LOGGER.debug("Frontend in "+frontConn.getCurrentState().getClass().getSimpleName());
 		
     	frontConn.connDriverMachine(WriteWaitingState.INSTANCE);
-        ConDataBuffer frontdatabuffer = frontConn.getDataBuffer();
+        MycatByteBuffer frontdatabuffer = frontConn.getDataBuffer();
         
             	
     	//开启透传模式
     	frontConn.setDirectTransferMode(TransferMode.COMPLETE_PACKET); //整包透传
     	frontConn.setDataBuffer(backendDataBuffer);
-        frontConn.getDataBuffer().setLastWritePos(0);
+    	//TODO ???
+//        frontConn.getDataBuffer().setLastWritePos(0);
 
-        frontConn.setWriteCompleteListener(() -> {
+		frontConn.setWriteCompleteListener(() -> {
         	frontdatabuffer.clear();
         	frontConn.getDataBuffer().compact();
         	frontConn.setDataBuffer(frontdatabuffer);

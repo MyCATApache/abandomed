@@ -25,6 +25,7 @@ package io.mycat.front;
 
 import java.io.IOException;
 
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.mysql.state.CloseState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,17 +65,17 @@ public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnect
     @Override
     public void handleReadEvent(final MySQLFrontConnection cnxn) throws IOException {
         LOGGER.debug("handleReadEvent(): {}", cnxn);
-        final ConDataBuffer buffer = cnxn.getDataBuffer();
+        final MycatByteBuffer buffer = cnxn.getDataBuffer();
         int offset = cnxn.getCurrentPacketStartPos();
-        int limit = buffer.getWritePos();
+        int limit = buffer.writeIndex();
         int length = MySQLConnection.getPacketLength(buffer, offset);
         final byte packetType = buffer.getByte(offset + MySQLConnection.msyql_packetHeaderSize);
         final int pkgStartPos = offset;
         final NetSystem nets = NetSystem.getInstance();
         if (nets.getNetConfig().isTraceProtocol()) {
-            final String hexs = StringUtil.dumpAsHex(buffer, pkgStartPos, length);
-            LOGGER.info("C#{}B#{} received a packet: offset = {}, length = {}, type = {}, cur total length = {}, packet bytes\n{}",
-                    cnxn.getId(), buffer.hashCode(), pkgStartPos, length, packetType, limit, hexs);
+//            final String hexs = StringUtil.dumpAsHex(buffer, pkgStartPos, length);
+//            LOGGER.info("C#{}B#{} received a packet: offset = {}, length = {}, type = {}, cur total length = {}, packet bytes\n{}",
+//                    cnxn.getId(), buffer.hashCode(), pkgStartPos, length, packetType, limit, hexs);
         }
         offset += length;
         cnxn.setCurrentPacketLength(length);
