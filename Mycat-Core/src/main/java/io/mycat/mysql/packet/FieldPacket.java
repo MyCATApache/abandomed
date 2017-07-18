@@ -25,7 +25,7 @@ package io.mycat.mysql.packet;
 
 import java.nio.ByteBuffer;
 
-import io.mycat.net2.ByteBufferArray;
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
 
@@ -94,10 +94,10 @@ public class FieldPacket extends MySQLPacket {
     // }
 
     @Override
-    public void write(ByteBuffer buffer,int pkgSize) { 
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        writeBody(buffer);
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+//        BufferUtil.writeUB3(buffer, pkgSize);
+//        buffer.put(packetId);
+//        writeBody(buffer);
     }
 
     @Override

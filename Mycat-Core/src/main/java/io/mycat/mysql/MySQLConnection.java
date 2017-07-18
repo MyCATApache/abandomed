@@ -166,13 +166,9 @@ public class MySQLConnection extends Connection implements StatefulConnection {
      */
     public void writeMsqlPackage(MySQLPacket pkg) throws IOException {
         int pkgSize = pkg.calcPacketSize();
-        byte[] data = new byte[pkgSize + 3 + 1];
-        ByteBuffer buffer = ByteBuffer.allocate(pkgSize + 3 + 1);
-        pkg.write(buffer, pkgSize);
-        buffer.flip();
-        buffer.get(data);
-        write(data);
-        buffer = null;
+        pkg.write(getDataBuffer(), pkgSize);
+        this.directTransferMode = TransferMode.NORMAL;
+    	setNextConnState(WriteWaitingState.INSTANCE);
     }
 
     public void writeErrMessage(int errno, String info) throws IOException {

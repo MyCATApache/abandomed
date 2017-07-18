@@ -220,6 +220,48 @@ public class MycatByteBufferTest {
         allocator.recyle(buffer);
     }
 
+    @Test
+    public void testByteReadWrite() {
+        MycatByteBuffer buffer = allocator.allocate();
+        buffer.putByte(0, (byte) 100);
+        Assert.assertTrue(buffer.readIndex() == 0);
+        Assert.assertTrue(buffer.writeIndex() == 0);
+        Assert.assertTrue(buffer.getByte(0) == 100);
+        buffer.clear();
+
+        buffer.writeByte((byte) 100);
+        Assert.assertTrue(buffer.readIndex() == 0);
+        Assert.assertTrue(buffer.writeIndex() == 1);
+        Assert.assertTrue(buffer.readByte() == 100);
+        Assert.assertTrue(buffer.readIndex() == 1);
+
+        allocator.recyle(buffer);
+    }
+
+    @Test
+    public void testSkip(){
+        MycatByteBuffer buffer = allocator.allocate();
+        buffer.skip(10);
+        Assert.assertTrue(buffer.readIndex() == 10);
+        allocator.recyle(buffer);
+    }
+
+    @Test
+    public void testLenencBytesReadWrite(){
+        MycatByteBuffer buffer = allocator.allocate();
+        buffer.putLenencBytes(0,"hello".getBytes());
+        Assert.assertTrue(buffer.readIndex() == 0);
+        Assert.assertTrue(buffer.writeIndex() == 0);
+        Assert.assertTrue(new String(buffer.getLenencBytes(0)).equals("hello"));
+        buffer.clear();
+
+        buffer.writeLenencBytes("hello".getBytes());
+        Assert.assertTrue(buffer.readIndex() == 0);
+        Assert.assertTrue(buffer.writeIndex() == 6);
+        Assert.assertTrue(new String(buffer.readLenencBytes()).equals("hello"));
+        Assert.assertTrue(buffer.readIndex() == 6);
+        allocator.recyle(buffer);
+    }
 
     private String randomString(int length) {
         byte[] bytes = new byte[length];
@@ -228,6 +270,7 @@ public class MycatByteBufferTest {
         }
         return new String(bytes);
     }
+
 
     class FakeSocketChannel extends SocketChannel {
 

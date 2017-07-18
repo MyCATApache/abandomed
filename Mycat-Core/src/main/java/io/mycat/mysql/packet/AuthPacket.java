@@ -24,14 +24,9 @@
 package io.mycat.mysql.packet;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 
 import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.mysql.Capabilities;
-import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
-import io.mycat.util.StreamUtil;
 
 /**
  * From client to server during initial handshake.
@@ -86,31 +81,28 @@ public class AuthPacket extends MySQLPacket {
     }
 
   
-    public void write(ByteBuffer  buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        BufferUtil.writeUB4(buffer, clientFlags);
-        BufferUtil.writeUB4(buffer, maxPacketSize);
-        buffer.put((byte) charsetIndex);
-        buffer.put(FILLER);
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+        buffer.writeFixInt(3,pkgSize);
+        buffer.writeByte(packetId);
+        buffer.writeFixInt(4, clientFlags);
+        buffer.writeFixInt(4, maxPacketSize);
+        buffer.writeByte((byte) charsetIndex);
+        buffer.writeBytes(FILLER);
         if (user == null) {
-            buffer.put((byte) 0);
+            buffer.writeByte((byte) 0);
         } else {
-            byte[] userData = user.getBytes();
-            BufferUtil.writeWithNull(buffer, userData);
+            buffer.writeNULString(user);
         }
         if (password == null) {
-            buffer.put((byte) 0);
+            buffer.writeByte((byte) 0);
         } else {
-            BufferUtil.writeWithLength(buffer, password);
+            buffer.writeLenencBytes(password);
         }
         if (database == null) {
-            buffer.put((byte) 0);
+            buffer.writeByte((byte) 0);
         } else {
-            byte[] databaseData = database.getBytes();
-            BufferUtil.writeWithNull(buffer, databaseData);
+            buffer.writeNULString(database);
         }
-
     }
 
     @Override

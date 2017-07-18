@@ -23,8 +23,7 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
-
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
 
@@ -67,13 +66,13 @@ public class ResultSetHeaderPacket extends MySQLPacket {
     }
 
     @Override
-    public void write(ByteBuffer  buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        BufferUtil.writeLength(buffer, fieldCount);
-        if (extra > 0) {
-            BufferUtil.writeLength(buffer, extra);
-        }
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+//        BufferUtil.writeUB3(buffer, pkgSize);
+//        buffer.put(packetId);
+//        BufferUtil.writeLength(buffer, fieldCount);
+//        if (extra > 0) {
+//            BufferUtil.writeLength(buffer, extra);
+//        }
     }
 
     @Override

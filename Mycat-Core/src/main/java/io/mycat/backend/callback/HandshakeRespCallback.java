@@ -34,7 +34,8 @@ public class HandshakeRespCallback extends ResponseCallbackAdapter {
 
     private void processHandShakePacket(MySQLBackendConnection conn, final MycatByteBuffer dataBuffer) {
         HandshakePacket packet = new HandshakePacket();
-//        packet.read(dataBuffer);
+        packet.read(dataBuffer);
+        conn.getDataBuffer().clear();
         conn.setHandshake(packet);
         // 设置字符集编码
         int charsetIndex = (packet.serverCharsetIndex & 0xff);

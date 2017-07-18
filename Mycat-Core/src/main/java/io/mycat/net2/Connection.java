@@ -68,7 +68,7 @@ public abstract class Connection implements ClosableConnection {
     
     private byte[] tmpWriteBytes;  // 该字段用于 在非透传模式下,net buffer 大小小于写出报文大小时,临时记录报文数据.用于分批 写出到 net buffer
     private int tmplastwritePos;   // 写缓冲区可用时, tmpWriteBytes 上次写到 net buffer 缓冲区中的位置
-    private TransferMode directTransferMode = TransferMode.NORMAL;
+    protected TransferMode directTransferMode = TransferMode.NORMAL;
     
     
         

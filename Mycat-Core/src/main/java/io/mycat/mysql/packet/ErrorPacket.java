@@ -23,11 +23,8 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
-
-import io.mycat.net2.ByteBufferArray;
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.net2.ConDataBuffer;
-import io.mycat.net2.Connection;
 import io.mycat.util.BufferUtil;
 
 /**
@@ -98,15 +95,15 @@ public class ErrorPacket extends MySQLPacket {
     }
 
 
-    public void write(ByteBuffer buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        buffer.put(fieldCount);
-        BufferUtil.writeUB2(buffer, errno);
-        buffer.put(mark);
-        buffer.put(sqlState);
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+        buffer.writeFixInt(3,pkgSize);
+        buffer.writeByte(packetId);
+        buffer.writeLenencInt(fieldCount);
+        buffer.writeFixInt(2,errno);
+        buffer.writeByte(mark);
+        buffer.writeBytes(sqlState);
         if (message != null) {
-            buffer.put(message);
+            buffer.writeBytes(message);
 
         }
     }

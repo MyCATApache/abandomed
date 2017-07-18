@@ -23,7 +23,8 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
+import io.mycat.buffer.MycatByteBuffer;
+
 /**
  * 
  * @author wuzhihui
@@ -232,7 +233,7 @@ public abstract class MySQLPacket {
                 .append('}').toString();
     }
 
-    public void write(ByteBuffer buffer,int pkgSize) {
+    public void write(MycatByteBuffer buffer, int pkgSize) {
 		
 		
 	}

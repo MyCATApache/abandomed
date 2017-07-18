@@ -46,6 +46,13 @@ public interface MycatByteBuffer {
     void reset();
 
     /**
+     * 将readIndex向后跳step个位置
+     *
+     * @param step 跳多长
+     */
+    void skip(int step);
+
+    /**
      * 压缩空间
      *
      * @return 本身的实例
@@ -374,6 +381,21 @@ public interface MycatByteBuffer {
     byte readByte();
 
     /**
+     * 从指定位置获取lenenc形式的byte数组
+     *
+     * @param index 位置
+     * @return byte数组
+     */
+    byte[] getLenencBytes(int index);
+
+    /**
+     * 从readIndex位置开始读取Lenenc形式的byte数组
+     *
+     * @return byte数组
+     */
+    byte[] readLenencBytes();
+
+    /**
      * 在指定位置写入bytes
      * 不影响读写指针
      *
@@ -395,6 +417,15 @@ public interface MycatByteBuffer {
     MycatByteBuffer putBytes(int index, int length, byte[] bytes);
 
     /**
+     * 在指定位置放入lenenc形式的byte数组
+     *
+     * @param index 位置
+     * @param bytes byte数组
+     * @return 本身的实例
+     */
+    MycatByteBuffer putLenencBytes(int index,byte[] bytes);
+
+    /**
      * 在指定的位置放入byte,
      * 不影响读写指针
      *
@@ -403,6 +434,14 @@ public interface MycatByteBuffer {
      * @return 本身的实例
      */
     MycatByteBuffer putByte(int index, byte val);
+
+    /**
+     * 从writeIndex位置写入lenenc形式的byte数组
+     *
+     * @param bytes
+     * @return
+     */
+    MycatByteBuffer writeLenencBytes(byte[] bytes);
 
     /**
      * 在writeIndex位置定入byte,
