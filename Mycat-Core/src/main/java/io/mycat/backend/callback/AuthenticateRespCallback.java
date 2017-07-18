@@ -28,6 +28,7 @@ public class AuthenticateRespCallback extends ResponseCallbackAdapter {
             conn.changeState(CloseState.INSTANCE, null);
         } else if (packageType == MySQLPacket.OK_PACKET) {
             conn.setNextState(IdleState.INSTANCE);
+            conn.getDataBuffer().clear();
             MySQLFrontConnection mySQLFrontConnection = conn.getMySQLFrontConnection();
             if (mySQLFrontConnection != null) {
                 mySQLFrontConnection.executePendingTask();

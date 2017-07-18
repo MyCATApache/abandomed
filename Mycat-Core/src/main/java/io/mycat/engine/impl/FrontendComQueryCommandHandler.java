@@ -41,7 +41,7 @@ public class FrontendComQueryCommandHandler extends AbstractComQueryCommandHandl
                 finalBackendConnection.setShareBuffer(dataBuffer);//
                 //TODO ???
 //                finalBackendConnection.getShareBuffer().setLastWritePos(0);
-                finalBackendConnection.getShareBuffer().readIndex(frontCon.getCurrentPacketLength());
+//                finalBackendConnection.getShareBuffer().readIndex(frontCon.getCurrentPacketLength());
                 finalBackendConnection.driveState();
             });
         } else {
@@ -55,7 +55,7 @@ public class FrontendComQueryCommandHandler extends AbstractComQueryCommandHandl
             backendConnection.setShareBuffer(dataBuffer);
             //TODO ???
 //            backendConnection.getShareBuffer().setLastWritePos(0);
-            backendConnection.getShareBuffer().readIndex(frontCon.getCurrentPacketLength());
+//            backendConnection.getShareBuffer().readIndex(frontCon.getCurrentPacketLength());
             backendConnection.driveState();
         }
         frontCon.setNextConnState(NoReadAndWriteState.INSTANCE);
