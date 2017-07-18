@@ -26,11 +26,12 @@ package io.mycat.mysql.packet;
 import java.io.IOException;
 
 import io.mycat.buffer.MycatByteBuffer;
+import io.mycat.mysql.Capabilities;
 import io.mycat.util.BufferUtil;
 
 /**
  * From client to server during initial handshake.
- * 
+ * <p>
  * <pre>
  * Bytes                        Name
  * -----                        ----
@@ -41,10 +42,10 @@ import io.mycat.util.BufferUtil;
  * n (Null-Terminated String)   user
  * n (Length Coded Binary)      scramble_buff (1 + x bytes)
  * n (Null-Terminated String)   databasename (optional)
- * 
+ *
  * &#64;see http://forge.mysql.com/wiki/MySQL_Internals_ClientServer_Protocol#Client_Authentication_Packet
  * </pre>
- * 
+ *
  * @author mycat
  */
 public class AuthPacket extends MySQLPacket {
@@ -62,27 +63,19 @@ public class AuthPacket extends MySQLPacket {
         packetLength = (int) byteBuffer.readFixInt(3);
         packetId = byteBuffer.readByte();
         clientFlags = byteBuffer.readFixInt(4);
-        maxPacketSize =byteBuffer.readFixInt(4);
+        maxPacketSize = byteBuffer.readFixInt(4);
         charsetIndex = byteBuffer.readByte();
-        // read extra
-        int current = byteBuffer.readIndex();
-//        int len = (int) mm.readLength();
-//        if (len > 0 && len < FILLER.length) {
-//            byte[] ab = new byte[len];
-//            System.arraycopy(mm.bytes(), mm.position(), ab, 0, len);
-//            this.extra = ab;
-//        }
-//        mm.position(current + FILLER.length);
-//        user = mm.readStringWithNull();
-//        password = mm.readBytesWithLength();
-//        if (((clientFlags & Capabilities.CLIENT_CONNECT_WITH_DB) != 0) && mm.hasRemaining()) {
-//            database = mm.readStringWithNull();
-//        }
+        byteBuffer.skip(23);
+        user = byteBuffer.readNULString();
+        password = byteBuffer.readLenencBytes();
+        if ((clientFlags & Capabilities.CLIENT_CONNECT_WITH_DB) != 0) {
+            database = byteBuffer.readNULString();
+        }
     }
 
-  
+
     public void write(MycatByteBuffer buffer, int pkgSize) {
-        buffer.writeFixInt(3,pkgSize);
+        buffer.writeFixInt(3, pkgSize);
         buffer.writeByte(packetId);
         buffer.writeFixInt(4, clientFlags);
         buffer.writeFixInt(4, maxPacketSize);
