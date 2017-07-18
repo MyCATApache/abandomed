@@ -1,6 +1,7 @@
 package io.mycat.backend.callback;
 
 import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.mysql.state.AuthenticatingState;
 import io.mycat.net2.ConDataBuffer;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 /**
  * 握手响应处理器
@@ -21,7 +21,7 @@ public class HandshakeRespCallback extends ResponseCallbackAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(HandshakeRespCallback.class);
 
     @Override
-    public void handleResponse(MySQLBackendConnection conn, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
+    public void handleResponse(MySQLBackendConnection conn, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
         processHandShakePacket(conn, dataBuffer);
         conn.authenticate();
         conn.setNextState(AuthenticatingState.INSTANCE);
@@ -32,9 +32,10 @@ public class HandshakeRespCallback extends ResponseCallbackAdapter {
         });
     }
 
-    private void processHandShakePacket(MySQLBackendConnection conn, final ConDataBuffer dataBuffer) {
+    private void processHandShakePacket(MySQLBackendConnection conn, final MycatByteBuffer dataBuffer) {
         HandshakePacket packet = new HandshakePacket();
         packet.read(dataBuffer);
+        conn.getDataBuffer().clear();
         conn.setHandshake(packet);
         // 设置字符集编码
         int charsetIndex = (packet.serverCharsetIndex & 0xff);

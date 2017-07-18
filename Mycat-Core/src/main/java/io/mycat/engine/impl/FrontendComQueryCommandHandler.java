@@ -1,6 +1,7 @@
 package io.mycat.engine.impl;
 
 import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.state.ComQueryResponseState;
@@ -23,7 +24,7 @@ public class FrontendComQueryCommandHandler extends AbstractComQueryCommandHandl
     private static final Logger LOGGER = LoggerFactory.getLogger(FrontendComQueryCommandHandler.class);
 
     @Override
-    public void processCmd(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
+    public void processCmd(MySQLFrontConnection frontCon, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
         frontCon.setNextState(ComQueryResponseState.INSTANCE);
         MySQLBackendConnection backendConnection = frontCon.getBackendConnection();
         if (backendConnection == null) {
@@ -37,9 +38,10 @@ public class FrontendComQueryCommandHandler extends AbstractComQueryCommandHandl
                 finalBackendConnection.setCurrentPacketStartPos(frontCon.getCurrentPacketStartPos());
                 finalBackendConnection.setCurrentPacketType(frontCon.getCurrentPacketType());
 
-                finalBackendConnection.setShareBuffer(dataBuffer);
-                finalBackendConnection.getShareBuffer().setLastWritePos(0);
-                finalBackendConnection.getShareBuffer().setReadPos(frontCon.getCurrentPacketLength());
+                finalBackendConnection.setShareBuffer(dataBuffer);//
+                //TODO ???
+//                finalBackendConnection.getShareBuffer().setLastWritePos(0);
+//                finalBackendConnection.getShareBuffer().readIndex(frontCon.getCurrentPacketLength());
                 finalBackendConnection.driveState();
             });
         } else {
@@ -51,8 +53,9 @@ public class FrontendComQueryCommandHandler extends AbstractComQueryCommandHandl
             backendConnection.setCurrentPacketType(frontCon.getCurrentPacketType());
         	
             backendConnection.setShareBuffer(dataBuffer);
-            backendConnection.getShareBuffer().setLastWritePos(0);
-            backendConnection.getShareBuffer().setReadPos(frontCon.getCurrentPacketLength());
+            //TODO ???
+//            backendConnection.getShareBuffer().setLastWritePos(0);
+//            backendConnection.getShareBuffer().readIndex(frontCon.getCurrentPacketLength());
             backendConnection.driveState();
         }
         frontCon.setNextNetworkState(NoReadAndWriteState.INSTANCE);

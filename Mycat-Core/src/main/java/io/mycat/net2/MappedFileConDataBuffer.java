@@ -70,9 +70,9 @@ public class MappedFileConDataBuffer implements ConDataBuffer {
 //	public void putBytes(ByteBuffer buf) throws IOException {
 //		int position=mapBuf.position();
 //		int writed=channel.write(buf, position);
-//		if(buf.hasRemaining())
+//		if(buf.hasReadableBytes())
 //		{
-//			throw new IOException("can't write whole buf ,writed "+writed+" remains "+buf.remaining());
+//			throw new IOException("can't write whole buf ,writed "+writed+" remains "+buf.readableBytes());
 //		}
 //		mapBuf.position(position+writed);
 //		

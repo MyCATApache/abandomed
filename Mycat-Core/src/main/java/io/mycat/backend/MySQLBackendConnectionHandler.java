@@ -25,6 +25,7 @@ package io.mycat.backend;
 
 import java.io.IOException;
 
+import io.mycat.buffer.MycatByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,10 +55,10 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
 
     @Override
     public void handleReadEvent(MySQLBackendConnection con) throws IOException {
-        ConDataBuffer dataBuffer = con.getDataBuffer();
+        MycatByteBuffer dataBuffer = con.getDataBuffer();
         int offset = con.getCurrentPacketStartPos();
         int length;
-        int limit = dataBuffer.getWritePos();
+        int limit = dataBuffer.writeIndex();
 
         /*
          * 判断透传逻辑.

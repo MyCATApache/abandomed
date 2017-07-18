@@ -23,10 +23,10 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
 
@@ -83,20 +83,20 @@ public class RowDataPacket extends MySQLPacket {
     }
 
     @Override
-    public void write(ByteBuffer  buffer,int pkgSize) {
-
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        for (int i = 0; i < fieldCount; i++) {
-            byte[] fv = fieldValues.get(i);
-            if (fv == null) {
-                buffer.put(RowDataPacket.NULL_MARK);
-            } else if (fv.length == 0) {
-                buffer.put(RowDataPacket.EMPTY_MARK);
-            } else {
-                BufferUtil.writeLength(buffer, fv.length);
-            }
-        }
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+//
+//        BufferUtil.writeUB3(buffer, pkgSize);
+//        buffer.put(packetId);
+//        for (int i = 0; i < fieldCount; i++) {
+//            byte[] fv = fieldValues.get(i);
+//            if (fv == null) {
+//                buffer.put(RowDataPacket.NULL_MARK);
+//            } else if (fv.length == 0) {
+//                buffer.put(RowDataPacket.EMPTY_MARK);
+//            } else {
+//                BufferUtil.writeLength(buffer, fv.length);
+//            }
+//        }
     }
 
   

@@ -12,7 +12,7 @@ public class NIOReactorPool {
 		reactors = new NIOReactor[poolSize];
 		Map<String,NIOReactor> reactorMap=new HashMap<String,NIOReactor>();
 		for (int i = 0; i < poolSize; i++) {
-			NIOReactor reactor = new NIOReactor(name + "-" + i, shearedBufferPool);
+			NIOReactor reactor = new NIOReactor(name + "-" + i);
 			reactors[i] = reactor;
 			reactor.startup();
 			reactorMap.put(reactor.getName(), reactor);

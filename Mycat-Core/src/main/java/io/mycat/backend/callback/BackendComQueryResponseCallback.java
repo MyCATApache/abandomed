@@ -2,6 +2,7 @@ package io.mycat.backend.callback;
 
 import java.io.IOException;
 
+import io.mycat.buffer.MycatByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,21 +13,20 @@ import io.mycat.mysql.packet.MySQLMessage;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.mysql.state.ComQueryColumnDefState;
 import io.mycat.mysql.state.IdleState;
-import io.mycat.net2.ConDataBuffer;
 
 public class BackendComQueryResponseCallback extends ResponseCallbackAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(BackendComQueryResponseCallback.class);
 
     @Override
-    public void handleResponse(MySQLBackendConnection mySQLBackendConnection, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
+    public void handleResponse(MySQLBackendConnection mySQLBackendConnection, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
     	LOGGER.debug(mySQLBackendConnection.getClass().getSimpleName() + "  in  BackendComQueryResponseCallback");
         switch(mySQLBackendConnection.getDirectTransferMode()){
         case COMPLETE_PACKET:
         	if (packageType == MySQLPacket.OK_PACKET || packageType == MySQLPacket.ERROR_PACKET) {
                 //多结果集时会返回OK包，此时服务器的状态应该已经不是多结果集的状态了
-                MySQLMessage mySQLMessage = new MySQLMessage(dataBuffer);
-                mySQLMessage.position(mySQLBackendConnection.getCurrentPacketStartPos());
-                int serverStatus = mySQLMessage.readUB2();
+//                MySQLMessage mySQLMessage = new MySQLMessage(dataBuffer);
+//                mySQLMessage.position(mySQLBackendConnection.getCurrentPacketStartPos());
+                int serverStatus = 0;
                 mySQLBackendConnection.setServerStatus(serverStatus);
                 if ((serverStatus & ServerStatus.SERVER_STATUS_IN_TRANS) != 0) {
                     LOGGER.debug("后端连接,处于事务中，不能回收!{}", mySQLBackendConnection);

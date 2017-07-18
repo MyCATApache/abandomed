@@ -25,6 +25,7 @@ package io.mycat.backend.callback;
 
 import java.io.IOException;
 
+import io.mycat.buffer.MycatByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +43,8 @@ public class DummyCallBack  implements BackConnectionCallback{
 	 
 	 
 	@Override
-	public void handleResponse(MySQLBackendConnection source, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos,
-			int pkgLen) throws IOException {
+	public void handleResponse(MySQLBackendConnection source, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos,
+							   int pkgLen) throws IOException {
 		LOGGER.warn("rereived not processed response  "+source);
 		
 	}

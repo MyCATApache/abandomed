@@ -5,10 +5,7 @@ import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.bigmem.sqlcache.BigSQLResult;
 import io.mycat.bigmem.sqlcache.IDataLoader;
 import io.mycat.bigmem.sqlcache.IRemoveKeyListener;
-import io.mycat.front.MySQLFrontConnection;
-import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.net2.ConDataBuffer;
-import io.mycat.net2.Connection;
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.net2.ConnectionException;
 import io.mycat.sqlcache.*;
 import org.slf4j.LoggerFactory;
@@ -57,7 +54,7 @@ public class SQLResCacheHintHandler implements BackConnectionCallback, HintHandl
     }
 
     @Override
-    public void handleResponse(MySQLBackendConnection conn, ConDataBuffer dataBuffer, byte packetType, int pkgStartPos, int pkgLen) throws IOException {
+    public void handleResponse(MySQLBackendConnection conn, MycatByteBuffer dataBuffer, byte packetType, int pkgStartPos, int pkgLen) throws IOException {
 //        //LOGGER.error("Hint SQL handleResponse");
 //        MySQLFrontConnection frontCon = conn.getMySQLFrontConnection();
 //        /**
@@ -77,7 +74,7 @@ public class SQLResCacheHintHandler implements BackConnectionCallback, HintHandl
 //                } else if (sqlResultCache != null) {
 //                    /**step 1: Result Set Header Packet 列的数目*/
 //                    LOGGER.error("step 1 =====>  DB status: Result Filed Count ");
-//                    byte[] headers = new byte[packetBuffer.remaining()];
+//                    byte[] headers = new byte[packetBuffer.readableBytes()];
 //                    packetBuffer.get(headers);
 //                    sqlResultCache.put(headers);
 //                    conn.setState(RESULT_HEADER_STATUS);
@@ -87,7 +84,7 @@ public class SQLResCacheHintHandler implements BackConnectionCallback, HintHandl
 //                if (packetType == MySQLPacket.EOF_PACKET) {
 //
 //                    LOGGER.error("step 3 : EOF Packet,marker—end of field packets");
-//                    byte[] fieldDescsEof = new byte[packetBuffer.remaining()];
+//                    byte[] fieldDescsEof = new byte[packetBuffer.readableBytes()];
 //                    packetBuffer.get(fieldDescsEof);
 //                    sqlResultCache.put(fieldDescsEof);
 //
@@ -97,7 +94,7 @@ public class SQLResCacheHintHandler implements BackConnectionCallback, HintHandl
 //                } else if (sqlResultCache != null) {
 //                    /**Step 2: Field Packets,列的描述信息*/
 //                    LOGGER.error("Step 2: Field Packets");
-//                    byte[] fieldDescs = new byte[packetBuffer.remaining()];
+//                    byte[] fieldDescs = new byte[packetBuffer.readableBytes()];
 //                    packetBuffer.get(fieldDescs);
 //                    sqlResultCache.put(fieldDescs);
 //                }
@@ -106,7 +103,7 @@ public class SQLResCacheHintHandler implements BackConnectionCallback, HintHandl
 //                if (packetType == MySQLPacket.EOF_PACKET) {
 //                    /**Step 5:EOF Packet: marker---end of row data packets*/
 //                    LOGGER.error("Step 5:EOF Packet: marker---end of row data packets");
-//                    byte[] rowDataEof = new byte[packetBuffer.remaining()];
+//                    byte[] rowDataEof = new byte[packetBuffer.readableBytes()];
 //                    packetBuffer.get(rowDataEof);
 //                    sqlResultCache.put(rowDataEof);
 //                    /**将sqlResultCache插入CacheService中*/
@@ -119,7 +116,7 @@ public class SQLResCacheHintHandler implements BackConnectionCallback, HintHandl
 //                } else if (sqlResultCache != null) {
 //                    /**Step 4: Row Data Packet{多个}: row contents 一行对应一个row packet*/
 //                    LOGGER.error("Step 4: Row Data Packet");
-//                    byte[] rowDatas = new byte[packetBuffer.remaining()];
+//                    byte[] rowDatas = new byte[packetBuffer.readableBytes()];
 //                    packetBuffer.get(rowDatas);
 //                    sqlResultCache.put(rowDatas);
 //                }

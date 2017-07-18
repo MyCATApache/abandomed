@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.net2.Connection;
-import io.mycat.net2.DirectConDataBuffer;
 import io.mycat.net2.NetSystem;
 
 public class ListeningState implements NetworkState {
@@ -34,7 +33,7 @@ public class ListeningState implements NetworkState {
          * 后面考虑会使用netty中ByteBuf中的DirectBuffer进行网络IO通信。效率更高
          * */
 //        conn.setReadDataBuffer(new DirectConDataBuffer(1024 ));
-        conn.setDataBuffer(new DirectConDataBuffer(2048 ));
+        conn.setDataBuffer(conn.getMycatByteBufferAllocator().allocate());
         //新的client进来后，处理Server发送Client的handshake init packet
         conn.getHandler().onConnected(conn);  //连接事件处理完成后,驱动状态机
         if(conn.getNextNetworkState()!=null){

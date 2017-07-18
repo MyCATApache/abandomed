@@ -23,45 +23,12 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     abstract long getInt(int index, int length);
 
     /**
-     * 从指定位置读取bytes
-     *
-     * @param index  位置
-     * @param length 长度
-     * @return 字节数组
-     */
-    abstract byte[] getBytes(int index, int length);
-
-    /**
-     * 从指定位置读取byte
-     *
-     * @param index 位置
-     * @return 字节
-     */
-    abstract byte getByte(int index);
-
-    /**
-     * 从指定位置开始写入字节数组
-     *
-     * @param index 位置
-     * @param bytes 字节数组
-     */
-    abstract void putBytes(int index, byte[] bytes);
-
-    /**
-     * 向指定位置写入字节
-     *
-     * @param index
-     * @param val
-     */
-    abstract void putByte(int index, byte val);
-
-    /**
      * 获取lenenc占用的字节长度
      *
      * @param lenenc 值
      * @return 长度
      */
-    private int getLenencBytes(int lenenc) {
+    private int getLenencLength(int lenenc) {
         if (lenenc < 251) {
             return 1;
         } else if (lenenc >= 251 && lenenc < (1 << 16)) {
@@ -74,17 +41,22 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     }
 
     @Override
-    public boolean hasRemaining() {
+    public void skip(int step) {
+        this.readIndex += step;
+    }
+
+    @Override
+    public boolean hasReadableBytes() {
         return readIndex < writeIndex;
     }
 
     @Override
-    public int remaining() {
+    public int readableBytes() {
         return writeIndex - readIndex;
     }
 
     @Override
-    public int freeBytes() {
+    public int writableBytes() {
         return capacity() - writeIndex;
     }
 
@@ -169,7 +141,7 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     @Override
     public String getLenencString(int index) {
         int strLen = (int) getLenencInt(index);
-        int lenencLen = getLenencBytes(strLen);
+        int lenencLen = getLenencLength(strLen);
         byte[] bytes = getBytes(index + lenencLen, strLen);
         return new String(bytes);
     }
@@ -177,7 +149,7 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     @Override
     public String readLenencString() {
         int strLen = (int) getLenencInt(readIndex);
-        int lenencLen = getLenencBytes(strLen);
+        int lenencLen = getLenencLength(strLen);
         byte[] bytes = getBytes(readIndex + lenencLen, strLen);
         this.readIndex += strLen + lenencLen;
         return new String(bytes);
@@ -203,7 +175,7 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
             }
             strLength++;
         }
-        byte[] bytes = getBytes(index, strLength - 1);
+        byte[] bytes = getBytes(index, strLength);
         return new String(bytes);
     }
 
@@ -284,7 +256,7 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     @Override
     public MycatByteBuffer putLenencString(int index, String val) {
         this.putLenencInt(index, val.getBytes().length);
-        int lenencLen = getLenencBytes(val.getBytes().length);
+        int lenencLen = getLenencLength(val.getBytes().length);
         this.putFixString(index + lenencLen, val);
         return this;
     }
@@ -292,7 +264,7 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     @Override
     public MycatByteBuffer writeLenencString(String val) {
         putLenencString(writeIndex, val);
-        int lenencLen = getLenencBytes(val.getBytes().length);
+        int lenencLen = getLenencLength(val.getBytes().length);
         this.writeIndex += lenencLen + val.getBytes().length;
         return this;
     }
@@ -311,7 +283,7 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     @Override
     public MycatByteBuffer putNULString(int index, String val) {
         putFixString(index, val);
-        putByte(index + 1 + val.getBytes().length, (byte) 0);
+        putByte(val.getBytes().length + index, (byte) 0);
         return this;
     }
 
@@ -319,6 +291,71 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     public MycatByteBuffer writeNULString(String val) {
         putNULString(writeIndex, val);
         writeIndex += val.getBytes().length + 1;
+        return this;
+    }
+
+    @Override
+    public byte[] readBytes(int length) {
+        byte[] bytes = this.getBytes(readIndex, length);
+        readIndex += length;
+        return bytes;
+    }
+
+    @Override
+    public MycatByteBuffer writeBytes(byte[] bytes) {
+        this.writeBytes(bytes.length, bytes);
+        return this;
+    }
+
+    @Override
+    public MycatByteBuffer writeBytes(int length, byte[] bytes) {
+        this.putBytes(writeIndex, length, bytes);
+        writeIndex += length;
+        return this;
+    }
+
+    @Override
+    public byte readByte() {
+        byte val = getByte(readIndex);
+        readIndex++;
+        return val;
+    }
+
+    @Override
+    public byte[] getLenencBytes(int index) {
+        int len = (int) getLenencInt(index);
+        return getBytes(index + getLenencLength(len), len);
+    }
+
+    @Override
+    public byte[] readLenencBytes() {
+        int len = (int) getLenencInt(readIndex);
+        byte[] bytes = getBytes(readIndex + getLenencLength(len), len);
+        readIndex += getLenencLength(len) + len;
+        return bytes;
+    }
+
+    @Override
+    public MycatByteBuffer putLenencBytes(int index, byte[] bytes) {
+        putLenencInt(index, bytes.length);
+        int offset = getLenencLength(bytes.length);
+        putBytes(index + offset, bytes);
+        return this;
+    }
+
+    @Override
+    public MycatByteBuffer writeLenencBytes(byte[] bytes) {
+        putLenencInt(writeIndex, bytes.length);
+        int offset = getLenencLength(bytes.length);
+        putBytes(writeIndex + offset, bytes);
+        writeIndex += offset + bytes.length;
+        return this;
+    }
+
+    @Override
+    public MycatByteBuffer writeByte(byte val) {
+        this.putByte(writeIndex, val);
+        writeIndex++;
         return this;
     }
 }

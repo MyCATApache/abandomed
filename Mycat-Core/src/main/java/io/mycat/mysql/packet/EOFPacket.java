@@ -23,8 +23,7 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
-
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
 
@@ -62,12 +61,12 @@ public class EOFPacket extends MySQLPacket {
     }
 
     @Override
-    public void write(ByteBuffer  buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        buffer.put(fieldCount);
-        BufferUtil.writeUB2(buffer, warningCount);
-        BufferUtil.writeUB2(buffer, status);
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+        buffer.writeFixInt(3,pkgSize);
+        buffer.writeByte(packetId);
+        buffer.writeLenencInt(fieldCount);
+        buffer.writeFixInt(2, warningCount);
+        buffer.writeFixInt(2, status);
     }
 
     @Override

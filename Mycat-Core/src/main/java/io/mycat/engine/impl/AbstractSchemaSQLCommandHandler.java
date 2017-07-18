@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.mysql.state.CloseState;
 import io.mycat.sqlcache.HintSQLInfo;
 import io.mycat.sqlcache.HintSQLParser;
@@ -63,7 +64,7 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
     protected final DirectTransTofrontCallBack directTransCallback = new DirectTransTofrontCallBack();
 
     @Override
-    public void processCmd(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType, int pkgStartPos,
+    public void processCmd(MySQLFrontConnection frontCon, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos,
                            int pkgLen) throws IOException {
     	throw new RuntimeException("AbstractSchemaSQLCommandHandler  in runtimeException");
 //        switch (packageType) {
