@@ -22,30 +22,12 @@ public class HandshakeRespCallback extends ResponseCallbackAdapter {
 
     @Override
     public void handleResponse(MySQLBackendConnection conn, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
-        processHandShakePacket(conn, dataBuffer);
-        conn.authenticate();
-        conn.setNextState(AuthenticatingState.INSTANCE);
-        conn.setWriteCompleteListener(()->{
-        	conn.clearCurrentPacket();
-        	conn.getDataBuffer().clear();
-        	conn.setNextNetworkState(ReadWaitingState.INSTANCE);
-        });
-    }
-
-    private void processHandShakePacket(MySQLBackendConnection conn, final MycatByteBuffer dataBuffer) {
-        HandshakePacket packet = new HandshakePacket();
-        packet.read(dataBuffer);
-        conn.getDataBuffer().clear();
-        conn.setHandshake(packet);
-        // 设置字符集编码
-        int charsetIndex = (packet.serverCharsetIndex & 0xff);
-        String charset = CharsetUtil.getCharset(charsetIndex);
-        if (charset != null) {
-            conn.setCharset(charsetIndex, charset);
-        } else {
-            String errmsg = "Unknown charsetIndex:" + charsetIndex + " of " + conn;
-            LOGGER.warn(errmsg);
-            return;
-        }
+//        processHandShakePacket(conn, dataBuffer);
+//        conn.authenticate();
+//        conn.setWriteCompleteListener(()->{
+//        	conn.clearCurrentPacket();
+//        	conn.getDataBuffer().clear();
+//        	conn.setNextNetworkState(ReadWaitingState.INSTANCE);
+//        });
     }
 }

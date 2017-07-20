@@ -2,22 +2,15 @@ package io.mycat.mysql.state;
 
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.backend.callback.BackendComQueryResponseCallback;
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.mysql.MySQLConnection;
+import io.mycat.mysql.ServerStatus;
 import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.net2.ConDataBuffer;
-import io.mycat.net2.states.NoReadAndWriteState;
-import io.mycat.net2.states.ReadWaitingState;
-import io.mycat.net2.states.WriteState;
-import io.mycat.net2.states.WriteWaitingState;
 
 /**
  * COM_QUERY响应
@@ -28,56 +21,58 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
     private static final Logger LOGGER = LoggerFactory.getLogger(ComQueryResponseState.class);
     public static final ComQueryResponseState INSTANCE = new ComQueryResponseState();
 
-    private BackendComQueryResponseCallback backendComQueryResponseCallback = new BackendComQueryResponseCallback();
-
     private ComQueryResponseState() {
     }
 
     @Override
-    protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
+    protected boolean frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment)throws IOException {
        LOGGER.debug("Frontend in ComQueryResponseState");
-//        byte packageType = mySQLFrontConnection.getCurrentPacketType();
-//        if(packageType == MySQLPacket.ERROR_PACKET || packageType == MySQLPacket.OK_PACKET){
-//            ConDataBuffer writeBuffer = mySQLFrontConnection.getWriteDataBuffer();
-//            mySQLFrontConnection.setWriteDataBuffer(mySQLFrontConnection.getShareBuffer());
-//            mySQLFrontConnection.setNextState(IdleState.INSTANCE);
-//            mySQLFrontConnection.setWriteCompleteListener(() -> {
-//                mySQLFrontConnection.setCurrentPacketStartPos(0);
-//                mySQLFrontConnection.getWriteDataBuffer().clear();
-//                mySQLFrontConnection.getReadDataBuffer().clear();
-//                mySQLFrontConnection.setWriteDataBuffer(writeBuffer);
-//            });
-//            mySQLFrontConnection.setNextConnState(WriteWaitingState.INSTANCE);
-//        } else {
-//            mySQLFrontConnection.setNextState(ComQueryColumnDefState.INSTANCE);
-//        }
-//
-//        if (attachment != null && ((Boolean) attachment)) {
-//        	passThrouthOnce(mySQLFrontConnection);
-//        }
+       return true;
     }
 
     @Override
-    protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
+    protected boolean backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment)throws IOException {
         LOGGER.debug("Backend in ComQueryResponseState");
+        boolean returnflag = false;
         try {
-        	backendComQueryResponseCallback.handleResponse(
-                    mySQLBackendConnection,
-                    mySQLBackendConnection.getDataBuffer(),
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketStartPos(),
-                    mySQLBackendConnection.getCurrentPacketLength()
-            );
-        	// 如果需要透传给前端,再驱动前端状态机
-        	// 透传分为全包透传和半包透传的情况
-//        	if(MySQLConnection.COMPLETE_PACKET == transferMode||
-//        			MySQLConnection.HALF_PACKET == transferMode){
-//        		mySQLBackendConnection.getMySQLFrontConnection().driveState(attachment);
-//        	}
+        	processPacketHeader(mySQLBackendConnection);
+        	
+        	byte packageType;
+        	switch(mySQLBackendConnection.getDirectTransferMode()){
+            case COMPLETE_PACKET:
+            	packageType = mySQLBackendConnection.getCurrentPacketType();
+            	if (packageType == MySQLPacket.OK_PACKET || packageType == MySQLPacket.ERROR_PACKET) {
+                    //多结果集时会返回OK包，此时服务器的状态应该已经不是多结果集的状态了
+//                    MySQLMessage mySQLMessage = new MySQLMessage(dataBuffer);
+//                    mySQLMessage.position(mySQLBackendConnection.getCurrentPacketStartPos());
+                    int serverStatus = 0;
+                    mySQLBackendConnection.setServerStatus(serverStatus);
+                    if ((serverStatus & ServerStatus.SERVER_STATUS_IN_TRANS) != 0) {
+                        LOGGER.debug("后端连接,处于事务中，不能回收!{}", mySQLBackendConnection);
+                    } else {
+                        LOGGER.debug("后端连接，不在事务中，可以回收！{}",mySQLBackendConnection);
+                    }
+                    mySQLBackendConnection.setNextState(IdleState.INSTANCE);
+                    SQLEngineCtx.INSTANCE().getDataTransferChannel()
+                	.transferToFront(mySQLBackendConnection, true, true);
+                    returnflag = false;  //触发透传,退出当前状态机
+                } else {
+                    mySQLBackendConnection.setNextState(ComQueryColumnDefState.INSTANCE);
+                    mySQLBackendConnection.getDataBuffer().writeLimit(mySQLBackendConnection.getCurrentPacketLength());
+                    returnflag = true;   //状态机自驱进入下一个状态
+                }
+            	break;
+            case LONG_HALF_PACKET:
+            case SHORT_HALF_PACKET:
+            case NONE:
+            	returnflag = false;
+            	break;
+            }
         } catch (IOException e) {
-            LOGGER.warn("Backend ComQueryResponseState error", e);
-            mySQLBackendConnection.changeState(CloseState.INSTANCE, "program error");
-            throw new StateException(e);
+            LOGGER.error("Backend ComQueryResponseState error", e);
+            mySQLBackendConnection.setNextState(CloseState.INSTANCE);
+            returnflag = false;
         }
+        return returnflag;
     }
 }

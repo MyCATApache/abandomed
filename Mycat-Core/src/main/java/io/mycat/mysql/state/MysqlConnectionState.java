@@ -1,5 +1,7 @@
 package io.mycat.mysql.state;
 
+import java.io.IOException;
+
 import io.mycat.mysql.MySQLConnection;
 
 /**
@@ -8,5 +10,5 @@ import io.mycat.mysql.MySQLConnection;
  * @author ynfeng
  */
 public interface MysqlConnectionState {
-    void handle(MySQLConnection mySQLConnection,Object attachment);
+    boolean handle(MySQLConnection mySQLConnection,Object attachment)throws IOException;
 }

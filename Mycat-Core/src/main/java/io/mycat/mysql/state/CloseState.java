@@ -22,13 +22,14 @@ public class CloseState extends AbstractMysqlConnectionState {
     }
 
     @Override
-    protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
+    protected boolean frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in CloseState");
         mySQLFrontConnection.setNextNetworkState(ClosingState.INSTANCE);
+        return false;
     }
 
     @Override
-    protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
-
+    protected boolean backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
+    	return false;
     }
 }

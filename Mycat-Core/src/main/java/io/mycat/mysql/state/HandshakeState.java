@@ -6,8 +6,12 @@ import org.slf4j.LoggerFactory;
 
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.backend.callback.HandshakeRespCallback;
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.front.MySQLFrontConnection;
+import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.net2.ConDataBuffer;
+import io.mycat.net2.states.ReadWaitingState;
+import io.mycat.util.CharsetUtil;
 
 /**
  * 握手状态
@@ -29,9 +33,10 @@ public class HandshakeState extends AbstractMysqlConnectionState {
      * @param attachment
      */
     @Override
-    protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
+    protected boolean frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in HandshakeState");
-        mySQLFrontConnection.changeState(AuthenticatingState.INSTANCE, attachment);
+        mySQLFrontConnection.setNextState(AuthenticatingState.INSTANCE);
+        return true;
     }
 
     /**
@@ -41,20 +46,42 @@ public class HandshakeState extends AbstractMysqlConnectionState {
      * @param attachment
      */
     @Override
-    protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
+    protected boolean backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
     	LOGGER.debug("Backend in HandshakeState");
+    	boolean returnflag;
         try {
-            handshakeRespCallback.handleResponse(
-                    mySQLBackendConnection,
-                    mySQLBackendConnection.getDataBuffer(),
-                    mySQLBackendConnection.getCurrentPacketType(),
-                    mySQLBackendConnection.getCurrentPacketStartPos(),
-                    mySQLBackendConnection.getCurrentPacketLength()
-            );
+        	processHandShakePacket(mySQLBackendConnection);
+        	mySQLBackendConnection.authenticate();
+            mySQLBackendConnection.setNextState(AuthenticatingState.INSTANCE);
+            mySQLBackendConnection.setWriteCompleteListener(()->{
+            	mySQLBackendConnection.clearCurrentPacket();
+            	mySQLBackendConnection.getDataBuffer().clear();
+            	mySQLBackendConnection.setNextNetworkState(ReadWaitingState.INSTANCE);
+            });
+            
+            returnflag = false;
         } catch (Throwable e) {
             LOGGER.warn("frontend InitialState error", e);
-            mySQLBackendConnection.changeState(CloseState.INSTANCE, "auth error.");
-            throw new StateException(e);
+            mySQLBackendConnection.setNextState(CloseState.INSTANCE);
+            returnflag = true;
+        }
+        return returnflag;
+    }
+    
+    private void processHandShakePacket(MySQLBackendConnection conn) {
+        HandshakePacket packet = new HandshakePacket();
+        packet.read(conn.getDataBuffer());
+        conn.getDataBuffer().clear();
+        conn.setHandshake(packet);
+        // 设置字符集编码
+        int charsetIndex = (packet.serverCharsetIndex & 0xff);
+        String charset = CharsetUtil.getCharset(charsetIndex);
+        if (charset != null) {
+            conn.setCharset(charsetIndex, charset);
+        } else {
+            String errmsg = "Unknown charsetIndex:" + charsetIndex + " of " + conn;
+            LOGGER.warn(errmsg);
+            return;
         }
     }
 }

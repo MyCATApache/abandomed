@@ -30,21 +30,24 @@ public class ConnectingState extends AbstractMysqlConnectionState {
      * @param attachment
      */
     @Override
-    protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
+    protected boolean frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment)throws IOException {
         LOGGER.debug("Frontend in ConnectingState");
+        boolean returnflag = false;
         try {
-            mySQLFrontConnection.setNextState(HandshakeState.INSTANCE);
             mySQLFrontConnection.sendAuthPackge();
             mySQLFrontConnection.setWriteCompleteListener(()->{
             	mySQLFrontConnection.clearCurrentPacket();
             	mySQLFrontConnection.getDataBuffer().clear();
             	mySQLFrontConnection.setNextNetworkState(ReadWaitingState.INSTANCE);
             });
+            mySQLFrontConnection.setNextState(HandshakeState.INSTANCE);
+            returnflag = false;
         } catch (Throwable e) {
             LOGGER.warn("frontend InitialState error", e);
-            mySQLFrontConnection.changeState(CloseState.INSTANCE, "register error");
-            throw new StateException(e);
+            mySQLFrontConnection.setNextState(CloseState.INSTANCE);
+            returnflag = true;
         }
+        return returnflag;
     }
 
     /**
@@ -54,9 +57,10 @@ public class ConnectingState extends AbstractMysqlConnectionState {
      * @param attachment
      */
     @Override
-    protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
+    protected boolean backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment)throws IOException {
         LOGGER.debug("Backend in ConnectingState");
         mySQLBackendConnection.setNextState(HandshakeState.INSTANCE);
         NetSystem.getInstance().getConnector().postConnect(mySQLBackendConnection);
+        return false;
     }
 }

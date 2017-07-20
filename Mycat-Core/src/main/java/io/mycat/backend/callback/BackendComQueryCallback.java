@@ -21,8 +21,6 @@ public class BackendComQueryCallback extends ResponseCallbackAdapter {
         conn.setDataBuffer(conn.getShareBuffer());
         /* 这里还没有办法区分是前端状态机驱动还是后端状态机驱动  */
         conn.networkDriverMachine(WriteWaitingState.INSTANCE);
-//        conn.connDriverMachine(WriteWaitingState.INSTANCE);    /*  后端连接网络状态机进入可写状态   */
-//        conn.setNextConnState(WriteWaitingState.INSTANCE);     /*  后端连接网络状态机进入可写状态   */
         conn.setWriteCompleteListener(() -> {
             conn.setNextState(ComQueryResponseState.INSTANCE);
             conn.setDataBuffer(writeBuffer);
@@ -30,5 +28,5 @@ public class BackendComQueryCallback extends ResponseCallbackAdapter {
             conn.getShareBuffer().compact();   //透传buffer 使用compact
             conn.getDataBuffer().clear();     //非透传buffer 使用 clear
         });
-    } 
+    }
 }

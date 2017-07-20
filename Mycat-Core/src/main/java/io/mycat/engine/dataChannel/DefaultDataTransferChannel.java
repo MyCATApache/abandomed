@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.mycat.engine.dataChannel.impl.PassThrouthtoBackendDataHandler;
 import io.mycat.engine.dataChannel.impl.PassThrouthtoFrontDataHandler;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.net2.ConDataBuffer;
@@ -16,6 +17,7 @@ public class DefaultDataTransferChannel implements DataChannel {
 	
 	{
 		toFronthandlers.add(PassThrouthtoFrontDataHandler.INSTANCE);
+		toBackendhandlers.add(PassThrouthtoBackendDataHandler.INSTANCE);
 	}
 
 	@Override

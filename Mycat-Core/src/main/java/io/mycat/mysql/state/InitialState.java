@@ -27,9 +27,10 @@ public class InitialState extends AbstractMysqlConnectionState {
      * @param attachment
      */
     @Override
-    protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
+    protected boolean frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
         LOGGER.debug("Frontend in ConnectingState");
-        mySQLFrontConnection.changeState(ConnectingState.INSTANCE, attachment);
+        mySQLFrontConnection.setNextState(ConnectingState.INSTANCE);
+        return true;
     }
 
     /**
@@ -39,8 +40,9 @@ public class InitialState extends AbstractMysqlConnectionState {
      * @param attachment
      */
     @Override
-    protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
+    protected boolean backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
         LOGGER.debug("Backend in ConnectingState");
-        mySQLBackendConnection.changeState(ConnectingState.INSTANCE, attachment);
+        mySQLBackendConnection.setNextState(ConnectingState.INSTANCE);
+        return true;
     }
 }

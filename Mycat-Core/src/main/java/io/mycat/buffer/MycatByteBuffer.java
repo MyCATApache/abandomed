@@ -98,6 +98,19 @@ public interface MycatByteBuffer {
      * @return 当前的写位置
      */
     int writeIndex();
+    
+    
+    /**
+     * 获取当前写出指针位置
+     * @return
+     */
+    int writeLimit();
+    
+    /**
+     * 设置当前写指针位置
+     * @param currentWriteIndex
+     */
+    void writeLimit(int writeLimit);
 
     /**
      * 获取当前的读位置

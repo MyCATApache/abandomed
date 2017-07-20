@@ -53,7 +53,7 @@ public class MySQLDataSource {
         this.size = config.getMaxCon();
         this.mysqlBean = config;
         this.name = config.getHostName();
-        this.slaveNode = islaveNode;
+        this.slaveNode = islaveNode; 
         this.factory = factory;
 
     }

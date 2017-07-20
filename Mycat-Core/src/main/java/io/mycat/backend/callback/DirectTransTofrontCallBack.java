@@ -68,7 +68,7 @@ public class DirectTransTofrontCallBack  implements BackConnectionCallback{
 
 	@Override
 	public void connectionError(ConnectionException e, MySQLBackendConnection conn) {
-	getFrontCon(conn).failure(e.getCode(), e.toString());
+//	getFrontCon(conn).failure(e.getCode(), e.toString());
 		
 	}
 	@Override
@@ -89,7 +89,7 @@ public class DirectTransTofrontCallBack  implements BackConnectionCallback{
 	}
 	@Override
 	public void handlerError(Exception e, MySQLBackendConnection conn) {
-		getFrontCon(conn).failure(ErrorCode.ERR_FOUND_EXCEPION, e.toString());
+//		getFrontCon(conn).failure(ErrorCode.ERR_FOUND_EXCEPION, e.toString());
 		
 	}
 

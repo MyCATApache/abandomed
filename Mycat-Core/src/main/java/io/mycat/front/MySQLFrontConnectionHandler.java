@@ -30,11 +30,14 @@ import io.mycat.mysql.state.CloseState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.engine.dataChannel.TransferDirection;
+import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.ConnectionException;
 import io.mycat.net2.NIOHandler;
 import io.mycat.net2.NetSystem;
+import io.mycat.net2.states.ReadWaitingState;
 import io.mycat.util.StringUtil;
 
 /**
@@ -63,7 +66,7 @@ public class MySQLFrontConnectionHandler implements NIOHandler<MySQLFrontConnect
     }
 
     @Override
-    public void handleReadEvent(final MySQLFrontConnection cnxn) throws IOException {
+    public void handleReadEvent(final MySQLFrontConnection cnxn) throws IOException { 	
         LOGGER.debug("handleReadEvent(): {}", cnxn);
         final MycatByteBuffer buffer = cnxn.getDataBuffer();
         int offset = cnxn.getCurrentPacketStartPos();

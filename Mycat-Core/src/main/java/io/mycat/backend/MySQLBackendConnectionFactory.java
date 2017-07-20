@@ -62,6 +62,6 @@ public class MySQLBackendConnectionFactory {
         c.setUserCallback(callback);
         c.setIdleTimeout(NetSystem.getInstance().getNetConfig().getConIdleTimeout() * 60 * 1000L);
         c.driveState();
-        return c;
+        return c; 
     }
 }

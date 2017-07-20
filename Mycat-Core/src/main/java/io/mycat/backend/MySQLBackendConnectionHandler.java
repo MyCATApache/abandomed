@@ -85,7 +85,7 @@ public class MySQLBackendConnectionHandler implements NIOHandler<MySQLBackendCon
         	 * 只有在进行透传时,透传标记才设置为 true, 循环处理缓冲区中的数据时,透传标记为false.
         	 * 整个结果集解析完成,最后一个数据包透传完成后,需要结束透传状态.
         	 */
-         	if(!TransferDirection.NONE.equals(con.getTransferDirection())){  //完成一次透传后,
+         	if(!con.isPassthrough()){  //完成一次透传后,
          		
          		if(offset < 0){  //完成一次透传后,如果有半包,并且半包已经透传出去的情况.offset 会小于0
          			if(con.getCurrentPacketLength()< limit){

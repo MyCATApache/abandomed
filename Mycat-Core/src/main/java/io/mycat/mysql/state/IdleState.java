@@ -1,11 +1,17 @@
 package io.mycat.mysql.state;
 
 
-import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.front.MySQLFrontConnection;
-import io.mycat.mysql.packet.MySQLPacket;
+import java.io.IOException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.buffer.MycatByteBuffer;
+import io.mycat.front.MySQLFrontConnection;
+import io.mycat.mysql.MySQLConnection;
+import io.mycat.mysql.packet.MySQLPacket;
+import io.mycat.net2.NetSystem;
 
 /**
  * 空闲状态
@@ -21,33 +27,42 @@ public class IdleState extends AbstractMysqlConnectionState {
     }
 
     @Override
-    protected void frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) {
+    protected boolean frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment)throws IOException {
         LOGGER.debug("Frontend in IdleState");
+        processPacketHeader(mySQLFrontConnection);
         int packetType = mySQLFrontConnection.getCurrentPacketType();
+    	boolean returnflag = false;
         switch (packetType) {
             case MySQLPacket.COM_QUERY:
                 LOGGER.debug("Frontend receive a COM_QUERY in IdleState");
-                mySQLFrontConnection.changeState(ComQueryState.INSTANCE, attachment);
+                
+                mySQLFrontConnection.setNextState(ComQueryState.INSTANCE);
+                returnflag = true;
                 break;
             case MySQLPacket.COM_QUIT:
             	LOGGER.debug("Frontend receive a COM_QUIT in IdleState");
-            	mySQLFrontConnection.changeState(CloseState.INSTANCE, attachment);
+            	mySQLFrontConnection.setNextState(CloseState.INSTANCE);
+            	returnflag = true;
             default:
                 break;
         }
+        return returnflag;
     }
 
     @Override
-    protected void backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) {
+    protected boolean backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) throws IOException {
         LOGGER.debug("Backend in IdleState");
-        int packetType = mySQLBackendConnection.getCurrentPacketType();
-        switch (packetType) {
+        boolean returnflag = false;
+        processPacketHeader(mySQLBackendConnection); 
+        switch (mySQLBackendConnection.getCurrentPacketType()) {
             case MySQLPacket.COM_QUERY:
                 LOGGER.debug("Backend receive a COM_QUERY in IdleState");
-                mySQLBackendConnection.changeState(ComQueryState.INSTANCE, attachment);
+                mySQLBackendConnection.setNextState(ComQueryState.INSTANCE);
+                returnflag = true;
                 break;
             default:
                 break;
         }
+        return returnflag;
     }
 }

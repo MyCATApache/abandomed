@@ -22,7 +22,7 @@ public class ParseCmdState implements NetworkState{
 	public boolean handler(Connection conn, SelectionKey processKey, SocketChannel channel, Selector selector)
 			throws IOException {
 		LOGGER.debug("Current conn in ParseCmdState. conn is "+conn.getClass());
-		conn.getHandler().handleReadEvent(conn);
+		conn.driveState(null);
 		if(conn.getNextNetworkState()!=null){
 			conn.setNetworkState(conn.getNextNetworkState());
 			conn.setNextNetworkState(null);

@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import io.mycat.backend.WriteCompleteListener;
 import io.mycat.engine.dataChannel.TransferDirection;
 import io.mycat.engine.dataChannel.TransferMode;
+import io.mycat.mysql.StatefulConnection;
+import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.states.ClosedState;
 import io.mycat.net2.states.ClosingState;
 import io.mycat.net2.states.ListeningState;
@@ -24,7 +26,7 @@ import io.mycat.net2.states.network.TRY_READ_RESULT;
 /**
  * @author wuzh
  */
-public abstract class Connection implements ClosableConnection {
+public abstract class Connection implements ClosableConnection, StatefulConnection {
 	
     public static Logger LOGGER = LoggerFactory.getLogger(Connection.class);
     protected String host;
@@ -70,7 +72,13 @@ public abstract class Connection implements ClosableConnection {
     private byte[] tmpWriteBytes;  // 该字段用于 在非透传模式下,net buffer 大小小于写出报文大小时,临时记录报文数据.用于分批 写出到 net buffer
     private int tmplastwritePos;   // 写缓冲区可用时, tmpWriteBytes 上次写到 net buffer 缓冲区中的位置
     private TransferMode directTransferMode = TransferMode.NONE;            //透传模式
-    private TransferDirection transferDirection = TransferDirection.NONE;   //透传方向
+    private boolean passthrough = false;   //是否透传
+    
+    private int currentPacketLength;
+    private byte currentPacketType;
+    private int currentPacketStartPos;
+    
+    private MycatByteBuffer shareBuffer;
         
     public Connection(SocketChannel channel) {
         this.channel = channel;
@@ -284,7 +292,7 @@ public abstract class Connection implements ClosableConnection {
     		tmpWriteBytes = data;
        	}
     	this.directTransferMode = TransferMode.NONE;
-    	this.transferDirection = TransferDirection.NONE;
+    	this.passthrough = false; 
     	setNextNetworkState(WriteWaitingState.INSTANCE);
     }
   	
@@ -301,7 +309,10 @@ public abstract class Connection implements ClosableConnection {
         final MycatByteBuffer buffer = this.dataBuffer;
         int written = 0;
         int remains = 0;
-        if(TransferDirection.NONE.equals(transferDirection)){
+        if(passthrough){
+        	written = buffer.transferToChannel(this.channel);
+        	remains = buffer.writeLimit()-buffer.readIndex();//buffer.getReadPos() - buffer.getLastWritePos();
+        }else{
         	/**
         	 * 在非透传模式下,如果 local buffer > net buffer 剩余长度,分批透传
         	 */
@@ -322,9 +333,6 @@ public abstract class Connection implements ClosableConnection {
         	}
         	written = buffer.transferToChannel(this.channel);
         	remains = buffer.readableBytes() ;//buffer.getWritePos() - buffer.getLastWritePos();
-        }else{
-        	written = buffer.transferToChannel(this.channel);
-        	remains = buffer.readableBytes();//buffer.getReadPos() - buffer.getLastWritePos();
         }
         
        	if(written > 0){
@@ -422,10 +430,9 @@ public abstract class Connection implements ClosableConnection {
 		return nextNetworkState;
 	}
 
-	public void setNextNetworkState(NetworkState nextConnState) {
-		LOGGER.debug("nextConnState is change to "+nextConnState
-					+"  current nextConnState is " +this.nextNetworkState + this.getClass().getSimpleName());
+	public Connection setNextNetworkState(NetworkState nextConnState) {
 		this.nextNetworkState = nextConnState;
+		return this;
 	}
 
 	public Selector getSelector() {
@@ -448,24 +455,27 @@ public abstract class Connection implements ClosableConnection {
 		return writeCompleteListener;
 	}
 
-	public void setWriteCompleteListener(WriteCompleteListener writeCompleteListener) {
+	public Connection setWriteCompleteListener(WriteCompleteListener writeCompleteListener) {
 		this.writeCompleteListener = writeCompleteListener;
+		return this;
 	}
 
 	public MycatByteBuffer getDataBuffer() {
 		return dataBuffer;
 	}
 
-	public void setDataBuffer(MycatByteBuffer dataBuffer) {
+	public Connection setDataBuffer(MycatByteBuffer dataBuffer) {
 		this.dataBuffer = dataBuffer;
+		return this;
 	}
 	
 	public TransferMode getDirectTransferMode() {
 		return directTransferMode;
 	}
 
-	public void setDirectTransferMode(TransferMode directTransferMode) {
+	public Connection setDirectTransferMode(TransferMode directTransferMode) {
 		this.directTransferMode = directTransferMode;
+		return this;
 	}
 
 	public byte[] getTmpWriteBytes() {
@@ -480,12 +490,58 @@ public abstract class Connection implements ClosableConnection {
         this.mycatByteBufferAllocator = mycatByteBufferAllocator;
     }
 
-	public TransferDirection getTransferDirection() {
-		return transferDirection;
+	public boolean isPassthrough() {
+		return passthrough;
 	}
 
-	public void setTransferDirection(TransferDirection transferDirection) {
-		this.transferDirection = transferDirection;
+	public Connection setPassthrough(boolean passthrough) {
+		this.passthrough = passthrough;
+		return this;
 	}
+	
+    public int getCurrentPacketLength() {
+        return currentPacketLength;
+    }
 
+    public Connection setCurrentPacketLength(int currentPacketLength) {
+        this.currentPacketLength = currentPacketLength;
+        return this;
+    }
+
+    public byte getCurrentPacketType() {
+        return currentPacketType;
+    }
+
+    public Connection setCurrentPacketType(byte currentPacketType) {
+        this.currentPacketType = currentPacketType;
+        return this;
+    }
+
+    public int getCurrentPacketStartPos() {
+        return currentPacketStartPos;
+    }
+
+    public Connection setCurrentPacketStartPos(int currentPacketStartPos) {
+        this.currentPacketStartPos = currentPacketStartPos;
+        return this;
+    }
+	/**
+
+    /**
+     * 清除关于当前包的记录状态
+     */
+    public void clearCurrentPacket() {
+        this.currentPacketLength = 0;
+        this.currentPacketType = MySQLPacket.COM_SLEEP;
+        this.currentPacketStartPos = 0;
+    }
+    
+    public MycatByteBuffer getShareBuffer() {
+        return shareBuffer;
+    }
+
+    public Connection setShareBuffer(MycatByteBuffer shareBuffer) {
+        this.shareBuffer = shareBuffer;
+        return this;
+    }
 }

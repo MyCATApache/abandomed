@@ -24,31 +24,30 @@
 package io.mycat.mysql;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
-import io.mycat.buffer.MycatByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.engine.dataChannel.TransferMode;
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.mysql.packet.ErrorPacket;
 import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.mysql.state.InitialState;
 import io.mycat.mysql.state.MysqlConnectionState;
-import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.Connection;
 import io.mycat.net2.states.WriteWaitingState;
 import io.mycat.util.RandomUtil;
 
 /**
- * Mysql connection
+ * Mysql connection 
  *
  * @author wuzhihui
+ *
  */
-public class MySQLConnection extends Connection implements StatefulConnection {
+public class MySQLConnection extends Connection implements StatefulConnection{
     protected final static Logger LOGGER = LoggerFactory.getLogger(MySQLConnection.class);
+    
 
     public static int NORMAL = 0;            //正常非透传状态
     public static int HALF_PACKET = 1;       //半包透传状态
@@ -59,16 +58,11 @@ public class MySQLConnection extends Connection implements StatefulConnection {
 
     public final static int msyql_packetHeaderSize = 4;
 
-    private int currentPacketLength;
-    private byte currentPacketType;
-    private int currentPacketStartPos;
-
     protected String user;
     protected String password;
     protected String charset;
     protected int charsetIndex;
     protected byte[] seed;
-    private MycatByteBuffer shareBuffer;
 
     public MySQLConnection(SocketChannel channel) {
         super(channel);
@@ -167,7 +161,6 @@ public class MySQLConnection extends Connection implements StatefulConnection {
     public void writeMsqlPackage(MySQLPacket pkg) throws IOException {
         int pkgSize = pkg.calcPacketSize();
         pkg.write(getDataBuffer(), pkgSize);
-        setDirectTransferMode(TransferMode.NONE);
     	setNextNetworkState(WriteWaitingState.INSTANCE);
     }
 
@@ -176,6 +169,7 @@ public class MySQLConnection extends Connection implements StatefulConnection {
         err.packetId = 2;
         err.errno = errno;
         err.message = info.getBytes();
+       this.writeMsqlPackage(err);
         this.writeMsqlPackage(err);
     }
 
@@ -185,8 +179,10 @@ public class MySQLConnection extends Connection implements StatefulConnection {
         err.errno = errno;
         err.message = info.getBytes();
         err.sqlState = sqlstate;
+       this.writeMsqlPackage(err);
         this.writeMsqlPackage(err);
     }
+    
 
     public String getUser() {
         return user;
@@ -204,85 +200,48 @@ public class MySQLConnection extends Connection implements StatefulConnection {
         this.password = password;
     }
 
+   
 
     public String getCharset() {
-        return charset;
-    }
+		return charset;
+	}
 
     public void setCharset(int charsetIndex, String charsetName) {
         this.charsetIndex = charsetIndex;
         this.charset = charsetName;
     }
 
-    public int getCurrentPacketLength() {
-        return currentPacketLength;
-    }
-
-    public void setCurrentPacketLength(int currentPacketLength) {
-        this.currentPacketLength = currentPacketLength;
-    }
-
-    public byte getCurrentPacketType() {
-        return currentPacketType;
-    }
-
-    public void setCurrentPacketType(byte currentPacketType) {
-        this.currentPacketType = currentPacketType;
-    }
-
-    public int getCurrentPacketStartPos() {
-        return currentPacketStartPos;
-    }
-
-    public void setCurrentPacketStartPos(int currentPacketStartPos) {
-        this.currentPacketStartPos = currentPacketStartPos;
-    }
-
-    /**
-     * 清除关于当前包的记录状态
-     */
-    public void clearCurrentPacket() {
-        this.currentPacketLength = 0;
-        this.currentPacketType = MySQLPacket.COM_SLEEP;
-        this.currentPacketStartPos = 0;
-    }
 
     @Override
-    public void changeState(MysqlConnectionState state, Object attachment) {
-        this.state = state;
-        this.state.handle(this, attachment);
-    }
-
-    @Override
-    public void setNextState(MysqlConnectionState state) {
+    public MySQLConnection setNextState(MysqlConnectionState state) {
         this.nextState = state;
+        return this;
+    }
+    
+	@Override
+	public MysqlConnectionState getNextState() {
+		return nextState;
+	}
+
+    @Override
+    public void driveState(Object attachment)throws IOException {
+    	
+    	do{
+    		if (this.nextState != null) {
+                this.state = nextState;
+                this.nextState = null;
+            }
+    	}while(this.state.handle(this, attachment));
     }
 
     @Override
-    public void driveState(Object attachment) {
-        if (this.nextState != null) {
-            this.state = nextState;
-            this.nextState = null;
-        }
-        this.state.handle(this, attachment);
-    }
-
-    @Override
-    public void driveState() {
+    public void driveState()throws IOException {
         driveState(null);
     }
 
     @Override
     public MysqlConnectionState getCurrentState() {
         return state;
-    }
-
-    public MycatByteBuffer getShareBuffer() {
-        return shareBuffer;
-    }
-
-    public void setShareBuffer(MycatByteBuffer shareBuffer) {
-        this.shareBuffer = shareBuffer;
     }
 
 }

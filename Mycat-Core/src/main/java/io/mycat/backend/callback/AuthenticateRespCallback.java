@@ -25,7 +25,7 @@ public class AuthenticateRespCallback extends ResponseCallbackAdapter {
     public void handleResponse(MySQLBackendConnection conn, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
     	LOGGER.debug("in AuthenticateRespCallback method ");
     	if (packageType == MySQLPacket.ERROR_PACKET) {
-            conn.changeState(CloseState.INSTANCE, null);
+    		conn.setNextState(CloseState.INSTANCE);
         } else if (packageType == MySQLPacket.OK_PACKET) {
             conn.setNextState(IdleState.INSTANCE);
             conn.getDataBuffer().clear();
@@ -36,6 +36,5 @@ public class AuthenticateRespCallback extends ResponseCallbackAdapter {
             	conn.setNextNetworkState(ReadWaitingState.INSTANCE);
             }
         }
-
     }
 }

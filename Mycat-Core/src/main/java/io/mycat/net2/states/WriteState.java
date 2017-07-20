@@ -26,7 +26,8 @@ public class WriteState implements NetworkState {
 		TRANSMIT_RESULT result = conn.write();
 		switch(result){
 		case TRANSMIT_COMPLETE:
-			if(TransferDirection.NONE.equals(conn.getTransferDirection())){
+			
+			if(conn.isPassthrough()){
 				if(conn.getTmpWriteBytes()!=null){  //说明还有数据没有传输完成,保持当前状态,继续传输数据.
 					LOGGER.debug("Current conn in WriteState. tmpWriteBytes is not null conn is "+conn.getClass());
 					return true;

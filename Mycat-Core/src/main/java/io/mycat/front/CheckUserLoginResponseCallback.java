@@ -50,61 +50,25 @@ public class CheckUserLoginResponseCallback implements SQLCommandHandler {
 
     public void processCmd(MySQLFrontConnection con, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos,
                            int pkgLen) throws IOException {
-        AuthPacket auth = new AuthPacket();
-        auth.read(dataBuffer);
+//        AuthPacket auth = new AuthPacket();
+//        auth.read(dataBuffer);
+//
+//        // Fake check user
+//        LOGGER.debug("Check user name. " + auth.user);
+//        if (!auth.user.equals("root")) {
+//            LOGGER.debug("User name error. " + auth.user);
+//            con.failure(ErrorCode.ER_ACCESS_DENIED_ERROR, "Access denied for user '" + auth.user + "'");
+//            con.setNextState(CloseState.INSTANCE);
+//            return;
+//        }
+//
+//        // Fake check password
+//        LOGGER.debug("Check user password. " + new String(auth.password));
+//
+//        // check schema
+//        LOGGER.debug("Check database. " + auth.database);
+//
+//        success(con, auth);
 
-        // Fake check user
-        LOGGER.debug("Check user name. " + auth.user);
-        if (!auth.user.equals("root")) {
-            LOGGER.debug("User name error. " + auth.user);
-            con.failure(ErrorCode.ER_ACCESS_DENIED_ERROR, "Access denied for user '" + auth.user + "'");
-            con.setNextState(CloseState.INSTANCE);
-            return;
-        }
-
-        // Fake check password
-        LOGGER.debug("Check user password. " + new String(auth.password));
-
-        // check schema
-        LOGGER.debug("Check database. " + auth.database);
-
-        success(con, auth);
-
-    }
-
-    private void success(MySQLFrontConnection con, AuthPacket auth) throws IOException {
-        LOGGER.debug("Login success");
-        // 设置字符集编码
-        int charsetIndex = (auth.charsetIndex & 0xff);
-        final String charset = CharsetUtil.getCharset(charsetIndex);
-        if (charset == null) {
-            final String errmsg = "Unknown charsetIndex:" + charsetIndex;
-            LOGGER.warn(errmsg);
-            con.writeErrMessage(ErrorCode.ER_UNKNOWN_CHARACTER_SET, errmsg);
-            con.setNextState(CloseState.INSTANCE);
-            return;
-        }
-        LOGGER.debug("charset = {}, charsetIndex = {}", charset, charsetIndex);
-        con.setCharset(charsetIndex, charset);
-
-        if (!con.setFrontSchema(auth.database)) {
-            final String errmsg = "No Mycat Schema defined: " + auth.database;
-            LOGGER.debug(errmsg);
-            con.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR,"42000".getBytes(), errmsg);
-            
-            con.setWriteCompleteListener(() -> {
-            	con.setNextState(CloseState.INSTANCE);
-                con.setNextNetworkState(ClosingState.INSTANCE);
-            });
-        } else {
-            con.clearCurrentPacket();
-            con.write(AUTH_OK);
-            con.setWriteCompleteListener(() -> {
-                con.setNextState(IdleState.INSTANCE);
-                con.clearCurrentPacket();
-            	con.getDataBuffer().clear();
-                con.setNextNetworkState(ReadWaitingState.INSTANCE);
-            });
-        }
     }
 }

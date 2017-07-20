@@ -7,10 +7,12 @@ package io.mycat.buffer;
 public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     private int writeIndex;
     private int readIndex;
+    private int writeLimit;
 
     public AbstractMycatByteBuffer() {
         this.writeIndex = 0;
         this.readIndex = 0;
+        this.writeLimit = 0;
     }
 
     /**
@@ -63,6 +65,16 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     @Override
     public int writeIndex() {
         return writeIndex;
+    }
+    
+    @Override
+    public int writeLimit(){
+    	return writeLimit;
+    }
+    
+    @Override
+    public void writeLimit(int writeLimit){
+    	this.writeLimit = writeLimit;
     }
 
     @Override
