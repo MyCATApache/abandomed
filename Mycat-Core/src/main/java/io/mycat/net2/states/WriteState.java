@@ -1,14 +1,10 @@
 package io.mycat.net2.states;
 
 import java.io.IOException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.engine.dataChannel.TransferDirection;
 import io.mycat.net2.Connection;
 import io.mycat.net2.states.network.TRANSMIT_RESULT;
 
@@ -21,7 +17,7 @@ public class WriteState implements NetworkState {
     }
 
 	@Override
-	public boolean handler(Connection conn, SelectionKey processKey, SocketChannel channel, Selector selector)
+	public boolean handler(Connection conn)
 			throws IOException {
 		TRANSMIT_RESULT result = conn.write();
 		switch(result){

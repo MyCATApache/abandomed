@@ -1,9 +1,6 @@
 package io.mycat.net2.states;
 
 import java.io.IOException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +17,7 @@ public class ClosingState implements NetworkState {
     }
 
 	@Override
-	public boolean handler(Connection conn, SelectionKey processKey, SocketChannel channel, Selector selector)
+	public boolean handler(Connection conn)
 			throws IOException {
 		LOGGER.debug("Current conn in ClosingState. conn is "+conn.getClass());
 		conn.close(" close connection!");

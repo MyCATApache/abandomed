@@ -1,9 +1,6 @@
 package io.mycat.net2.states;
 
 import java.io.IOException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +23,7 @@ public class NewCmdState implements NetworkState {
     }
 
 	@Override
-	public boolean handler(Connection conn,SelectionKey processKey,SocketChannel channel,Selector selector)throws IOException {
+	public boolean handler(Connection conn)throws IOException {
 		LOGGER.debug("Current conn in NewCmdState. conn is "+conn.getClass());
 		//处于透传模式时,不指定connState. 由 listener 通过设置nextConnState 指定.
 		// 通过回调可以设置业务状态机的状态等操作

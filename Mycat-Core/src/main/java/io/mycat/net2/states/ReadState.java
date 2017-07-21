@@ -1,9 +1,6 @@
 package io.mycat.net2.states;
 
 import java.io.IOException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +17,7 @@ public class ReadState implements NetworkState {
     }
 
 	@Override
-	public boolean handler(Connection conn, SelectionKey processKey, SocketChannel channel, Selector selector)
+	public boolean handler(Connection conn)
 			throws IOException {
 		TRY_READ_RESULT res;
 		LOGGER.debug("Current conn in ReadState. conn is "+conn.getClass());

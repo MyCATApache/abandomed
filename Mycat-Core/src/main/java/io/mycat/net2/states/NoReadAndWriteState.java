@@ -1,9 +1,6 @@
 package io.mycat.net2.states;
 
 import java.io.IOException;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.SocketChannel;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,19 +16,19 @@ public class NoReadAndWriteState implements NetworkState {
     }
 
 	@Override
-	public boolean handler(Connection conn, SelectionKey processKey, SocketChannel channel, Selector selector)
+	public boolean handler(Connection conn)
 			throws IOException {
 		LOGGER.debug("Current conn in NoReadAndWriteState. conn is "+conn.getClass());
 	    boolean needWakeup = false;
         try {
-        	processKey.interestOps(processKey.interestOps() & Connection.OP_NOT_READ);
-    	    processKey.interestOps(processKey.interestOps() & Connection.OP_NOT_WRITE);
+        	conn.getProcessKey().interestOps(conn.getProcessKey().interestOps() & Connection.OP_NOT_READ);
+        	conn.getProcessKey().interestOps(conn.getProcessKey().interestOps() & Connection.OP_NOT_WRITE);
             needWakeup = true;
         } catch (Exception e) {
             LOGGER.warn("enable read fail " + e);
         }
         if (needWakeup) {
-            processKey.selector().wakeup();
+        	conn.getProcessKey().selector().wakeup();
         }
         if(conn.getNextNetworkState()!=null){
 			conn.setNetworkState(conn.getNextNetworkState());

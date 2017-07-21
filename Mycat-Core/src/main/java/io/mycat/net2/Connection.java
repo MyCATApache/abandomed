@@ -5,13 +5,12 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
-import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.buffer.MycatByteBufferAllocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.backend.WriteCompleteListener;
-import io.mycat.engine.dataChannel.TransferDirection;
+import io.mycat.buffer.MycatByteBuffer;
+import io.mycat.buffer.MycatByteBufferAllocator;
 import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.mysql.StatefulConnection;
 import io.mycat.mysql.packet.MySQLPacket;
@@ -105,7 +104,7 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
 
     	try {
     		/* 循环方式,替代递归 */
-    		while(networkState.handler(this, processKey, channel, selector)){}
+    		while(networkState.handler(this)){}
 		} catch (Exception e) {
 			LOGGER.error("server error", e);
 			close(" close connection!");
