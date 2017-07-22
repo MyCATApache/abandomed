@@ -20,56 +20,68 @@
  * Any questions about this component can be directed to it's project Web address
  * https://code.google.com/p/opencloudb/.
  *
- */package io.mycat.beans;
+ */
+package io.mycat.beans;
+
 /**
  * Mycat Table def Bean
- * @author wuzhihui
  *
+ * @author wuzhihui
  */
 public class TableDefBean {
-private String name;
-private int type;
-private String shardingKey;
-private String shardingRule;
+    private String name;
+    private int type;
+    private String shardingKey;
+    private String shardingRule;
 
-	public TableDefBean(String name, int type, String shardingKey, String shardingRule) {
-	super();
-	this.name = name;
-	this.type = type;
-	this.shardingKey = shardingKey;
-	this.shardingRule = shardingRule;
-}
-	public TableDefBean() {
-		
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getShardingKey() {
-		return shardingKey;
-	}
-	public void setShardingKey(String shardingKey) {
-		this.shardingKey = shardingKey;
-	}
-	public String getShardingRule() {
-		return shardingRule;
-	}
-	public void setShardingRule(String shardingRule) {
-		this.shardingRule = shardingRule;
-	}
-	public int getType() {
-		return type;
-	}
-	public void setType(int type) {
-		this.type = type;
-	}
-	@Override
-	public String toString() {
-		return "TableDefBean [name=" + name + ", type=" + type + ", shardingKey=" + shardingKey + ", shardingRule="
-				+ shardingRule + "]";
-	}
+    public TableDefBean(String name, int type, String shardingKey, String shardingRule) {
+        super();
+        this.name = name;
+        this.type = type;
+        this.shardingKey = shardingKey;
+        this.shardingRule = shardingRule;
+    }
+
+    public TableDefBean() {
+
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getShardingKey() {
+        return shardingKey;
+    }
+
+    public void setShardingKey(String shardingKey) {
+        this.shardingKey = shardingKey;
+    }
+
+    public String getShardingRule() {
+        return shardingRule;
+    }
+
+    public void setShardingRule(String shardingRule) {
+        this.shardingRule = shardingRule;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return "TableDefBean [name=" + name + ", type=" + type + ", shardingKey=" + shardingKey + ", shardingRule="
+                + shardingRule + "]";
+    }
 
 }

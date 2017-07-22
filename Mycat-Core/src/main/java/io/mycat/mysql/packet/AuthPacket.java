@@ -24,16 +24,14 @@
 package io.mycat.mysql.packet;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.mysql.Capabilities;
 import io.mycat.util.BufferUtil;
-import io.mycat.util.StreamUtil;
 
 /**
  * From client to server during initial handshake.
- * 
+ * <p>
  * <pre>
  * Bytes                        Name
  * -----                        ----
@@ -44,10 +42,10 @@ import io.mycat.util.StreamUtil;
  * n (Null-Terminated String)   user
  * n (Length Coded Binary)      scramble_buff (1 + x bytes)
  * n (Null-Terminated String)   databasename (optional)
- * 
+ *
  * &#64;see http://forge.mysql.com/wiki/MySQL_Internals_ClientServer_Protocol#Client_Authentication_Packet
  * </pre>
- * 
+ *
  * @author mycat
  */
 public class AuthPacket extends MySQLPacket {
@@ -61,60 +59,48 @@ public class AuthPacket extends MySQLPacket {
     public byte[] password;
     public String database;
 
-    public void read(ByteBuffer bufferArray) throws IOException {
-        MySQLMessage mm = new MySQLMessage(bufferArray);
-        packetLength = mm.readUB3();
-        packetId = mm.read();
-        clientFlags = mm.readUB4();
-        maxPacketSize = mm.readUB4();
-        charsetIndex = (mm.read() & 0xff);
-        // read extra
-        int current = mm.position();
-        int len = (int) mm.readLength();
-//        if (len > 0 && len < FILLER.length) {
-//            byte[] ab = new byte[len];
-//            System.arraycopy(mm.bytes(), mm.position(), ab, 0, len);
-//            this.extra = ab;
-//        }
-        mm.position(current + FILLER.length);
-        user = mm.readStringWithNull();
-        password = mm.readBytesWithLength();
-        if (((clientFlags & Capabilities.CLIENT_CONNECT_WITH_DB) != 0) && mm.hasRemaining()) {
-            database = mm.readStringWithNull();
+    public void read(MycatByteBuffer byteBuffer) throws IOException {
+        packetLength = (int) byteBuffer.readFixInt(3);
+        packetId = byteBuffer.readByte();
+        clientFlags = byteBuffer.readFixInt(4);
+        maxPacketSize = byteBuffer.readFixInt(4);
+        charsetIndex = byteBuffer.readByte();
+        byteBuffer.skip(23);
+        user = byteBuffer.readNULString();
+        password = byteBuffer.readLenencBytes();
+        if ((clientFlags & Capabilities.CLIENT_CONNECT_WITH_DB) != 0) {
+            database = byteBuffer.readNULString();
         }
     }
 
-  
-    public void write(ByteBuffer  buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        BufferUtil.writeUB4(buffer, clientFlags);
-        BufferUtil.writeUB4(buffer, maxPacketSize);
-        buffer.put((byte) charsetIndex);
-        buffer.put(FILLER);
+
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+        buffer.writeFixInt(3, pkgSize);
+        buffer.writeByte(packetId);
+        buffer.writeFixInt(4, clientFlags);
+        buffer.writeFixInt(4, maxPacketSize);
+        buffer.writeByte((byte) charsetIndex);
+        buffer.writeBytes(FILLER);
         if (user == null) {
-            buffer.put((byte) 0);
+            buffer.writeByte((byte) 0);
         } else {
-            byte[] userData = user.getBytes();
-            BufferUtil.writeWithNull(buffer, userData);
+            buffer.writeNULString(user);
         }
         if (password == null) {
-            buffer.put((byte) 0);
+            buffer.writeByte((byte) 0);
         } else {
-            BufferUtil.writeWithLength(buffer, password);
+            buffer.writeLenencBytes(password);
         }
         if (database == null) {
-            buffer.put((byte) 0);
+            buffer.writeByte((byte) 0);
         } else {
-            byte[] databaseData = database.getBytes();
-            BufferUtil.writeWithNull(buffer, databaseData);
+            buffer.writeNULString(database);
         }
-
     }
 
     @Override
     public int calcPacketSize() {
-        int size = 32;// 4+4+1+23;
+        int size = 32;//4+4+1+23;
         size += (user == null) ? 1 : user.length() + 1;
         size += (password == null) ? 1 : BufferUtil.getLength(password);
         size += (database == null) ? 1 : database.length() + 1;

@@ -25,14 +25,14 @@ package io.mycat.mysql.packet;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
 
-import io.mycat.util.BufferUtil;
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.util.StreamUtil;
 
 /**
  * @author mycat
  */
+@Deprecated
 public class Reply323Packet extends MySQLPacket {
 
     public byte[] seed;
@@ -47,14 +47,14 @@ public class Reply323Packet extends MySQLPacket {
         }
     }
 
-    public void write(ByteBuffer  buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        if (seed == null) {
-            buffer.put((byte) 0);
-        } else {
-            BufferUtil.writeWithNull(buffer, seed);
-        }
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+//        BufferUtil.writeUB3(buffer, pkgSize);
+//        buffer.put(packetId);
+//        if (seed == null) {
+//            buffer.put((byte) 0);
+//        } else {
+//            BufferUtil.writeWithNull(buffer, seed);
+//        }
     }
 
     @Override

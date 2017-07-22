@@ -39,6 +39,7 @@ public class UserSession  {
 	 private static final Logger LOGGER = LoggerFactory.getLogger(UserSession.class);	
 private SQLCommandHandler curCmdHandler;	
 private ArrayList<MySQLBackendConnection> backConLst=new  ArrayList<MySQLBackendConnection>();
+
 public void changeCmdHandler(SQLCommandHandler newCmdHandler)
 {
 	
@@ -78,9 +79,5 @@ public void addBackCon(MySQLBackendConnection con)
 public  ArrayList<MySQLBackendConnection> getBackendCons() {
 	return backConLst;
 }
-
-
-	
-	
 
 }

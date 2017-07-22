@@ -23,13 +23,11 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
-
-import io.mycat.util.BufferUtil;
+import io.mycat.buffer.MycatByteBuffer;
 
 /**
  * From server to client during initial handshake.
- * 
+ * <p>
  * <pre>
  * Bytes                        Name
  * -----                        ----
@@ -43,14 +41,14 @@ import io.mycat.util.BufferUtil;
  * 2                            server_status
  * 13                           (filler) always 0x00 ...
  * 13                           rest of scramble_buff (4.1)
- * 
+ *
  * &#64;see http://forge.mysql.com/wiki/MySQL_Internals_ClientServer_Protocol#Handshake_Initialization_Packet
  * </pre>
- * 
+ *
  * @author mycat
  */
 public class HandshakePacket extends MySQLPacket {
-    private static final byte[] FILLER_13 = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    private static final byte[] FILLER_13 = new byte[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     public byte protocolVersion;
     public byte[] serverVersion;
@@ -62,34 +60,32 @@ public class HandshakePacket extends MySQLPacket {
     public byte[] restOfScrambleBuff;
 
 
-    public void read(ByteBuffer buffer) {
-        MySQLMessage mm = new MySQLMessage(buffer);
-        packetLength = mm.readUB3();
-        packetId = mm.read();
-        protocolVersion = mm.read();
-        serverVersion = mm.readBytesWithNull();
-        threadId = mm.readUB4();
-        seed = mm.readBytesWithNull();
-        serverCapabilities = mm.readUB2();
-        serverCharsetIndex = mm.read();
-        serverStatus = mm.readUB2();
-        mm.move(13);
-        restOfScrambleBuff = mm.readBytesWithNull();
+    public void read(MycatByteBuffer buffer) {
+        packetLength = (int) buffer.readFixInt(3);
+        packetId = buffer.readByte();
+        protocolVersion = buffer.readByte();
+        serverVersion = buffer.readNULString().getBytes();
+        threadId = buffer.readFixInt(4);
+        seed = buffer.readNULString().getBytes();
+        serverCapabilities = (int) buffer.readFixInt(2);
+        serverCharsetIndex = buffer.readByte();
+        serverStatus = (int) buffer.readFixInt(2);
+        buffer.skip(13);
+        restOfScrambleBuff = buffer.readNULString().getBytes();
     }
 
-    public void write(ByteBuffer  buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        buffer.put(protocolVersion);
-        BufferUtil.writeWithNull(buffer, serverVersion);
-        BufferUtil.writeUB4(buffer, threadId);
-        BufferUtil.writeWithNull(buffer, seed);
-        BufferUtil.writeUB2(buffer, serverCapabilities);
-        buffer.put(serverCharsetIndex);
-        BufferUtil.writeUB2(buffer, serverStatus);
-        buffer.put(FILLER_13);
-        // buffer.position(buffer.position() + 13);
-        BufferUtil.writeWithNull(buffer, restOfScrambleBuff);
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+        buffer.writeFixInt(3, pkgSize);
+        buffer.writeByte(packetId);
+        buffer.writeByte(protocolVersion);
+        buffer.writeNULString(new String(serverVersion));
+        buffer.writeFixInt(4, threadId);
+        buffer.writeNULString(new String(seed));
+        buffer.writeFixInt(2, serverCapabilities);
+        buffer.writeByte(serverCharsetIndex);
+        buffer.writeFixInt(2, serverStatus);
+        buffer.writeBytes(FILLER_13);
+        buffer.writeNULString(new String(restOfScrambleBuff));
     }
 
     @Override

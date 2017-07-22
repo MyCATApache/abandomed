@@ -20,87 +20,103 @@
  * Any questions about this component can be directed to it's project Web address
  * https://code.google.com/p/opencloudb/.
  *
- */package io.mycat.beans;
+ */
+package io.mycat.beans;
+
 /**
- * 
  * @author wuzhihui
- *
  */
 public class MySQLBean {
-private String hostName;	
-private  String ip;
-private  int port; 
-private  String user;
-private String password;
-private String defaultSchema="mysql";
-private int maxCon=1000;
-private int minCon=5;
+    private String hostName;
+    private String ip;
+    private int port;
+    private String user;
+    private String password;
+    private String defaultSchema = "mysql";
+    private int maxCon = 1000;
+    private int minCon = 1;
 
-	public MySQLBean(String ip, int port, String user, String password) {
-	super();
-	this.hostName=ip;
-	this.ip = ip;
-	this.port = port;
-	this.user = user;
-	this.password = password;
-}
-	public MySQLBean() {
-		 
-	}
-	
-	public String getHostName() {
-		return hostName;
-	}
-	public void setHostName(String hostName) {
-		this.hostName = hostName;
-	}
-	public String getIp() {
-		return ip;
-	}
-	public void setIp(String ip) {
-		this.ip = ip;
-	}
-	public int getPort() {
-		return port;
-	}
-	public void setPort(int port) {
-		this.port = port;
-	}
-	public String getUser() {
-		return user;
-	}
-	public void setUser(String user) {
-		this.user = user;
-	}
-	public String getPassword() {
-		return password;
-	}
-	public void setPassword(String password) {
-		this.password = password;
-	}
-	
-	public String getDefaultSchema() {
-		return defaultSchema;
-	}
-	public void setDefaultSchema(String defaultSchema) {
-		this.defaultSchema = defaultSchema;
-	}
-	public int getMaxCon() {
-		return maxCon;
-	}
-	public void setMaxCon(int maxCon) {
-		this.maxCon = maxCon;
-	}
-	public int getMinCon() {
-		return minCon;
-	}
-	public void setMinCon(int minCon) {
-		this.minCon = minCon;
-	}
-	@Override
-	public String toString() {
-		return "MySQLBean [hostName=" + hostName + ", ip=" + ip + ", port=" + port + ", user=" + user + ", password="
-				+ password + ", defaultSchema=" + defaultSchema + ", maxCon=" + maxCon + ", minCon=" + minCon + "]";
-	}
-	 
+    public MySQLBean(String ip, int port, String user, String password) {
+        super();
+        this.hostName = ip;
+        this.ip = ip;
+        this.port = port;
+        this.user = user;
+        this.password = password;
+    }
+
+    public MySQLBean() {
+
+    }
+
+    public String getHostName() {
+        return hostName;
+    }
+
+    public void setHostName(String hostName) {
+        this.hostName = hostName;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getDefaultSchema() {
+        return defaultSchema;
+    }
+
+    public void setDefaultSchema(String defaultSchema) {
+        this.defaultSchema = defaultSchema;
+    }
+
+    public int getMaxCon() {
+        return maxCon;
+    }
+
+    public void setMaxCon(int maxCon) {
+        this.maxCon = maxCon;
+    }
+
+    public int getMinCon() {
+        return minCon;
+    }
+
+    public void setMinCon(int minCon) {
+        this.minCon = minCon;
+    }
+
+    @Override
+    public String toString() {
+        return "MySQLBean [hostName=" + hostName + ", ip=" + ip + ", port=" + port + ", user=" + user + ", password="
+                + password + ", defaultSchema=" + defaultSchema + ", maxCon=" + maxCon + ", minCon=" + minCon + "]";
+    }
+
 }

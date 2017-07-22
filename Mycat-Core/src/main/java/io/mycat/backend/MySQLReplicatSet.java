@@ -53,7 +53,7 @@ public class MySQLReplicatSet {
 		final MySQLBackendConnectionFactory bcFactory = SQLEngineCtx.INSTANCE().getBackendMySQLConFactory();
 		for(int i = 0;i < dhSources.length; i++) {
 			dhSources[i] = new MySQLDataSource(bcFactory, mysqlBeans.get(i), writeIndex!=i);
-			dhSources[i].initSource();
+			dhSources[i].initSource(); 
 		}
 	}
 

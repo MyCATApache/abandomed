@@ -6,8 +6,6 @@ import java.nio.ByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.net2.ConDataBuffer;
-
 /**
  * String utils.
  * 
@@ -50,24 +48,6 @@ public final class StringUtil {
 		
 	}
 	
-	public static class ConDataBufferGetable implements ByteGetable{
-		
-		final ConDataBuffer buffer;
-		
-		public ConDataBufferGetable(final ConDataBuffer buffer){
-			this.buffer = buffer;
-		}
-
-		@Override
-		public byte get(final int i){
-			try {
-				return (buffer.getByte(i));
-			} catch (final IOException e) {
-				throw new RuntimeException(e);
-			}
-		}
-		
-	}
 	
 	public static class ByteBufferGetable implements ByteGetable{
 		
@@ -180,21 +160,17 @@ public final class StringUtil {
     	return (dumpAsHex(new ByteBufferGetable(buffer), offset, length));
     }
     
-    public final static String dumpAsHex(final ConDataBuffer buffer){
-    	try {
-			return (dumpAsHex(buffer, 0, buffer.writingPos()));
-		} catch (final IOException e) {
-			throw new RuntimeException(e);
-		}
-    }
-    
-    public final static String dumpAsHex(final ConDataBuffer buffer, final int length){
-    	return (dumpAsHex(buffer, 0, length));
-    }
-    
-    public final static String dumpAsHex(final ConDataBuffer buffer, final int offset, final int length){
-    	return (dumpAsHex(new ConDataBufferGetable(buffer), offset, length));
-    }
+//    public final static String dumpAsHex(final ConDataBuffer buffer){
+//    	return (dumpAsHex(buffer, 0, buffer.getWritePos()));
+//    }
+//    
+//    public final static String dumpAsHex(final ConDataBuffer buffer, final int length){
+//    	return (dumpAsHex(buffer, 0, length));
+//    }
+//    
+//    public final static String dumpAsHex(final ConDataBuffer buffer, final int offset, final int length){
+//    	return (dumpAsHex(new ConDataBufferGetable(buffer), offset, length));
+//    }
     
     public static void main(String args[]){
     	final byte[] array = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 48, 49, 50, 97, 98, 99};
