@@ -23,9 +23,7 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
-
-import io.mycat.util.BufferUtil;
+import io.mycat.buffer.MycatByteBuffer;
 
 /**
  * From Server To Client, at the end of a series of Field Packets, and at the
@@ -51,22 +49,22 @@ public class EOFPacket extends MySQLPacket {
     public int warningCount;
     public int status = 2;
 
-    public void read(ByteBuffer byteBuf) {
-        MySQLMessage mm = new MySQLMessage(byteBuf);
-        packetLength = mm.readUB3();
-        packetId = mm.read();
-        fieldCount = mm.read();
-        warningCount = mm.readUB2();
-        status = mm.readUB2();
-    }
+//    public void read(ConDataBuffer byteBuffer) {
+//        MySQLMessage mm = new MySQLMessage(byteBuffer);
+//        packetLength = mm.readUB3();
+//        packetId = mm.read();
+//        fieldCount = mm.read();
+//        warningCount = mm.readUB2();
+//        status = mm.readUB2();
+//    }
 
     @Override
-    public void write(ByteBuffer  buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        buffer.put(fieldCount);
-        BufferUtil.writeUB2(buffer, warningCount);
-        BufferUtil.writeUB2(buffer, status);
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+        buffer.writeFixInt(3,pkgSize);
+        buffer.writeByte(packetId);
+        buffer.writeLenencInt(fieldCount);
+        buffer.writeFixInt(2, warningCount);
+        buffer.writeFixInt(2, status);
     }
 
     @Override

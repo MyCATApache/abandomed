@@ -54,7 +54,8 @@ public class CharsetUtil {
     private static final Map<String, Integer> CHARSET_TO_INDEX = new HashMap<>();
 
     /** collationName 到 CharsetCollation 对象的映射 */
-    private static final Map<String, CharsetCollation> COLLATION_TO_CHARSETCOLLATION = new HashMap<>();
+    @SuppressWarnings("unused")
+	private static final Map<String, CharsetCollation> COLLATION_TO_CHARSETCOLLATION = new HashMap<>();
 
     public static final String getCharset(int index) {
         String charset= INDEX_TO_CHARSET.get(index);

@@ -25,23 +25,24 @@ package io.mycat.engine;
 
 import java.io.IOException;
 
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.net2.ConDataBuffer;
 
 /**
  * internal used for process sql command
- *  @author wuzhihui
  *
+ * @author wuzhihui
  */
 public interface SQLCommandHandler {
-	/**
-	 * response received data 
-	 * @param con
-	 * @param dataBuffer
-	 * @param packageType
-	 * @param pkgStartPos
-	 * @param pkgLen
-	 * @throws IOException
-	 */
-	 public void processCmd(MySQLFrontConnection  frontCon, ConDataBuffer dataBuffer,byte packageType,int pkgStartPos,int pkgLen) throws IOException;
+    /**
+     * response received data
+     *
+     * @param frontCon
+     * @param dataBuffer
+     * @param packageType
+     * @param pkgStartPos
+     * @param pkgLen
+     * @throws IOException
+     */
+    public void processCmd(MySQLFrontConnection frontCon, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException;
 }

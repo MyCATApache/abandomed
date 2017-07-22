@@ -23,13 +23,6 @@
  */
 package io.mycat.engine.impl;
 
-import java.io.IOException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.mycat.front.MySQLFrontConnection;
-import io.mycat.net2.ConDataBuffer;
 
 /**
  * 不分片的Schema對應的 SQL Command Handler
@@ -38,28 +31,27 @@ import io.mycat.net2.ConDataBuffer;
  *
  */
 public class NormalSchemaSQLCommandHandler extends AbstractSchemaSQLCommandHandler {
-	private static final Logger LOGGER = LoggerFactory.getLogger(NormalSchemaSQLCommandHandler.class);
 
-	@Override
-	public void executeSetSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
-			int pkgStartPos, int pkgLen, String sql) throws IOException {
-		passThroughSQL(frontCon, dataBuffer, pkgStartPos, pkgLen);
-		
-	}
-
-	@Override
-	public void executeShowSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
-			int pkgStartPos, int pkgLen, String sql) throws IOException {
-		passThroughSQL(frontCon, dataBuffer, pkgStartPos, pkgLen);
-		
-	}
-
-	@Override
-	public void executeSelectSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
-			int pkgStartPos, int pkgLen, String sql) throws IOException {
-		passThroughSQL(frontCon, dataBuffer, pkgStartPos, pkgLen);
-		
-	}
+//	@Override
+//	public void executeSetSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
+//			int pkgStartPos, int pkgLen, String sql) throws IOException {
+//		passThroughSQL(frontCon, dataBuffer, pkgStartPos, pkgLen);
+//		
+//	}
+//
+//	@Override
+//	public void executeShowSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
+//			int pkgStartPos, int pkgLen, String sql) throws IOException {
+//		passThroughSQL(frontCon, dataBuffer, pkgStartPos, pkgLen);
+//		
+//	}
+//
+//	@Override
+//	public void executeSelectSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
+//			int pkgStartPos, int pkgLen, String sql) throws IOException {
+//		passThroughSQL(frontCon, dataBuffer, pkgStartPos, pkgLen);
+//		
+//	}
 	
 
 	

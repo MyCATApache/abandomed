@@ -28,17 +28,12 @@ import java.nio.channels.SocketChannel;
 
 import io.mycat.net2.Connection;
 import io.mycat.net2.ConnectionFactory;
-import io.mycat.net2.NIOHandler;
 /**
  * create front mysql connection
  * @author wuzhihui
  *
  */
 public class MySQLFrontendConnectionFactory extends ConnectionFactory {
-	/**
-	 * 全局共享的前段NIO Handler
-	 */
-	 private final MySQLFrontConnectionHandler handler = new MySQLFrontConnectionHandler();
     
 
 	@Override
@@ -51,10 +46,4 @@ public class MySQLFrontendConnectionFactory extends ConnectionFactory {
         // con.setTxIsolation(sys.getTxIsolation());
         return con;
     }
-
-    @Override
-    protected NIOHandler<MySQLFrontConnection> getNIOHandler() {
-        return handler;
-    }
-
 }

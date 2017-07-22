@@ -23,8 +23,7 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
-
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.util.BufferUtil;
 
 /**
@@ -50,29 +49,30 @@ import io.mycat.util.BufferUtil;
  * 
  * @author mycat
  */
+@Deprecated
 public class ResultSetHeaderPacket extends MySQLPacket {
 
     public int fieldCount;
     public long extra;
 
-    public void read(ByteBuffer buffer) {
-        MySQLMessage mm = new MySQLMessage(buffer);
-        this.packetLength = mm.readUB3();
-        this.packetId = mm.read();
-        this.fieldCount = (int) mm.readLength();
-        if (mm.hasRemaining()) {
-            this.extra = mm.readLength();
-        }
-    }
+//    public void read(ConDataBuffer buffer) {
+//        MySQLMessage mm = new MySQLMessage(buffer);
+//        this.packetLength = mm.readUB3();
+//        this.packetId = mm.read();
+//        this.fieldCount = (int) mm.readLength();
+//        if (mm.hasRemaining()) {
+//            this.extra = mm.readLength();
+//        }
+//    }
 
     @Override
-    public void write(ByteBuffer  buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        BufferUtil.writeLength(buffer, fieldCount);
-        if (extra > 0) {
-            BufferUtil.writeLength(buffer, extra);
-        }
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+//        BufferUtil.writeUB3(buffer, pkgSize);
+//        buffer.put(packetId);
+//        BufferUtil.writeLength(buffer, fieldCount);
+//        if (extra > 0) {
+//            BufferUtil.writeLength(buffer, extra);
+//        }
     }
 
     @Override

@@ -24,139 +24,104 @@
 package io.mycat.front;
 
 import java.io.IOException;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 
 import io.mycat.SQLEngineCtx;
+import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.beans.SchemaBean;
 import io.mycat.engine.NoneBlockTask;
 import io.mycat.engine.UserSession;
 import io.mycat.mysql.MySQLConnection;
-import io.mycat.mysql.packet.MySQLPacket;
 
 /**
  * front mysql connection
- * 
- * @author wuzhihui
  *
+ * @author wuzhihui
  */
 public class MySQLFrontConnection extends MySQLConnection {
-	private final UserSession session;
-	private SchemaBean mycatSchema;
-	private final ArrayList<NoneBlockTask> todoTasks = new ArrayList<NoneBlockTask>(2);
+    private final UserSession session;
+    private SchemaBean mycatSchema;
+    private MySQLBackendConnection backendConnection;
+    private final ArrayList<NoneBlockTask> todoTasks = new ArrayList<NoneBlockTask>(2);
 
-	public MySQLFrontConnection(SocketChannel channel) {
-		super(channel);
-		session = new UserSession();
-	}
+    public MySQLFrontConnection(SocketChannel channel) {
+        super(channel);
+        session = new UserSession();
+    }
+    
+    @Override
+    public boolean init() throws IOException {
+    	setProcessKey(channel.register(getSelector(), SelectionKey.OP_CONNECT, this));
+    	driveState();
+    	return true;
+    }
 
-	/**
-	 * 客戶端連接或者設置Schema的時候，需要調用此方法,確定是連接到了普通的Schema還是分片Schema
-	 * 
-	 * @param schema
-	 * @throws IOException
-	 */
-	public boolean setFrontSchema(String schema) throws IOException {
-		SchemaBean mycatSchema = null;
-		if (schema != null) {
-			mycatSchema = SQLEngineCtx.INSTANCE().getMycatSchema(schema);
-			if (mycatSchema == null) {
-				
-				return false;
-			}
-			this.mycatSchema = mycatSchema;
-			if (!mycatSchema.isNormalSchema()) {
-				this.session.changeCmdHandler(SQLEngineCtx.INSTANCE().getPartionSchemaSQLCmdHandler());
-			}else
-			{
-				session.changeCmdHandler(SQLEngineCtx.INSTANCE().getNomalSchemaSQLCmdHandler());
-			}
-			 
-			return true;
+    /**
+     * 客戶端連接或者設置Schema的時候，需要調用此方法,確定是連接到了普通的Schema還是分片Schema
+     *
+     * @param schema
+     * @throws IOException
+     */
+    public boolean setFrontSchema(String schema) throws IOException {
+        //TODO 此处应该重新实现
+        SchemaBean mycatSchema = null;
+        if (schema != null) {
 
-		}else
-		{
-			// 默认设置为不分片的SQL处理器
-			session.changeCmdHandler(SQLEngineCtx.INSTANCE().getNomalSchemaSQLCmdHandler());
-			return true;
-		}
-		
+            mycatSchema = SQLEngineCtx.INSTANCE().getMycatSchema(schema);
+            if (mycatSchema == null) {
 
-	}
+                return false;
+            }
+            this.mycatSchema = mycatSchema;
+            if (!mycatSchema.isNormalSchema()) {
+                this.session.changeCmdHandler(SQLEngineCtx.INSTANCE().getPartionSchemaSQLCmdHandler());
+            } else {
+                session.changeCmdHandler(SQLEngineCtx.INSTANCE().getNomalSchemaSQLCmdHandler());
+            }
+            return true;
+        } else {
+            // 默认设置为不分片的SQL处理器
+            session.changeCmdHandler(SQLEngineCtx.INSTANCE().getNomalSchemaSQLCmdHandler());
+            return true;
+        }
+    }
 
-	public void setNextStatus(byte packetType) {
-		if (packetType == MySQLPacket.COM_QUIT) {
-			this.setState(STATE_CLOSING);
-		}
-		int status = this.getState();
-		switch (status) {
-		case STATE_IDLE:
-			if (packetType == MySQLPacket.COM_QUERY) {
-				this.setState(CMD_QUERY_STATUS);
-			} else if (packetType == MySQLPacket.COM_QUIT) {
-				this.setState(STATE_CLOSING);
-			}
-			break;
-		case CMD_QUERY_STATUS:
-			if (packetType == MySQLPacket.OK_PACKET) {
-				this.setState(RESULT_INIT_STATUS);
-			} else if (packetType == MySQLPacket.ERROR_PACKET) {
-				this.setState(STATE_IDLE);
-			}
-			break;
-		case RESULT_INIT_STATUS:
-			if (packetType == MySQLPacket.OK_PACKET) {
-				this.setState(RESULT_FETCH_STATUS);
-			} else if (packetType == MySQLPacket.ERROR_PACKET) {
-				this.setState(RESULT_FAIL_STATUS);
-			}
-			break;
-		case RESULT_FETCH_STATUS:
-			if (packetType == MySQLPacket.EOF_PACKET) {
-				this.setState(STATE_IDLE);
-			} else if (packetType == MySQLPacket.ERROR_PACKET) {
-				this.setState(RESULT_FAIL_STATUS);
-			}
-			break;
-		case RESULT_FAIL_STATUS:
-			if (packetType == MySQLPacket.EOF_PACKET) {
-				this.setState(STATE_IDLE);
-			}
-			break;
-		default:
-			LOGGER.warn("Error connected status.", status);
-			break;
-		}
-	}
+    public void executePendingTask() {
+        if (todoTasks.isEmpty()) {
+            return;
+        }
+        NoneBlockTask task = todoTasks.remove(0);
+        try {
+            task.execute();
+        } catch (Exception e) {
+        	
+        }
+    }
 
-	@SuppressWarnings("unchecked")
-	public void executePendingTask() {
-		if (todoTasks.isEmpty()) {
-			return;
-		}
-		NoneBlockTask task = todoTasks.remove(0);
-		try {
-			task.execute();
-		} catch (Exception e) {
-			this.getHandler().onHandlerError(this, e);
-		}
-	}
+    public void addTodoTask(NoneBlockTask task) {
 
-	public void addTodoTask(NoneBlockTask task) {
+        todoTasks.add(task);
+    }
 
-		todoTasks.add(task);
-	}
+    public UserSession getSession() {
+        return this.session;
+    }
 
-	public UserSession getSession() {
-		return this.session;
-	}
+    public SchemaBean getMycatSchema() {
+        return mycatSchema;
+    }
 
-	public SchemaBean getMycatSchema() {
-		return mycatSchema;
-	}
+    public void setMycatSchema(SchemaBean mycatSchema) {
+        this.mycatSchema = mycatSchema;
+    }
 
-	public void setMycatSchema(SchemaBean mycatSchema) {
-		this.mycatSchema = mycatSchema;
-	}
+    public MySQLBackendConnection getBackendConnection() {
+        return backendConnection;
+    }
 
+    public void setBackendConnection(MySQLBackendConnection backendConnection) {
+        this.backendConnection = backendConnection;
+    }
 }

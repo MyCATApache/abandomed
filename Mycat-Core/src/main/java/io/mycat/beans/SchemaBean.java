@@ -20,73 +20,71 @@
  * Any questions about this component can be directed to it's project Web address
  * https://code.google.com/p/opencloudb/.
  *
- */package io.mycat.beans;
+ */
+package io.mycat.beans;
 
 import java.util.List;
 
 /**
  * Mycat Logic Schema
- * @author wuzhihui
  *
+ * @author wuzhihui
  */
 
 public class SchemaBean {
-	
-private String name;
-private DNBean defaultDN;
-/**
- * 是否非分片的Schema，意味著沒有任何分片表的Schema
- */
-private final boolean normalSchema;
-private List<TableDefBean> tableDefBeans;
 
-	public SchemaBean(String name, DNBean defaultDN, boolean normalSchema,List<TableDefBean> tableDefBeans) {
-	super();
-	this.name = name;
-	this.defaultDN = defaultDN;
-	this.normalSchema = normalSchema;
-	this.tableDefBeans=tableDefBeans;
-}
- 
+    private String name;
+    private DNBean defaultDN;
+    /**
+     * 是否非分片的Schema，意味著沒有任何分片表的Schema
+     */
+    private final boolean normalSchema;
+    private List<TableDefBean> tableDefBeans;
 
-	public boolean isNormalSchema() {
-		return normalSchema;
-	}
+    public SchemaBean(String name, DNBean defaultDN, boolean normalSchema, List<TableDefBean> tableDefBeans) {
+        super();
+        this.name = name;
+        this.defaultDN = defaultDN;
+        this.normalSchema = normalSchema;
+        this.tableDefBeans = tableDefBeans;
+    }
 
 
-	public String getName() {
-		return name;
-	}
+    public boolean isNormalSchema() {
+        return normalSchema;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
 
-	public DNBean getDefaultDN() {
-		return defaultDN;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setDefaultDN(DNBean defaultDN) {
-		this.defaultDN = defaultDN;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	 
-	
-	
-	public void setTableDefBeans(List<TableDefBean> tableDefBeans) {
-		this.tableDefBeans = tableDefBeans;
-	}
+    public DNBean getDefaultDN() {
+        return defaultDN;
+    }
 
-	public List<TableDefBean> getTableDefBeans() {
-		return tableDefBeans;
-	}
+    public void setDefaultDN(DNBean defaultDN) {
+        this.defaultDN = defaultDN;
+    }
 
-	 
 
-	@Override
-	public String toString() {
-		return "SchemaBean [name=" + name + ", defaultDN=" + defaultDN + ", normalSchema=" + normalSchema
-				+ ", tableDefBeans=" + tableDefBeans + "]";
-	}
+    public void setTableDefBeans(List<TableDefBean> tableDefBeans) {
+        this.tableDefBeans = tableDefBeans;
+    }
+
+    public List<TableDefBean> getTableDefBeans() {
+        return tableDefBeans;
+    }
+
+
+    @Override
+    public String toString() {
+        return "SchemaBean [name=" + name + ", defaultDN=" + defaultDN + ", normalSchema=" + normalSchema
+                + ", tableDefBeans=" + tableDefBeans + "]";
+    }
 
 }

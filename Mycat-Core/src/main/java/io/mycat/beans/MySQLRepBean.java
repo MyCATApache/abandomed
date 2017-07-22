@@ -27,43 +27,50 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- *表示一組MySQL Server复制集群，如主从或者多主
- * @author wuzhihui
+ * 表示一組MySQL Server复制集群，如主从或者多主
  *
+ * @author wuzhihui
  */
 public class MySQLRepBean {
-private final String name;
-private final int type;
-private int switchType;
-private List<MySQLBean> mysqls=Collections.emptyList();
-public MySQLRepBean(String name, int type) {
-	super();
-	this.name = name;
-	this.type = type;
-}
-public int getSwitchType() {
-	return switchType;
-}
-public void setSwitchType(int switchType) {
-	this.switchType = switchType;
-}
-public String getName() {
-	return name;
-}
-public int getType() {
-	return type;
-}
-public List<MySQLBean> getMysqls() {
-	return mysqls;
-}
-public void setMysqls(List<MySQLBean> mysqls) {
-	this.mysqls = mysqls;
-}
-@Override
-public String toString() {
-	return "MySQLRepBean [name=" + name + ", type=" + type + ", switchType=" + switchType + ", mysqls=" + mysqls + "]";
-}
+    private final String name;
+    private final int type;
+    private int switchType;
+    private List<MySQLBean> mysqls = Collections.emptyList();
+
+    public MySQLRepBean(String name, int type) {
+        super();
+        this.name = name;
+        this.type = type;
+    }
+
+    public int getSwitchType() {
+        return switchType;
+    }
+
+    public void setSwitchType(int switchType) {
+        this.switchType = switchType;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public List<MySQLBean> getMysqls() {
+        return mysqls;
+    }
+
+    public void setMysqls(List<MySQLBean> mysqls) {
+        this.mysqls = mysqls;
+    }
+
+    @Override
+    public String toString() {
+        return "MySQLRepBean [name=" + name + ", type=" + type + ", switchType=" + switchType + ", mysqls=" + mysqls + "]";
+    }
 
 
-	 
 }

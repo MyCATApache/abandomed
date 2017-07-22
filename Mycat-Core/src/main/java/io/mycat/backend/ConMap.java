@@ -36,9 +36,8 @@ public class ConMap {
                     }
                 }
             }
-        }
+        }        
         return null;
-
     }
 
     private MySQLBackendConnection tryTakeCon(String reacotr,ConQueue queue, boolean autoCommit) {
@@ -49,7 +48,6 @@ public class ConMap {
         } else {
             return null;
         }
-
     }
 
     public Collection<ConQueue> getAllConQueue() {
