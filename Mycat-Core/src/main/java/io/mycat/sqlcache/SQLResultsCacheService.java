@@ -1,28 +1,31 @@
 package io.mycat.sqlcache;
 
+import static com.google.common.hash.Hashing.murmur3_32;
+
+import java.io.IOException;
+import java.util.ArrayList;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.backend.MySQLDataSource;
 import io.mycat.backend.MySQLReplicatSet;
 import io.mycat.backend.callback.SQLResCacheHintHandler;
 import io.mycat.beans.DNBean;
-import io.mycat.bigmem.sqlcache.*;
 import io.mycat.bigmem.console.LocatePolicy;
+import io.mycat.bigmem.sqlcache.BigSQLResult;
+import io.mycat.bigmem.sqlcache.CacheImp;
+import io.mycat.bigmem.sqlcache.IDataLoader;
+import io.mycat.bigmem.sqlcache.IRemoveKeyListener;
+import io.mycat.bigmem.sqlcache.Keyer;
 import io.mycat.engine.UserSession;
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.mysql.MySQLConnection;
-import io.mycat.mysql.packet.*;
-import io.mycat.net2.Connection;
+import io.mycat.mysql.packet.CommandPacket;
+import io.mycat.mysql.packet.MySQLMessage;
+import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.states.WriteWaitingState;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-
-import static com.google.common.hash.Hashing.murmur3_32;
 
 /**
  * SQL 结果集缓存服务

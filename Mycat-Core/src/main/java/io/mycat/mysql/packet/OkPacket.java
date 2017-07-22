@@ -26,7 +26,6 @@ package io.mycat.mysql.packet;
 import java.nio.ByteBuffer;
 
 import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.NetSystem;
 import io.mycat.util.BufferUtil;
 
@@ -48,6 +47,7 @@ import io.mycat.util.BufferUtil;
  *
  * @author mycat
  */
+@Deprecated
 public class OkPacket extends MySQLPacket {
     public static final byte FIELD_COUNT = 0x00;
     public static final byte[] OK = new byte[]{7, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0};
@@ -73,19 +73,19 @@ public class OkPacket extends MySQLPacket {
     // }
     // }
 
-    public void read(ConDataBuffer buffer) {
-        MySQLMessage mm = new MySQLMessage(buffer);
-        packetLength = mm.readUB3();
-        packetId = mm.read();
-        fieldCount = mm.read();
-        affectedRows = mm.readLength();
-        insertId = mm.readLength();
-        serverStatus = mm.readUB2();
-        warningCount = mm.readUB2();
-        if (mm.hasRemaining()) {
-            this.message = mm.readBytesWithLength();
-        }
-    }
+//    public void read(ConDataBuffer buffer) {
+//        MySQLMessage mm = new MySQLMessage(buffer);
+//        packetLength = mm.readUB3();
+//        packetId = mm.read();
+//        fieldCount = mm.read();
+//        affectedRows = mm.readLength();
+//        insertId = mm.readLength();
+//        serverStatus = mm.readUB2();
+//        warningCount = mm.readUB2();
+//        if (mm.hasRemaining()) {
+//            this.message = mm.readBytesWithLength();
+//        }
+//    }
 
     public byte[] writeToBytes() {
         ByteBuffer buffer = NetSystem.getInstance().getBufferPool().allocate();

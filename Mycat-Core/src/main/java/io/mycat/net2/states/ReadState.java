@@ -24,16 +24,16 @@ public class ReadState implements NetworkState {
 		res = conn.try_read_network();     /* writePos 指针向前移动   */
 	    switch(res){
 	    case READ_NO_DATA_RECEIVED:
-		   conn.setNetworkState(ReadWaitingState.INSTANCE);
+		   conn.setNextNetworkState(ReadWaitingState.INSTANCE);
 		   break;
 	    case READ_DATA_RECEIVED:   /* 数据读取完成,开始解析命令 */
-		   conn.setNetworkState(ParseCmdState.INSTANCE);
+		   conn.setNextNetworkState(ParseCmdState.INSTANCE);
 		   break;
 	    case READ_ERROR:
-		   conn.setNetworkState(ClosingState.INSTANCE);
+		   conn.setNextNetworkState(ClosingState.INSTANCE);
 		   break;
 	    case READ_MEMORY_ERROR: /* Failed to allocate more memory */
-		   conn.setNetworkState(ClosingState.INSTANCE);
+		   conn.setNextNetworkState(ClosingState.INSTANCE);
 		   break;
 	    }
 		return true;

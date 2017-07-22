@@ -24,7 +24,6 @@
 package io.mycat.mysql.packet;
 
 import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
 
 /**
@@ -50,20 +49,21 @@ import io.mycat.util.BufferUtil;
  * 
  * @author mycat
  */
+@Deprecated
 public class ResultSetHeaderPacket extends MySQLPacket {
 
     public int fieldCount;
     public long extra;
 
-    public void read(ConDataBuffer buffer) {
-        MySQLMessage mm = new MySQLMessage(buffer);
-        this.packetLength = mm.readUB3();
-        this.packetId = mm.read();
-        this.fieldCount = (int) mm.readLength();
-        if (mm.hasRemaining()) {
-            this.extra = mm.readLength();
-        }
-    }
+//    public void read(ConDataBuffer buffer) {
+//        MySQLMessage mm = new MySQLMessage(buffer);
+//        this.packetLength = mm.readUB3();
+//        this.packetId = mm.read();
+//        this.fieldCount = (int) mm.readLength();
+//        if (mm.hasRemaining()) {
+//            this.extra = mm.readLength();
+//        }
+//    }
 
     @Override
     public void write(MycatByteBuffer buffer, int pkgSize) {

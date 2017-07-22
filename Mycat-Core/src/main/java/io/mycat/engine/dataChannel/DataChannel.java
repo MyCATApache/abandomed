@@ -3,7 +3,6 @@ package io.mycat.engine.dataChannel;
 import java.io.IOException;
 
 import io.mycat.mysql.MySQLConnection;
-import io.mycat.net2.ConDataBuffer;
 
 /**
  * 数据传输通道

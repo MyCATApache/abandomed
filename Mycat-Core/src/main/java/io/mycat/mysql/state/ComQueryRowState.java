@@ -8,15 +8,10 @@ import org.slf4j.LoggerFactory;
 
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.backend.callback.BackendComQueryRowCallback;
 import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.ServerStatus;
 import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.net2.ConDataBuffer;
-import io.mycat.net2.states.NoReadAndWriteState;
-import io.mycat.net2.states.ReadWaitingState;
-import io.mycat.net2.states.WriteWaitingState;
 
 /**
  * 行数据传送状态
@@ -26,7 +21,6 @@ import io.mycat.net2.states.WriteWaitingState;
 public class ComQueryRowState extends AbstractMysqlConnectionState {
     private static final Logger LOGGER = LoggerFactory.getLogger(ComQueryRowState.class);
     public static final ComQueryRowState INSTANCE = new ComQueryRowState();
-    private BackendComQueryRowCallback backendComQueryRowCallback = new BackendComQueryRowCallback();
 
 
     private ComQueryRowState() {

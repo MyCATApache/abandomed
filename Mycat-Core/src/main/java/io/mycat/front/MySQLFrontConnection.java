@@ -24,6 +24,7 @@
 package io.mycat.front;
 
 import java.io.IOException;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 
@@ -33,7 +34,6 @@ import io.mycat.beans.SchemaBean;
 import io.mycat.engine.NoneBlockTask;
 import io.mycat.engine.UserSession;
 import io.mycat.mysql.MySQLConnection;
-import io.mycat.mysql.packet.MySQLPacket;
 
 /**
  * front mysql connection
@@ -49,6 +49,13 @@ public class MySQLFrontConnection extends MySQLConnection {
     public MySQLFrontConnection(SocketChannel channel) {
         super(channel);
         session = new UserSession();
+    }
+    
+    @Override
+    public boolean init() throws IOException {
+    	setProcessKey(channel.register(getSelector(), SelectionKey.OP_CONNECT, this));
+    	driveState();
+    	return true;
     }
 
     /**
@@ -81,7 +88,7 @@ public class MySQLFrontConnection extends MySQLConnection {
         }
     }
 
-    @SuppressWarnings("unchecked") public void executePendingTask() {
+    public void executePendingTask() {
         if (todoTasks.isEmpty()) {
             return;
         }
@@ -89,7 +96,7 @@ public class MySQLFrontConnection extends MySQLConnection {
         try {
             task.execute();
         } catch (Exception e) {
-            this.getHandler().onHandlerError(this, e);
+        	
         }
     }
 

@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.net2.ConDataBuffer;
 import io.mycat.util.BufferUtil;
 
 /**
@@ -52,9 +51,11 @@ import io.mycat.util.BufferUtil;
  * 
  * @author mycat
  */
+@Deprecated
+@SuppressWarnings("unused")
 public class RowDataPacket extends MySQLPacket {
     private static final byte NULL_MARK = (byte) 251;
-    private static final byte EMPTY_MARK = (byte) 0;
+	private static final byte EMPTY_MARK = (byte) 0;
     public int fieldCount;
     public final List<byte[]> fieldValues;
 
@@ -73,14 +74,14 @@ public class RowDataPacket extends MySQLPacket {
         fieldCount = fieldCount + add;
     }
 
-    public void read(ConDataBuffer buffer) {
-        MySQLMessage mm = new MySQLMessage(buffer);
-        packetLength = mm.readUB3();
-        packetId = mm.read();
-        for (int i = 0; i < fieldCount; i++) {
-            fieldValues.add(mm.readBytesWithLength());
-        }
-    }
+//    public void read(ConDataBuffer buffer) {
+//        MySQLMessage mm = new MySQLMessage(buffer);
+//        packetLength = mm.readUB3();
+//        packetId = mm.read();
+//        for (int i = 0; i < fieldCount; i++) {
+//            fieldValues.add(mm.readBytesWithLength());
+//        }
+//    }
 
     @Override
     public void write(MycatByteBuffer buffer, int pkgSize) {

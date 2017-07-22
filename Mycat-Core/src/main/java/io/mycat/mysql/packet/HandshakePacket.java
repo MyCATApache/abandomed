@@ -24,8 +24,6 @@
 package io.mycat.mysql.packet;
 
 import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.net2.ConDataBuffer;
-import io.mycat.util.BufferUtil;
 
 /**
  * From server to client during initial handshake.

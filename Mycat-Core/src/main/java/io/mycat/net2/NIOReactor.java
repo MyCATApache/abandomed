@@ -74,7 +74,7 @@ public final class NIOReactor {
             this.setName(name);
             this.selector = Selector.open();
             this.registerQueue = new ConcurrentLinkedQueue<Connection>();
-            this.mycatByteBufferAllocator = new DirectFixBufferAllocator(1024);
+            this.mycatByteBufferAllocator = new DirectFixBufferAllocator(15000);
         }
 
         @Override

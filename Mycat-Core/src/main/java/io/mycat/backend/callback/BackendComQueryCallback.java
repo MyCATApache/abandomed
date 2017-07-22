@@ -20,7 +20,8 @@ public class BackendComQueryCallback extends ResponseCallbackAdapter {
         MycatByteBuffer writeBuffer = conn.getDataBuffer();
         conn.setDataBuffer(conn.getShareBuffer());
         /* 这里还没有办法区分是前端状态机驱动还是后端状态机驱动  */
-        conn.networkDriverMachine(WriteWaitingState.INSTANCE);
+        conn.setNextNetworkState(WriteWaitingState.INSTANCE);
+        conn.networkDriverMachine();
         conn.setWriteCompleteListener(() -> {
             conn.setNextState(ComQueryResponseState.INSTANCE);
             conn.setDataBuffer(writeBuffer);

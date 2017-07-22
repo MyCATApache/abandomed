@@ -2,9 +2,6 @@ package io.mycat.mysql.state;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.backend.MySQLBackendConnectionFactory;
@@ -22,7 +19,6 @@ import io.mycat.mysql.MySQLConnection;
  * @author ynfeng
  */
 public abstract class AbstractMysqlConnectionState implements MysqlConnectionState {
-	private static final Logger LOGGER = LoggerFactory.getLogger(ComQueryRowState.class);
     @Override
     public boolean handle(MySQLConnection mySQLConnection, Object attachment) throws IOException{
         if (mySQLConnection instanceof MySQLBackendConnection) {

@@ -2,7 +2,6 @@ package io.mycat.net2;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketOptions;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
@@ -13,7 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.mycat.engine.ErrorCode;
+import io.mycat.net2.states.ReadWaitingState;
 
 /**
  * NIO 连接器，用于连接对方Sever
@@ -85,7 +84,7 @@ public final class NIOConnector extends Thread {
 		while ((c = connectQueue.poll()) != null) {
 			try {
 				SocketChannel channel = (SocketChannel) c.getChannel();
-				channel.register(selector, SelectionKey.OP_CONNECT, c);
+				c.setProcessKey(channel.register(selector, SelectionKey.OP_CONNECT, c));
 				channel.connect(new InetSocketAddress(c.host, c.port));
 			} catch (Throwable e) {
 				c.close("connect failed:" + e.toString());
@@ -93,7 +92,6 @@ public final class NIOConnector extends Thread {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private void finishConnect(SelectionKey key, Object att) {
 		Connection c = (Connection) att;
 		try {
@@ -118,8 +116,6 @@ public final class NIOConnector extends Thread {
 			LOGGER.warn("caught err ",e);
 			clearSelectionKey(key);
 			c.close(e.toString());
-			c.getHandler().onConnectFailed(c ,new ConnectionException(ErrorCode.ERR_FOUND_EXCEPION,e.toString()));
-
 		}
 	}
 

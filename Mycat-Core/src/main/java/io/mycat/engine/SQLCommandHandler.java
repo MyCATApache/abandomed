@@ -27,7 +27,6 @@ import java.io.IOException;
 
 import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.net2.ConDataBuffer;
 
 /**
  * internal used for process sql command

@@ -27,12 +27,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.util.BufferUtil;
 import io.mycat.util.StreamUtil;
 
 /**
  * @author mycat
  */
+@Deprecated
 public class Reply323Packet extends MySQLPacket {
 
     public byte[] seed;

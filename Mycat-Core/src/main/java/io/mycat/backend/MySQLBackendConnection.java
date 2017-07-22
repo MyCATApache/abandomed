@@ -24,19 +24,19 @@
 package io.mycat.backend;
 
 import java.io.IOException;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.security.NoSuchAlgorithmException;
 
-import io.mycat.front.MySQLFrontConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.Capabilities;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.AuthPacket;
 import io.mycat.mysql.packet.HandshakePacket;
-import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.net2.Connection;
+import io.mycat.net2.states.ReadState;
 import io.mycat.util.SecurityUtil;
 
 /**
@@ -51,7 +51,8 @@ public class MySQLBackendConnection extends MySQLConnection {
     private final boolean fromSlaveDB;
     private BackConnectionCallback userCallback;
     private MySQLDataSource dataSource;
-    private boolean borrowed;
+    @SuppressWarnings("unused")
+	private boolean borrowed;
     private String schema;
     private HandshakePacket handshake;
     private MySQLFrontConnection mySQLFrontConnection;
@@ -72,6 +73,13 @@ public class MySQLBackendConnection extends MySQLConnection {
         this.datasource = datasource;
         this.fromSlaveDB = datasource.isSlaveNode();
         this.clientFlags = initClientFlags();
+    }
+    
+    @Override
+    public boolean init() throws IOException {
+    	setProcessKey(channel.register(getSelector(), SelectionKey.OP_READ, this));
+    	setNextNetworkState(ReadState.INSTANCE);
+    	return false;
     }
 
     private static long initClientFlags() {

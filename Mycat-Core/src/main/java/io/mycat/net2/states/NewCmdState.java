@@ -33,13 +33,10 @@ public class NewCmdState implements NetworkState {
 			conn.setWriteCompleteListener(null);
 		}
 		
-		if(conn.getNextNetworkState()!=null){
-			conn.setNetworkState(conn.getNextNetworkState());
-			conn.setNextNetworkState(null);		
-		}else{
+		if(conn.getNextNetworkState()==null){
 			/* 命令解析完成后,应该制定后续状态,这里打印出 error 日志      */
 			LOGGER.error("Current conn in ReadWaitingState. conn is "+conn.getClass());
-			throw new RuntimeException(" error connState,you must set nextConnState ");
+			throw new RuntimeException(" error connState,you must set nextConnState ");	
 		}
 		return true;
 		

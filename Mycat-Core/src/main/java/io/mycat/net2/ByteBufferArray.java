@@ -28,7 +28,8 @@ public class ByteBufferArray {
     // 此Array中包括的消息报文长度（byte 字节的长度而不是writedBlockLst中的次序）
     private int[] packetLengths = new int[CAPACITY];
     private int curPacageIndex = 0;
-    private final int blockCapasity;
+    @SuppressWarnings("unused")
+	private final int blockCapasity;
     private int curHandlingPacageIndex = 0;
 
     public ByteBufferArray(ReactorBufferPool bufferPool) {
@@ -228,7 +229,7 @@ public class ByteBufferArray {
 
     public byte readPacket(int packetIndex, int offset) {
         // TODO 性能可能很低
-        final int blockCapasity = this.blockCapasity;
+//        final int blockCapasity = this.blockCapasity;
         int totalBytes = 0;
         for (int i = 0; i < packetIndex; i++) {
             totalBytes += packetLengths[i] & PACKAGE_LENGTH_UNIT;

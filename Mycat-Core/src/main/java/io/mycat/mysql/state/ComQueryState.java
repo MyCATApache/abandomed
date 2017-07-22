@@ -2,6 +2,7 @@ package io.mycat.mysql.state;
 
 
 import java.io.IOException;
+import java.io.InvalidObjectException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,24 +32,23 @@ public class ComQueryState extends AbstractMysqlConnectionState {
     }
 
     @Override
-    protected boolean frontendHandle(MySQLFrontConnection frontCon, Object attachment)throws IOException {
+    protected boolean frontendHandle(final MySQLFrontConnection frontCon, Object attachment)throws IOException {
     	LOGGER.debug("Frontend in ComQueryState");
         MySQLBackendConnection backendConnection = frontCon.getBackendConnection();
         frontCon.setNextNetworkState(NoReadAndWriteState.INSTANCE);
-        frontCon.setNextState(ComQueryResponseState.INSTANCE);
-        frontCon.setPassthrough(true); // 开启透传模式
-        if (backendConnection == null) {
+        if (backendConnection == null) {   //往往新建立连接时,后端连接会是空
             backendConnection = getBackendFrontConnection(frontCon);
             MySQLBackendConnection finalBackendConnection = backendConnection;
+            frontCon.setPassthrough(true); // 开启透传模式
             frontCon.addTodoTask(() -> {
-
+            	frontCon.setNextState(ComQueryResponseState.INSTANCE);
             	/*
             	 * 1. 开启透传模式
             	 * 2. 同步状态机状态
             	 */
-            	
-                finalBackendConnection.setPassthrough(true)//开启透传模式
-                					  .setDirectTransferMode(TransferMode.COMPLETE_PACKET) //透传方式整包透传
+                //开启透传模式
+            	finalBackendConnection.setPassthrough(true)
+            						  .setDirectTransferMode(TransferMode.COMPLETE_PACKET) //透传方式整包透传
                 					  .setCurrentPacketLength(frontCon.getCurrentPacketLength())
                 					  .setCurrentPacketStartPos(frontCon.getCurrentPacketStartPos())
                 					  .setCurrentPacketType(frontCon.getCurrentPacketType());
@@ -56,15 +56,44 @@ public class ComQueryState extends AbstractMysqlConnectionState {
                 SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true, true);
             });
         } else {
-        	
-        	backendConnection.setPassthrough(true)//开启透传模式
-							  .setDirectTransferMode(TransferMode.COMPLETE_PACKET) //透传方式整包透传
-							  .setCurrentPacketLength(frontCon.getCurrentPacketLength())
-							  .setCurrentPacketStartPos(frontCon.getCurrentPacketStartPos())
-							  .setCurrentPacketType(frontCon.getCurrentPacketType())
-							  .setShareBuffer(frontCon.getDataBuffer());//
 
-        	SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true, true);
+        	if(frontCon.isPassthrough()){  //如果房钱已经处于透传模式.
+        		processPacketHeader(frontCon);
+        	}else{
+        		frontCon.setPassthrough(true);
+        		backendConnection.setPassthrough(true);
+        	}
+
+    		MycatByteBuffer dataBuffer = frontCon.getDataBuffer();
+        	switch(frontCon.getDirectTransferMode()){
+            case COMPLETE_PACKET:
+            	//设置当前包结束位置
+            	dataBuffer.writeLimit(frontCon.getCurrentPacketLength());
+//            	if(frontCon.getCurrentPacketLength()==dataBuffer.writeIndex()){  // 查询报文结束，触发透传    这里没有必要判断了。注释掉
+            		frontCon.setNextState(ComQueryResponseState.INSTANCE);
+            		SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true, true);
+//            	}
+            	break;
+            case LONG_HALF_PACKET:
+        			dataBuffer.writeLimit(dataBuffer.writeIndex()); //设置当前包结束位置
+        			if(frontCon.getCurrentPacketLength()==dataBuffer.writeIndex()){  //当前报文传递完成
+        				frontCon.setNextState(ComQueryResponseState.INSTANCE);
+        				SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true, true);
+        			}else{
+        				frontCon.setCurrentPacketStartPos(frontCon.getCurrentPacketStartPos() - dataBuffer.writeIndex());
+            			frontCon.setCurrentPacketLength(frontCon.getCurrentPacketLength() - dataBuffer.writeIndex());
+            			//当前半包透传
+            			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true, false);
+        			}
+        			break;
+            case SHORT_HALF_PACKET:
+            	throw new InvalidObjectException("invalid packettype is SHORT_HALF_PACKET");
+            	// 短半包 在 前端透传时，不会出现。
+            	//当前半包不透传
+//            	SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, false, false);
+            case NONE:
+            	throw new InvalidObjectException("invalid packettype is NONE");
+            }
         }
         return false;
     }
@@ -77,7 +106,8 @@ public class ComQueryState extends AbstractMysqlConnectionState {
         	conn.setDataBuffer(conn.getShareBuffer());
         }
         /* 这里还没有办法区分是前端状态机驱动还是后端状态机驱动  */
-        conn.networkDriverMachine(WriteWaitingState.INSTANCE);
+        conn.setNextNetworkState(WriteWaitingState.INSTANCE)
+        	.networkDriverMachine();
         conn.setWriteCompleteListener(() -> {
             conn.setNextState(ComQueryResponseState.INSTANCE)
             	.setDataBuffer(writeBuffer)

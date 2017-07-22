@@ -7,11 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.net2.NetSystem;
 
 /**
  * 空闲状态
@@ -30,12 +27,11 @@ public class IdleState extends AbstractMysqlConnectionState {
     protected boolean frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment)throws IOException {
         LOGGER.debug("Frontend in IdleState");
         processPacketHeader(mySQLFrontConnection);
-        int packetType = mySQLFrontConnection.getCurrentPacketType();
+        int packetType = mySQLFrontConnection.getCurrentPacketType();        
     	boolean returnflag = false;
         switch (packetType) {
             case MySQLPacket.COM_QUERY:
                 LOGGER.debug("Frontend receive a COM_QUERY in IdleState");
-                
                 mySQLFrontConnection.setNextState(ComQueryState.INSTANCE);
                 returnflag = true;
                 break;

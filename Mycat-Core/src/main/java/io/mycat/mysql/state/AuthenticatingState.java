@@ -1,21 +1,19 @@
 package io.mycat.mysql.state;
 
 
+import java.io.IOException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.backend.callback.AuthenticateRespCallback;
 import io.mycat.engine.ErrorCode;
-import io.mycat.front.CheckUserLoginResponseCallback;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.packet.AuthPacket;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.states.ClosingState;
 import io.mycat.net2.states.ReadWaitingState;
 import io.mycat.util.CharsetUtil;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * 认证状态
@@ -25,9 +23,7 @@ import java.io.IOException;
 public class AuthenticatingState extends AbstractMysqlConnectionState {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticatingState.class);
     public static final AuthenticatingState INSTANCE = new AuthenticatingState();
-    private final CheckUserLoginResponseCallback loginCmdHandler = new CheckUserLoginResponseCallback();
-    private final AuthenticateRespCallback authenticateRespCallback = new AuthenticateRespCallback();
-    
+     
     private static final byte[] AUTH_OK = new byte[]{7, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0};
 
     private AuthenticatingState() {

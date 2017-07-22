@@ -25,13 +25,12 @@ package io.mycat.backend.callback;
 
 import java.io.IOException;
 
-import io.mycat.buffer.MycatByteBuffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.backend.BackConnectionCallback;
 import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.net2.ConDataBuffer;
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.net2.ConnectionException;
 /**
  * callback witch do nothing 

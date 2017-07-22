@@ -1,5 +1,7 @@
 package io.mycat.engine.impl;
 
+import java.io.IOException;
+
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.backend.MySQLBackendConnectionFactory;
@@ -7,14 +9,7 @@ import io.mycat.backend.MySQLDataSource;
 import io.mycat.backend.MySQLReplicatSet;
 import io.mycat.beans.DNBean;
 import io.mycat.engine.SQLCommandHandler;
-import io.mycat.engine.UserSession;
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.mysql.packet.MySQLPacket;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * ComQuery命令处理器基类

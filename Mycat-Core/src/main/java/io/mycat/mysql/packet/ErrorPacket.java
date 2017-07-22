@@ -24,8 +24,6 @@
 package io.mycat.mysql.packet;
 
 import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.net2.ConDataBuffer;
-import io.mycat.util.BufferUtil;
 
 /**
  * From server to client in response to command, if error.
@@ -81,18 +79,18 @@ public class ErrorPacket extends MySQLPacket {
     // message = mm.readBytes();
     // }
 
-    public void read(ConDataBuffer buffer) {
-        MySQLMessage mm = new MySQLMessage(buffer);
-        packetLength = mm.readUB3();
-        packetId = mm.read();
-        fieldCount = mm.read();
-        errno = mm.readUB2();
-        if (mm.hasRemaining() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
-            mm.read();
-            sqlState = mm.readBytes(5);
-        }
-        message = mm.readBytes();
-    }
+//    public void read(ConDataBuffer buffer) {
+//        MySQLMessage mm = new MySQLMessage(buffer);
+//        packetLength = mm.readUB3();
+//        packetId = mm.read();
+//        fieldCount = mm.read();
+//        errno = mm.readUB2();
+//        if (mm.hasRemaining() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
+//            mm.read();
+//            sqlState = mm.readBytes(5);
+//        }
+//        message = mm.readBytes();
+//    }
 
 
     public void write(MycatByteBuffer buffer, int pkgSize) {

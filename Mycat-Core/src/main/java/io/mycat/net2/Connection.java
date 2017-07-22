@@ -59,7 +59,6 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
     protected int pkgTotalCount;
     private long idleTimeout;
     private long lastPerfCollectTime;
-    protected NIOHandler handler;
     
     private NetworkState networkState = ListeningState.INSTANCE;
     private NetworkState nextNetworkState;  /** which state to go into after finishing current write */
@@ -88,28 +87,27 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
         this.lastPerfCollectTime = startupTime;
     }
     
-	public void networkDriverMachine(){
-		networkDriverMachine(null);
-	}
-    
     /**
-     * 状态机可以由内部驱动,也可以由外部驱动
-     * 内部驱动设置state,外部驱动设置 nextstate
+     * 连接初始化模板方法
      */
-    public void networkDriverMachine(NetworkState states){
-    	
-    	if(states!=null){
-    		this.networkState = states;
-    	}
+    public boolean init()throws IOException{
+    	return false;
+    }
+    
+	public void networkDriverMachine(){
 
     	try {
-    		/* 循环方式,替代递归 */
-    		while(networkState.handler(this)){}
+    		do{
+    			if(this.nextNetworkState!=null){
+    				this.networkState = nextNetworkState;
+    				this.nextNetworkState = null;
+    			}
+    		}while(networkState.handler(this));
 		} catch (Exception e) {
 			LOGGER.error("server error", e);
 			close(" close connection!");
 		}
-    }
+	}
     
     /*
      * 处理新的命令
@@ -217,24 +215,11 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
     public long getNetOutBytes() {
         return netOutBytes;
     }
-
-    
-    public void setHandler(NIOHandler handler) {
-        this.handler = handler;
-
-    }
-
-	@SuppressWarnings("rawtypes")
-    public NIOHandler getHandler() {
-        return this.handler;
-    }
-
  
     public boolean isConnected() {
         return (!this.networkState.equals(ClosedState.INSTANCE) && !networkState.equals(ClosingState.INSTANCE) && !networkState.equals(ListeningState.INSTANCE));
     }
 
-    @SuppressWarnings("unchecked")
     public void close(String reason) {
         if (!isClosed) {
             closeSocket();
@@ -242,9 +227,6 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
             isClosed = true;
             NetSystem.getInstance().removeConnection(this);
             LOGGER.info("close connection,reason:" + reason + " ," + this.getClass());
-            if (handler != null) {
-                handler.onClosed(this, reason);
-            }
         }
     }
 
@@ -370,10 +352,6 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
 		this.attachement = attachement;
 	}
 
-    public void setNetworkState(NetworkState newState) {
-        this.networkState = newState;
-    }
-
     private void closeSocket() {
 
         if (channel != null) {
@@ -389,10 +367,6 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
             }
 
         }
-    }
-
-	public NetworkState getNetworkState() {
-        return networkState;
     }
 
     public Direction getDirection() {

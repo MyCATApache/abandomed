@@ -5,11 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.backend.callback.HandshakeRespCallback;
-import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.packet.HandshakePacket;
-import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.states.ReadWaitingState;
 import io.mycat.util.CharsetUtil;
 
@@ -21,7 +18,6 @@ import io.mycat.util.CharsetUtil;
 public class HandshakeState extends AbstractMysqlConnectionState {
     private static final Logger LOGGER = LoggerFactory.getLogger(HandshakeState.class);
     public static final HandshakeState INSTANCE = new HandshakeState();
-    private final HandshakeRespCallback handshakeRespCallback = new HandshakeRespCallback();
 
     private HandshakeState() {
     }

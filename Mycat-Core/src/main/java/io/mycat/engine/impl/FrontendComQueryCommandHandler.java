@@ -1,17 +1,13 @@
 package io.mycat.engine.impl;
 
+import java.io.IOException;
+
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.state.ComQueryResponseState;
-import io.mycat.net2.ConDataBuffer;
 import io.mycat.net2.states.NoReadAndWriteState;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 /**
  * 前端查询命令响应
@@ -21,7 +17,6 @@ import java.io.IOException;
  * @author ynfeng
  */
 public class FrontendComQueryCommandHandler extends AbstractComQueryCommandHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FrontendComQueryCommandHandler.class);
 
     @Override
     public void processCmd(MySQLFrontConnection frontCon, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {

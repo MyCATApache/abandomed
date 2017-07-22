@@ -30,7 +30,7 @@ public class ReadWaitingState implements NetworkState {
         if (needWakeup) {
         	conn.getProcessKey().selector().wakeup();
         }
-	   conn.setNetworkState(ReadState.INSTANCE);   //继续解析剩下的数据
+	   conn.setNextNetworkState(ReadState.INSTANCE);   //继续解析剩下的数据
 	   return false;
 	}
 
