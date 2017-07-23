@@ -1,5 +1,6 @@
 package io.mycat.backend.callback;
 
+import io.mycat.NewSQLContext;
 import io.mycat.backend.BackConnectionCallback;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.bigmem.sqlcache.BigSQLResult;
@@ -24,12 +25,11 @@ public class SQLResCacheHintHandler implements BackConnectionCallback, HintHandl
     private final BigSQLResult sqlResultCache;
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(SQLResCacheHintHandler.class);
     private int filedCount = 0;
-    private IDataLoader<String, BigSQLResult> loader;
-    private IRemoveKeyListener<String, BigSQLResult> listener;
-    private HintSQLInfo hintSQLInfo;
-
-    public SQLResCacheHintHandler(HintSQLInfo hintSQLInfo, BigSQLResult sqlResultCache) {
-        this.hintSQLInfo = hintSQLInfo;
+    private IDataLoader<String,BigSQLResult> loader;
+    private IRemoveKeyListener<String,BigSQLResult> listener;
+    private NewSQLContext sqlContext;
+    public SQLResCacheHintHandler(NewSQLContext sqlContext, BigSQLResult sqlResultCache){
+        this.sqlContext = sqlContext;
         this.sqlResultCache = sqlResultCache;
         this.listener = new HintSQLRemoveKeyListener<>();
         this.loader = new HintSQLDataLoader<>();
