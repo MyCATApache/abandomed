@@ -28,10 +28,6 @@ public class ComQueryColumnDefState extends AbstractMysqlConnectionState {
     @Override
     protected boolean frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) { 
         LOGGER.debug("Frontend in ComQueryColumnDefState");
-//        byte packageType = mySQLFrontConnection.getCurrentPacketType();
-//        if (packageType == MySQLPacket.EOF_PACKET) {
-//            mySQLFrontConnection.setNextState(ComQueryRowState.INSTANCE);
-//        }
         return false;
     }
 
@@ -61,20 +57,20 @@ public class ComQueryColumnDefState extends AbstractMysqlConnectionState {
                 		//短半包的情况下,currentPacketStartPos 为 上一个包的结束位置,当前半包不透传,不需要设置
 //                		dataBuffer.writeLimit(mySQLBackendConnection.getCurrentPacketStartPos());
             			//当前半包不透传
-            			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, false, false);
+            			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, false,false, false);
             		}else{
             			dataBuffer.writeLimit(dataBuffer.writeIndex()); //设置当前包结束位置
 						mySQLBackendConnection.setCurrentPacketStartPos(mySQLBackendConnection.getCurrentPacketStartPos() - dataBuffer.writeIndex());
 						mySQLBackendConnection.setCurrentPacketLength(mySQLBackendConnection.getCurrentPacketLength() - dataBuffer.writeIndex());
             			//当前半包透传
-            			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true, false);
+            			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true,false, false);
             		}
                 	return false;
                 case SHORT_HALF_PACKET:
                 	//短半包的情况下,currentPacketLength 为 上一个包的结束位置,当前半包不透传,不需要设置
 //                	dataBuffer.writeLimit(mySQLBackendConnection.getCurrentPacketLength());
                 	//当前半包不透传
-        			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, false, false);
+        			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, false,false, false);
         			return false;
                 case NONE:
                 	break;

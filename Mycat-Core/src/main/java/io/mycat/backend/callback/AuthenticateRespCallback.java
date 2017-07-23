@@ -18,23 +18,11 @@ import java.io.IOException;
  *
  * @author ynfeng
  */
+@Deprecated
 public class AuthenticateRespCallback extends ResponseCallbackAdapter {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticateRespCallback.class);
 
     @Override
     public void handleResponse(MySQLBackendConnection conn, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
-    	LOGGER.debug("in AuthenticateRespCallback method ");
-    	if (packageType == MySQLPacket.ERROR_PACKET) {
-    		conn.setNextState(CloseState.INSTANCE);
-        } else if (packageType == MySQLPacket.OK_PACKET) {
-            conn.setNextState(IdleState.INSTANCE);
-            conn.getDataBuffer().clear();
-            MySQLFrontConnection mySQLFrontConnection = conn.getMySQLFrontConnection();
-            if (mySQLFrontConnection != null) {
-                mySQLFrontConnection.executePendingTask();
-            }else{
-            	conn.setNextNetworkState(ReadWaitingState.INSTANCE);
-            }
-        }
     }
 }

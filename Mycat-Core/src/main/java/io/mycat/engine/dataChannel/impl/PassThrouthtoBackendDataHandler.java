@@ -32,7 +32,7 @@ public class PassThrouthtoBackendDataHandler implements DataHandler {
 	 * 透传时,进行前后端状态同步
 	 */
 	@Override
-	public void transfer(MySQLConnection in, boolean isTransferLastPacket, boolean isAllFinish) throws IOException {
+	public void transfer(MySQLConnection in, boolean isTransferLastPacket,boolean transferFinish, boolean isAllFinish) throws IOException {
 		
 		LOGGER.debug("current in  PassThrouthtoBackendDataHandler ");
 		
@@ -59,12 +59,17 @@ public class PassThrouthtoBackendDataHandler implements DataHandler {
         	if(TransferMode.SHORT_HALF_PACKET.equals(frontCoxn.getDirectTransferMode())){
         		frontCoxn.clearCurrentPacket();
         	}
-        	if(isAllFinish){ //透传全部完成
+        	if(transferFinish){ //透传全部完成
         		backendCoxn.setNextNetworkState(ReadWaitingState.INSTANCE);
         	}else{
         		backendCoxn.setNextNetworkState(NoReadAndWriteState.INSTANCE);
         		frontCoxn.setNextNetworkState(ReadWaitingState.INSTANCE)
         			     .networkDriverMachine();
+        	}
+        	
+        	if(isAllFinish){  //透传全部完成
+        		frontCoxn.setPassthrough(false);
+        		backendCoxn.setPassthrough(false);
         	}
         });
 	}

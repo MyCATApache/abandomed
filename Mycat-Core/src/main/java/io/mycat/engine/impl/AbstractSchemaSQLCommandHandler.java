@@ -25,8 +25,8 @@ package io.mycat.engine.impl;
 
 import java.io.IOException;
 
-
 import io.mycat.buffer.MycatByteBuffer;
+
 import io.mycat.engine.SQLCommandHandler;
 import io.mycat.front.MySQLFrontConnection;
 

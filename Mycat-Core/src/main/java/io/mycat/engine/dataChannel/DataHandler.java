@@ -12,14 +12,13 @@ import io.mycat.mysql.MySQLConnection;
 public interface DataHandler {
 	
 	/**
-	 * 透传处理
-	 * @param in   透传数据输入连接
-	 * @param out  透传数据输出连接
-	 * @param shareDataBuffer  共享buffer
-	 * @param mode         传输模式
-	 * @param isTransferLastPacket 最后一个包是否传输
-	 * @param isAllFinish  是否全部透传完成
+	 * 传输处理
+	 * @param in
+	 * @param isTransferLastPacket  是否传输最后一个报文
+	 * @param transferFinish 当前透传方向是否完成
+	 * @param isAllFinish    整个命令交互,是否全部透传完成, 命令可能经过多次交互后，才完成，例如：load data local 命令，分两个阶段完成
+	 * @throws IOException
 	 */
-	public void transfer(MySQLConnection in,boolean isTransferLastPacket,boolean isAllFinish)throws IOException;
+	public void transfer(MySQLConnection in,boolean isTransferLastPacket,boolean transferFinish,boolean isAllFinish)throws IOException;
 
 }

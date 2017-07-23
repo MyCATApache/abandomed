@@ -47,11 +47,6 @@ import io.mycat.util.RandomUtil;
  */
 public class MySQLConnection extends Connection implements StatefulConnection{
     protected final static Logger LOGGER = LoggerFactory.getLogger(MySQLConnection.class);
-    
-
-    public static int NORMAL = 0;            //正常非透传状态
-    public static int HALF_PACKET = 1;       //半包透传状态
-    public static int COMPLETE_PACKET = 2;   //整包透传状态
 
     private MysqlConnectionState state;
     private MysqlConnectionState nextState;
