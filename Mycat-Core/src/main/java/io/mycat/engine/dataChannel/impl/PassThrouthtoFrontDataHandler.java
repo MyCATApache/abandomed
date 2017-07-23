@@ -49,6 +49,9 @@ public class PassThrouthtoFrontDataHandler implements DataHandler {
 		
 		//同步前后端状态
 		frontConn.setNextState(backendConn.getNextState());
+//		if(frontConn.getNextNetworkState() == null ) {
+//			frontConn.setNextNetworkState(NoReadAndWriteState.INSTANCE);
+//		}
 		
 		//将buffer 后端buffer 共享给前端
 		MycatByteBuffer frontdatabuffer = frontConn.getDataBuffer();

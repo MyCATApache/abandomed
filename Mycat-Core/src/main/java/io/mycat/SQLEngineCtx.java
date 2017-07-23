@@ -93,6 +93,11 @@ private Map<String,MySQLReplicatSet> msqlRepSetMap=new HashMap<String,MySQLRepli
  */
 private Map<String,SchemaBean> mycatSchemaMap=new HashMap<String,SchemaBean>();
 
+/**
+ * 默认Schema,取配置文件种第一个Schema
+ */
+private SchemaBean defaultSchemaBean;
+
 public  SQLCommandHandler getNomalSchemaSQLCmdHandler()
 {
 	return normalSchemaSQLCmdHandler;
@@ -151,12 +156,19 @@ protected void setBackendMySQLConFactory(MySQLBackendConnectionFactory backendMy
  
  protected void addSchemaBean(SchemaBean schemaBean)
  {
+	 if(defaultSchemaBean == null ) { // call by MycatCore,在配置文件加载时初始化
+		 defaultSchemaBean = schemaBean;
+	 }
 	 this.mycatSchemaMap.put(schemaBean.getName(), schemaBean);
  }
  
  public SchemaBean getMycatSchema(String schema)
  {
  	return this.mycatSchemaMap.get(schema);
+ }
+ 
+ public SchemaBean getDefaultMycatSchema() {
+	 return this.defaultSchemaBean;
  }
  
  
