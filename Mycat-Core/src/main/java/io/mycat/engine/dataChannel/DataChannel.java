@@ -28,7 +28,7 @@ public interface DataChannel {
 	 * @param isTransferLastPacket 最后一个包是否传输
 	 * @param isAllFinish  是否全部透传完成
 	 */
-	public void transferToFront(MySQLConnection in,boolean isTransferLastPacket,boolean isAllFinish)throws IOException;
+	public void transferToFront(MySQLConnection in,boolean isTransferLastPacket,boolean transferFinish,boolean isAllFinish)throws IOException;
 	
 	/**
 	 * 透传处理
@@ -39,6 +39,6 @@ public interface DataChannel {
 	 * @param isTransferLastPacket 最后一个包是否传输
 	 * @param isAllFinish  是否全部透传完成
 	 */
-	public void transferToBackend(MySQLConnection in,boolean isTransferLastPacket,boolean isAllFinish)throws IOException;
+	public void transferToBackend(MySQLConnection in,boolean isTransferLastPacket,boolean transferFinish,boolean isAllFinish)throws IOException;
 
 }

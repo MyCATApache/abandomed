@@ -36,7 +36,6 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
         boolean returnflag = false;
         try {
         	processPacketHeader(mySQLBackendConnection);
-        	
         	byte packageType;
         	switch(mySQLBackendConnection.getDirectTransferMode()){
             case COMPLETE_PACKET:
@@ -53,10 +52,13 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
                         LOGGER.debug("后端连接，不在事务中，可以回收！{}",mySQLBackendConnection);
                     }
                     mySQLBackendConnection.setNextState(IdleState.INSTANCE);
-                    SQLEngineCtx.INSTANCE().getDataTransferChannel()
-                	.transferToFront(mySQLBackendConnection, true, true);
+                    SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true,true, true);
                     returnflag = false;  //触发透传,退出当前状态机
-                } else {
+                }else if(packageType == MySQLPacket.REQUEST_FILE_FIELD_COUNT){
+                	mySQLBackendConnection.setNextState(ComLoadState.INSTANCE);
+                	SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true,true,false);
+                }
+            	else {
                     mySQLBackendConnection.setNextState(ComQueryColumnDefState.INSTANCE);
                     mySQLBackendConnection.getDataBuffer().writeLimit(mySQLBackendConnection.getCurrentPacketLength());
                     returnflag = true;   //状态机自驱进入下一个状态

@@ -53,7 +53,8 @@ public class ComQueryRowState extends AbstractMysqlConnectionState {
     	                    //检查后面还有没有结果集
     	                    if ((mySQLBackendConnection.getServerStatus() & ServerStatus.SERVER_MORE_RESULTS_EXISTS) == 0) {
     	                        LOGGER.debug("backend com query response complete change to idle state");
-    	                        SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true, true);
+    	                        mySQLBackendConnection.setNextState(IdleState.INSTANCE);
+    	                        SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true,true, true);
     	                        return false;
     	                    } else {
     	                        LOGGER.debug("backend com query response state have multi result");
@@ -70,14 +71,14 @@ public class ComQueryRowState extends AbstractMysqlConnectionState {
 //                    		dataBuffer.writeLimit(mySQLBackendConnection.getCurrentPacketStartPos());
     	                    //当前半包不透传
     	                    SQLEngineCtx.INSTANCE().getDataTransferChannel()
-    	                            .transferToFront(mySQLBackendConnection, false, false);
+    	                            .transferToFront(mySQLBackendConnection, false,false,false);
     	                } else {
     	                	dataBuffer.writeLimit(dataBuffer.writeIndex());
     						mySQLBackendConnection.setCurrentPacketStartPos(mySQLBackendConnection.getCurrentPacketStartPos() - dataBuffer.writeIndex());
     						mySQLBackendConnection.setCurrentPacketLength(mySQLBackendConnection.getCurrentPacketLength() - dataBuffer.writeIndex());
     	                    //当前半包透传
     	                    SQLEngineCtx.INSTANCE().getDataTransferChannel()
-    	                            .transferToFront(mySQLBackendConnection, true, false);
+    	                            .transferToFront(mySQLBackendConnection, true,false, false);
     	                }
     	                return false;
     	            case SHORT_HALF_PACKET:
@@ -86,7 +87,7 @@ public class ComQueryRowState extends AbstractMysqlConnectionState {
 //                    	dataBuffer.writeLimit(mySQLBackendConnection.getCurrentPacketLength());
     	                //当前半包不透传
     	                SQLEngineCtx.INSTANCE().getDataTransferChannel()
-    	                        .transferToFront(mySQLBackendConnection, false, false);
+    	                        .transferToFront(mySQLBackendConnection, false,false, false);
     	                return false;
     	            case NONE:
     	                break;

@@ -53,7 +53,7 @@ public class ComQueryState extends AbstractMysqlConnectionState {
                 					  .setCurrentPacketStartPos(frontCon.getCurrentPacketStartPos())
                 					  .setCurrentPacketType(frontCon.getCurrentPacketType());
                 
-                SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true, true);
+                SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true,true,false);
             });
         } else {
 
@@ -71,19 +71,19 @@ public class ComQueryState extends AbstractMysqlConnectionState {
             	dataBuffer.writeLimit(frontCon.getCurrentPacketLength());
 //            	if(frontCon.getCurrentPacketLength()==dataBuffer.writeIndex()){  // 查询报文结束，触发透传    这里没有必要判断了。注释掉
             		frontCon.setNextState(ComQueryResponseState.INSTANCE);
-            		SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true, true);
+            		SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true,true,false);
 //            	}
             	break;
             case LONG_HALF_PACKET:
         			dataBuffer.writeLimit(dataBuffer.writeIndex()); //设置当前包结束位置
         			if(frontCon.getCurrentPacketLength()==dataBuffer.writeIndex()){  //当前报文传递完成
         				frontCon.setNextState(ComQueryResponseState.INSTANCE);
-        				SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true, true);
+        				SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true, true,false);
         			}else{
         				frontCon.setCurrentPacketStartPos(frontCon.getCurrentPacketStartPos() - dataBuffer.writeIndex());
             			frontCon.setCurrentPacketLength(frontCon.getCurrentPacketLength() - dataBuffer.writeIndex());
             			//当前半包透传
-            			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true, false);
+            			SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToBackend(frontCon, true, false,false);
         			}
         			break;
             case SHORT_HALF_PACKET:

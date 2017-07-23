@@ -20,17 +20,17 @@ public class DefaultDataTransferChannel implements DataChannel {
 	}
 
 	@Override
-	public void transferToFront(MySQLConnection in, boolean isTransferLastPacket, boolean isAllFinish) throws IOException {
+	public void transferToFront(MySQLConnection in, boolean isTransferLastPacket,boolean transferFinish, boolean isAllFinish) throws IOException {
 		for(DataHandler handler:toFronthandlers){
-			handler.transfer(in,isTransferLastPacket, isAllFinish);
+			handler.transfer(in,isTransferLastPacket,transferFinish, isAllFinish);
 		}
 	}
 
 	@Override
 	public void transferToBackend(MySQLConnection in,
-			boolean isTransferLastPacket, boolean isAllFinish) throws IOException {
+			boolean isTransferLastPacket,boolean transferFinish, boolean isAllFinish) throws IOException {
 		for(DataHandler handler:toBackendhandlers){
-			handler.transfer(in, isTransferLastPacket, isAllFinish);
+			handler.transfer(in, isTransferLastPacket,transferFinish, isAllFinish);
 		}
 	}
 
