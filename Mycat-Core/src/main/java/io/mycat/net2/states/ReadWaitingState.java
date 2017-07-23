@@ -26,11 +26,12 @@ public class ReadWaitingState implements NetworkState {
             needWakeup = true;
         } catch (Exception e) {
             LOGGER.warn("enable read fail " + e);
+            conn.setNextNetworkState(ClosingState.INSTANCE);
         }
         if (needWakeup) {
         	conn.getProcessKey().selector().wakeup();
+        	conn.setNextNetworkState(ReadState.INSTANCE);   //继续解析剩下的数据
         }
-	   conn.setNextNetworkState(ReadState.INSTANCE);   //继续解析剩下的数据
 	   return false;
 	}
 

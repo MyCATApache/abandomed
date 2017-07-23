@@ -39,17 +39,6 @@ public class NewCmdState implements NetworkState {
 			throw new RuntimeException(" error connState,you must set nextConnState ");	
 		}
 		return true;
-		
-//		/* 缓冲区中有数据,继续处理缓冲区的数据    */
-//		boolean hasMoreData = (conn.getByteBuf().getReadPos() - conn.getByteBuf().getCurrProcessLimit()) > 0;
-//		if(hasMoreData){
-//			conn.getByteBuf().compact();
-//			conn.setConnState(ParseCmdState.INSTANCE);   //内部驱动状态机   继续解析剩下的数据
-//			return true;
-//		}else{
-//			conn.setConnState(ReadWaitingState.INSTANCE);   //内部驱动状态机    缓冲区中没有数据,注册可读事件
-//			return true;
-//		}
 	}
 
 }
