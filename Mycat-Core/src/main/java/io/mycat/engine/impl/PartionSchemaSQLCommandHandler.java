@@ -23,46 +23,37 @@
  */
 package io.mycat.engine.impl;
 
-import java.io.IOException;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import io.mycat.engine.ErrorCode;
-import io.mycat.engine.SQLCommandHandler;
-import io.mycat.front.MySQLFrontConnection;
-import io.mycat.net2.ConDataBuffer;
 
 /**
  * 分片的Schema對應的 SQL Command Handler
  * @author wuzhihui
  *
  */
+@Deprecated
 public class PartionSchemaSQLCommandHandler extends AbstractSchemaSQLCommandHandler{
-	private static final Logger LOGGER = LoggerFactory.getLogger(PartionSchemaSQLCommandHandler.class);
 	public PartionSchemaSQLCommandHandler() {
 		// TODO Auto-generated constructor stub
 	}
 
 
-	@Override
-	public void executeSetSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
-			int pkgStartPos, int pkgLen, String sql) throws IOException {
-		frontCon.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "Not implemented Yet,Welcome to be a Commiter ,Leader want you !!");
-	}
-
-	@Override
-	public void executeShowSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
-			int pkgStartPos, int pkgLen, String sql) throws IOException {
-		frontCon.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "Not implemented Yet,Welcome to be a Commiter ,Leader want you !!");
-		
-	}
-
-	@Override
-	public void executeSelectSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
-			int pkgStartPos, int pkgLen, String sql) throws IOException {
-		frontCon.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "Not implemented Yet,Welcome to be a Commiter ,Leader want you !!");
-		
-	}
+//	@Override
+//	public void executeSetSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
+//			int pkgStartPos, int pkgLen, String sql) throws IOException {
+//		frontCon.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "Not implemented Yet,Welcome to be a Commiter ,Leader want you !!");
+//	}
+//
+//	@Override
+//	public void executeShowSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
+//			int pkgStartPos, int pkgLen, String sql) throws IOException {
+//		frontCon.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "Not implemented Yet,Welcome to be a Commiter ,Leader want you !!");
+//		
+//	}
+//
+//	@Override
+//	public void executeSelectSQL(MySQLFrontConnection frontCon, ConDataBuffer dataBuffer, byte packageType,
+//			int pkgStartPos, int pkgLen, String sql) throws IOException {
+//		frontCon.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "Not implemented Yet,Welcome to be a Commiter ,Leader want you !!");
+//		
+//	}
 
 }

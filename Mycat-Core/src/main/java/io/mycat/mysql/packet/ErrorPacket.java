@@ -23,11 +23,7 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
-
-import io.mycat.net2.ByteBufferArray;
-import io.mycat.net2.Connection;
-import io.mycat.util.BufferUtil;
+import io.mycat.buffer.MycatByteBuffer;
 
 /**
  * From server to client in response to command, if error.
@@ -63,7 +59,7 @@ public class ErrorPacket extends MySQLPacket {
     // MySQLMessage mm = new MySQLMessage(bin.data);
     // fieldCount = mm.read();
     // errno = mm.readUB2();
-    // if (mm.hasRemaining() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
+    // if (mm.hasReadableBytes() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
     // mm.read();
     // sqlState = mm.readBytes(5);
     // }
@@ -76,36 +72,36 @@ public class ErrorPacket extends MySQLPacket {
     // packetId = mm.read();
     // fieldCount = mm.read();
     // errno = mm.readUB2();
-    // if (mm.hasRemaining() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
+    // if (mm.hasReadableBytes() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
     // mm.read();
     // sqlState = mm.readBytes(5);
     // }
     // message = mm.readBytes();
     // }
 
-    public void read(ByteBuffer buffer) {
-        MySQLMessage mm = new MySQLMessage(buffer);
-        packetLength = mm.readUB3();
-        packetId = mm.read();
-        fieldCount = mm.read();
-        errno = mm.readUB2();
-        if (mm.hasRemaining() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
-            mm.read();
-            sqlState = mm.readBytes(5);
-        }
-        message = mm.readBytes();
-    }
+//    public void read(ConDataBuffer buffer) {
+//        MySQLMessage mm = new MySQLMessage(buffer);
+//        packetLength = mm.readUB3();
+//        packetId = mm.read();
+//        fieldCount = mm.read();
+//        errno = mm.readUB2();
+//        if (mm.hasRemaining() && (mm.read(mm.position()) == SQLSTATE_MARKER)) {
+//            mm.read();
+//            sqlState = mm.readBytes(5);
+//        }
+//        message = mm.readBytes();
+//    }
 
 
-    public void write(ByteBuffer buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        buffer.put(fieldCount);
-        BufferUtil.writeUB2(buffer, errno);
-        buffer.put(mark);
-        buffer.put(sqlState);
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+        buffer.writeFixInt(3,pkgSize);
+        buffer.writeByte(packetId);
+        buffer.writeLenencInt(fieldCount);
+        buffer.writeFixInt(2,errno);
+        buffer.writeByte(mark);
+        buffer.writeBytes(sqlState);
         if (message != null) {
-            buffer.put(message);
+            buffer.writeBytes(message);
 
         }
     }

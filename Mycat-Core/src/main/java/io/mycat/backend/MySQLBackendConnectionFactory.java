@@ -28,26 +28,27 @@ import java.nio.channels.SocketChannel;
 
 import io.mycat.backend.callback.DummyCallBack;
 import io.mycat.beans.MySQLBean;
+import io.mycat.front.MySQLFrontConnection;
 import io.mycat.net2.NetSystem;
+import io.mycat.net2.states.ReadState;
+
 /**
  * bakcend mysql connection factory
- * @author wuzhihui
  *
+ * @author wuzhihui
  */
 public class MySQLBackendConnectionFactory {
- 
-    private final MySQLBackendConnectionHandler nioHandler = new MySQLBackendConnectionHandler();
-    private final DummyCallBack dummyCallBack=new DummyCallBack();
-    public MySQLBackendConnection make(MySQLDataSource pool,String reactor, String schema) throws IOException {
 
-    	MySQLBean dsc = pool.getConfig();
+    private final DummyCallBack dummyCallBack = new DummyCallBack();
+    public MySQLBackendConnection make(MySQLDataSource pool, String reactor, String schema, MySQLFrontConnection mySQLFrontConnection, BackConnectionCallback userCallback) throws IOException {
+        BackConnectionCallback callback = userCallback == null ? dummyCallBack : userCallback;
+        MySQLBean dsc = pool.getConfig();
         SocketChannel channel = SocketChannel.open();
         channel.configureBlocking(false);
 
-        MySQLBackendConnection c = new MySQLBackendConnection(pool,channel);
+        MySQLBackendConnection c = new MySQLBackendConnection(pool, channel);
         NetSystem.getInstance().setSocketParams(c, false);
         // 设置NIOHandlers
-        c.setHandler(nioHandler);
         c.setHost(dsc.getIp());
         c.setPort(dsc.getPort());
         c.setUser(dsc.getUser());
@@ -55,9 +56,10 @@ public class MySQLBackendConnectionFactory {
         c.setSchema(schema);
         c.setPool(pool);
         c.setNIOReactor(reactor);
-        c.setUserCallback(dummyCallBack);
-        c.setIdleTimeout(NetSystem.getInstance().getNetConfig().getConIdleTimeout()*60*1000L);
-        NetSystem.getInstance().getConnector().postConnect(c);
-        return c;
+        c.setMySQLFrontConnection(mySQLFrontConnection);
+        c.setUserCallback(callback);
+        c.setIdleTimeout(NetSystem.getInstance().getNetConfig().getConIdleTimeout() * 60 * 1000L);
+        c.driveState();
+        return c; 
     }
 }

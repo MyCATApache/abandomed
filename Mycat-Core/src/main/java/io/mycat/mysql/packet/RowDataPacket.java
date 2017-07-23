@@ -23,10 +23,10 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.util.BufferUtil;
 
 /**
@@ -51,9 +51,11 @@ import io.mycat.util.BufferUtil;
  * 
  * @author mycat
  */
+@Deprecated
+@SuppressWarnings("unused")
 public class RowDataPacket extends MySQLPacket {
     private static final byte NULL_MARK = (byte) 251;
-    private static final byte EMPTY_MARK = (byte) 0;
+	private static final byte EMPTY_MARK = (byte) 0;
     public int fieldCount;
     public final List<byte[]> fieldValues;
 
@@ -72,30 +74,30 @@ public class RowDataPacket extends MySQLPacket {
         fieldCount = fieldCount + add;
     }
 
-    public void read(ByteBuffer buffer) {
-        MySQLMessage mm = new MySQLMessage(buffer);
-        packetLength = mm.readUB3();
-        packetId = mm.read();
-        for (int i = 0; i < fieldCount; i++) {
-            fieldValues.add(mm.readBytesWithLength());
-        }
-    }
+//    public void read(ConDataBuffer buffer) {
+//        MySQLMessage mm = new MySQLMessage(buffer);
+//        packetLength = mm.readUB3();
+//        packetId = mm.read();
+//        for (int i = 0; i < fieldCount; i++) {
+//            fieldValues.add(mm.readBytesWithLength());
+//        }
+//    }
 
     @Override
-    public void write(ByteBuffer  buffer,int pkgSize) {
-
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        for (int i = 0; i < fieldCount; i++) {
-            byte[] fv = fieldValues.get(i);
-            if (fv == null) {
-                buffer.put(RowDataPacket.NULL_MARK);
-            } else if (fv.length == 0) {
-                buffer.put(RowDataPacket.EMPTY_MARK);
-            } else {
-                BufferUtil.writeLength(buffer, fv.length);
-            }
-        }
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+//
+//        BufferUtil.writeUB3(buffer, pkgSize);
+//        buffer.put(packetId);
+//        for (int i = 0; i < fieldCount; i++) {
+//            byte[] fv = fieldValues.get(i);
+//            if (fv == null) {
+//                buffer.put(RowDataPacket.NULL_MARK);
+//            } else if (fv.length == 0) {
+//                buffer.put(RowDataPacket.EMPTY_MARK);
+//            } else {
+//                BufferUtil.writeLength(buffer, fv.length);
+//            }
+//        }
     }
 
   

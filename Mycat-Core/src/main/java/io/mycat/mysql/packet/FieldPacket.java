@@ -23,9 +23,7 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
-
-import io.mycat.net2.ByteBufferArray;
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.util.BufferUtil;
 
 /**
@@ -56,9 +54,11 @@ import io.mycat.util.BufferUtil;
  * 
  * @author mycat
  */
+@Deprecated
 public class FieldPacket extends MySQLPacket {
     private static final byte[] DEFAULT_CATALOG = "def".getBytes();
-    private static final byte[] FILLER = new byte[2];
+    @SuppressWarnings("unused")
+	private static final byte[] FILLER = new byte[2];
 
     public byte[] catalog = DEFAULT_CATALOG;
     public byte[] db;
@@ -76,12 +76,12 @@ public class FieldPacket extends MySQLPacket {
     /**
      * 把字节数组转变成FieldPacket
      */
-    public void read(ByteBuffer buffer) {
-        MySQLMessage mm = new MySQLMessage(buffer);
-        this.packetLength = mm.readUB3();
-        this.packetId = mm.read();
-        readBody(mm);
-    }
+//    public void read(ConDataBuffer buffer) {
+//        MySQLMessage mm = new MySQLMessage(buffer);
+//        this.packetLength = mm.readUB3();
+//        this.packetId = mm.read();
+//        readBody(mm);
+//    }
     //
     // /**
     // * 把BinaryPacket转变成FieldPacket
@@ -93,10 +93,10 @@ public class FieldPacket extends MySQLPacket {
     // }
 
     @Override
-    public void write(ByteBuffer buffer,int pkgSize) { 
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        writeBody(buffer);
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+//        BufferUtil.writeUB3(buffer, pkgSize);
+//        buffer.put(packetId);
+//        writeBody(buffer);
     }
 
     @Override
@@ -119,45 +119,45 @@ public class FieldPacket extends MySQLPacket {
         return "MySQL Field Packet";
     }
 
-    private void readBody(MySQLMessage mm) {
-        this.catalog = mm.readBytesWithLength();
-        this.db = mm.readBytesWithLength();
-        this.table = mm.readBytesWithLength();
-        this.orgTable = mm.readBytesWithLength();
-        this.name = mm.readBytesWithLength();
-        this.orgName = mm.readBytesWithLength();
-        mm.move(1);
-        this.charsetIndex = mm.readUB2();
-        this.length = mm.readUB4();
-        this.type = mm.read() & 0xff;
-        this.flags = mm.readUB2();
-        this.decimals = mm.read();
-        mm.move(FILLER.length);
-        if (mm.hasRemaining()) {
-            this.definition = mm.readBytesWithLength();
-        }
-    }
+//    private void readBody(MySQLMessage mm) {
+//        this.catalog = mm.readBytesWithLength();
+//        this.db = mm.readBytesWithLength();
+//        this.table = mm.readBytesWithLength();
+//        this.orgTable = mm.readBytesWithLength();
+//        this.name = mm.readBytesWithLength();
+//        this.orgName = mm.readBytesWithLength();
+//        mm.move(1);
+//        this.charsetIndex = mm.readUB2();
+//        this.length = mm.readUB4();
+//        this.type = mm.read() & 0xff;
+//        this.flags = mm.readUB2();
+//        this.decimals = mm.read();
+//        mm.move(FILLER.length);
+//        if (mm.hasRemaining()) {
+//            this.definition = mm.readBytesWithLength();
+//        }
+//    }
 
-    private void writeBody(ByteBuffer buffer) {
-        byte nullVal = 0;
-        BufferUtil.writeWithLength(buffer, catalog, nullVal);
-        BufferUtil.writeWithLength(buffer, db, nullVal);
-        BufferUtil.writeWithLength(buffer, table, nullVal);
-        BufferUtil.writeWithLength(buffer, orgTable, nullVal);
-        BufferUtil.writeWithLength(buffer, name, nullVal);
-        BufferUtil.writeWithLength(buffer, orgName, nullVal);
-        buffer.put((byte) 0x0C);
-        BufferUtil.writeUB2(buffer, charsetIndex);
-        BufferUtil.writeUB4(buffer, length);
-        buffer.put((byte) (type & 0xff));
-        BufferUtil.writeUB2(buffer, flags);
-        buffer.put(decimals);
-        buffer.put((byte) 0x00);
-        buffer.put((byte) 0x00);
-        // buffer.position(buffer.position() + FILLER.length);
-        if (definition != null) {
-            BufferUtil.writeWithLength(buffer, definition);
-        }
-    }
+//    private void writeBody(ByteBuffer buffer) {
+//        byte nullVal = 0;
+//        BufferUtil.writeWithLength(buffer, catalog, nullVal);
+//        BufferUtil.writeWithLength(buffer, db, nullVal);
+//        BufferUtil.writeWithLength(buffer, table, nullVal);
+//        BufferUtil.writeWithLength(buffer, orgTable, nullVal);
+//        BufferUtil.writeWithLength(buffer, name, nullVal);
+//        BufferUtil.writeWithLength(buffer, orgName, nullVal);
+//        buffer.put((byte) 0x0C);
+//        BufferUtil.writeUB2(buffer, charsetIndex);
+//        BufferUtil.writeUB4(buffer, length);
+//        buffer.put((byte) (type & 0xff));
+//        BufferUtil.writeUB2(buffer, flags);
+//        buffer.put(decimals);
+//        buffer.put((byte) 0x00);
+//        buffer.put((byte) 0x00);
+//        // buffer.position(buffer.position() + FILLER.length);
+//        if (definition != null) {
+//            BufferUtil.writeWithLength(buffer, definition);
+//        }
+//    }
 
 }

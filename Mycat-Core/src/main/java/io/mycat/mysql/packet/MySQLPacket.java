@@ -23,7 +23,8 @@
  */
 package io.mycat.mysql.packet;
 
-import java.nio.ByteBuffer;
+import io.mycat.buffer.MycatByteBuffer;
+
 /**
  * 
  * @author wuzhihui
@@ -190,6 +191,21 @@ public abstract class MySQLPacket {
      * mysql_stmt_fetch
      */
     public static final byte COM_STMT_FETCH = 28;
+    
+    /**
+     * mysql_stmt_fetch
+     */
+    public static final byte COM_DAEMON     = 29;
+    
+    /**
+     * mysql_stmt_fetch
+     */
+    public static final byte COM_BINLOG_DUMP_GTID  = 30;
+    
+    /**
+     * mysql_stmt_fetch
+     */
+    public static final byte COM_RESET_CONNECTION  = 31;
 
     /**
      * Mycat heartbeat
@@ -217,7 +233,7 @@ public abstract class MySQLPacket {
                 .append('}').toString();
     }
 
-	public void write(ByteBuffer buffer,int pkgSize) {
+    public void write(MycatByteBuffer buffer, int pkgSize) {
 		
 		
 	}

@@ -25,12 +25,13 @@ package io.mycat.mysql.packet;
 
 import java.nio.ByteBuffer;
 
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.net2.NetSystem;
 import io.mycat.util.BufferUtil;
 
 /**
  * From server to client in response to command, if no error and no result set.
- * 
+ * <p>
  * <pre>
  * Bytes                       Name
  * -----                       ----
@@ -40,15 +41,16 @@ import io.mycat.util.BufferUtil;
  * 2                           server_status
  * 2                           warning_count
  * n   (until end of packet)   message fix:(Length Coded String)
- * 
+ *
  * &#64;see http://forge.mysql.com/wiki/MySQL_Internals_ClientServer_Protocol#OK_Packet
  * </pre>
- * 
+ *
  * @author mycat
  */
+@Deprecated
 public class OkPacket extends MySQLPacket {
     public static final byte FIELD_COUNT = 0x00;
-    public static final byte[] OK = new byte[] { 7, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0 };
+    public static final byte[] OK = new byte[]{7, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0};
 
     public byte fieldCount = FIELD_COUNT;
     public long affectedRows;
@@ -66,24 +68,24 @@ public class OkPacket extends MySQLPacket {
     // insertId = mm.readLength();
     // serverStatus = mm.readUB2();
     // warningCount = mm.readUB2();
-    // if (mm.hasRemaining()) {
+    // if (mm.hasReadableBytes()) {
     // this.message = mm.readBytesWithLength();
     // }
     // }
 
-    public void read(ByteBuffer buffer) {
-        MySQLMessage mm = new MySQLMessage(buffer);
-        packetLength = mm.readUB3();
-        packetId = mm.read();
-        fieldCount = mm.read();
-        affectedRows = mm.readLength();
-        insertId = mm.readLength();
-        serverStatus = mm.readUB2();
-        warningCount = mm.readUB2();
-        if (mm.hasRemaining()) {
-            this.message = mm.readBytesWithLength();
-        }
-    }
+//    public void read(ConDataBuffer buffer) {
+//        MySQLMessage mm = new MySQLMessage(buffer);
+//        packetLength = mm.readUB3();
+//        packetId = mm.read();
+//        fieldCount = mm.read();
+//        affectedRows = mm.readLength();
+//        insertId = mm.readLength();
+//        serverStatus = mm.readUB2();
+//        warningCount = mm.readUB2();
+//        if (mm.hasRemaining()) {
+//            this.message = mm.readBytesWithLength();
+//        }
+//    }
 
     public byte[] writeToBytes() {
         ByteBuffer buffer = NetSystem.getInstance().getBufferPool().allocate();
@@ -104,16 +106,16 @@ public class OkPacket extends MySQLPacket {
         return data;
     }
 
-    public void write(ByteBuffer  buffer,int pkgSize) {
-        BufferUtil.writeUB3(buffer, pkgSize);
-        buffer.put(packetId);
-        buffer.put(fieldCount);
-        BufferUtil.writeLength(buffer, affectedRows);
-        BufferUtil.writeLength(buffer, insertId);
-        BufferUtil.writeUB2(buffer, serverStatus);
-        BufferUtil.writeUB2(buffer, warningCount);
+    public void write(MycatByteBuffer buffer, int pkgSize) {
+        buffer.writeFixInt(3, pkgSize);
+        buffer.writeByte(packetId);
+        buffer.writeLenencInt(fieldCount);
+        buffer.writeLenencInt(affectedRows);
+        buffer.writeLenencInt(insertId);
+        buffer.writeFixInt(2, serverStatus);
+        buffer.writeFixInt(2, warningCount);
         if (message != null) {
-            BufferUtil.writeWithLength(buffer, message);
+            buffer.writeLenencString(new String(message));
         }
     }
 

@@ -24,12 +24,11 @@
 package io.mycat.mysql.packet;
 
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
 import io.mycat.mysql.BufferUtil;
 import io.mycat.mysql.MySQLConnection;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
 
 /**
  * From client to server whenever the client wants the server to do something.
@@ -93,13 +92,13 @@ public class CommandPacket extends MySQLPacket {
     public byte command;
     public byte[] arg;
 
-    public void read(ByteBuffer data) {
-        MySQLMessage mm = new MySQLMessage(data);
-        packetLength = mm.readUB3();
-        packetId = mm.read();
-        command = mm.read();
-        arg = mm.readBytes();
-    }
+//    public void read(ConDataBuffer data) {
+//        MySQLMessage mm = new MySQLMessage(data);
+//        packetLength = mm.readUB3();
+//        packetId = mm.read();
+//        command = mm.read();
+//        arg = mm.readBytes();
+//    }
 
     public ByteBuffer write(MySQLConnection c) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocateDirect(256);

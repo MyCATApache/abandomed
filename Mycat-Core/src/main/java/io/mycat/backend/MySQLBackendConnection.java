@@ -24,34 +24,38 @@
 package io.mycat.backend;
 
 import java.io.IOException;
+import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.security.NoSuchAlgorithmException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.Capabilities;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.AuthPacket;
 import io.mycat.mysql.packet.HandshakePacket;
-import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.net2.Connection;
+import io.mycat.net2.states.ReadState;
 import io.mycat.util.SecurityUtil;
+
 /**
  * backend mysql connection
- * @author wuzhihui
  *
+ * @author wuzhihui
  */
 
 public class MySQLBackendConnection extends MySQLConnection {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(MySQLBackendConnection.class);
     private final boolean fromSlaveDB;
-    private BackConnectionCallback  userCallback;
+    private BackConnectionCallback userCallback;
     private MySQLDataSource dataSource;
-    private boolean borrowed;
+    @SuppressWarnings("unused")
+	private boolean borrowed;
     private String schema;
     private HandshakePacket handshake;
+    private MySQLFrontConnection mySQLFrontConnection;
 
     private boolean authenticated;
 
@@ -62,12 +66,20 @@ public class MySQLBackendConnection extends MySQLConnection {
     private int charsetIndex;
 
     private MySQLDataSource datasource;
-    
-    public MySQLBackendConnection(MySQLDataSource datasource,SocketChannel channel) {
+    private int serverStatus;
+
+    public MySQLBackendConnection(MySQLDataSource datasource, SocketChannel channel) {
         super(channel);
-        this.datasource=datasource;
-        this.fromSlaveDB=datasource.isSlaveNode();
+        this.datasource = datasource;
+        this.fromSlaveDB = datasource.isSlaveNode();
         this.clientFlags = initClientFlags();
+    }
+    
+    @Override
+    public boolean init() throws IOException {
+    	setProcessKey(channel.register(getSelector(), SelectionKey.OP_READ, this));
+    	setNextNetworkState(ReadState.INSTANCE);
+    	return false;
     }
 
     private static long initClientFlags() {
@@ -97,70 +109,12 @@ public class MySQLBackendConnection extends MySQLConnection {
         return flag;
     }
 
-    public void setNextStatus(byte packetType) {
-        int status = this.getState();
-        switch (status) {
-        case Connection.STATE_IDLE:
-            if (packetType == MySQLPacket.COM_QUERY) {
-                this.setState(RESULT_INIT_STATUS);
-                LOGGER.debug("DB status: Result Init");
-            } else if (packetType == MySQLPacket.COM_QUIT) {
-            	this.setState(Connection.STATE_IDLE);
-            }
-            break;
-        case RESULT_INIT_STATUS:
-            if (packetType == MySQLPacket.OK_PACKET) {
-                this.setState(Connection.STATE_IDLE);
-                LOGGER.debug("DB status: IDLE");
-            } else if (packetType == MySQLPacket.ERROR_PACKET) {
-                this.setState(Connection.STATE_IDLE);
-                LOGGER.debug("DB status: IDLE");
-            } else {
-                this.setState(RESULT_HEADER_STATUS);
-                LOGGER.debug("DB status: Result Header");
-            }
-            break;
-        case RESULT_HEADER_STATUS:
-            if (packetType == MySQLPacket.EOF_PACKET) {
-                this.setState(RESULT_FETCH_STATUS);
-                LOGGER.debug("DB status: Fetch Row");
-            } else if (packetType == MySQLPacket.ERROR_PACKET) {
-                this.setState(Connection.STATE_IDLE);
-                LOGGER.debug("DB status: IDLE");
-            } else {
-                LOGGER.debug("DB status: Result Field");
-            }
-            break;
-        case RESULT_FETCH_STATUS:
-            if (packetType == MySQLPacket.EOF_PACKET) {
-                this.setState(Connection.STATE_IDLE);
-                LOGGER.debug("DB status: IDLE");
-            } else if (packetType == MySQLPacket.ERROR_PACKET) {
-                this.setState(Connection.STATE_IDLE);
-                LOGGER.debug("DB status: IDLE");
-            } else {
-                LOGGER.debug("DB status: Reading row");
-            }   
-            break;
-        case RESULT_FAIL_STATUS:
-            if (packetType == MySQLPacket.EOF_PACKET) {
-                this.setState(Connection.STATE_IDLE);
-            }
-            break;
-        default:
-            LOGGER.warn("Error connected status.", status);
-            break;
-        }
-    }
-
-  
-
-    public BackConnectionCallback  getUserCallback() {
+    public BackConnectionCallback getUserCallback() {
         return userCallback;
     }
 
 
-	public void setUserCallback(BackConnectionCallback conCallback) {
+    public void setUserCallback(BackConnectionCallback conCallback) {
         this.userCallback = conCallback;
     }
 
@@ -172,7 +126,7 @@ public class MySQLBackendConnection extends MySQLConnection {
         this.dataSource = pool;
     }
 
-   
+
     public HandshakePacket getHandshake() {
         return handshake;
     }
@@ -202,7 +156,7 @@ public class MySQLBackendConnection extends MySQLConnection {
             throw new RuntimeException(e.getMessage());
         }
         packet.database = schema;
-        System.out.println("auth "+user+" :"+password+"@"+schema);
+        System.out.println("auth " + user + " :" + password + "@" + schema);
 
         // write to connection
         this.writeMsqlPackage(packet);
@@ -222,11 +176,9 @@ public class MySQLBackendConnection extends MySQLConnection {
         return SecurityUtil.scramble411(passwd, seed);
     }
 
-
     public boolean isBorrowed() {
         return false;
     }
-
 
 
     public boolean isFromSlaveDB() {
@@ -243,19 +195,34 @@ public class MySQLBackendConnection extends MySQLConnection {
 
     public void release() {
         this.datasource.releaseChannel(this);
-        this.borrowed=false;
+        this.borrowed = false;
     }
 
-	public void setBorrowed(boolean borrowed) {
-		this.borrowed = borrowed;
-	}
-	 public String getSchema() {
-	        return schema;
-	    }
+    public void setBorrowed(boolean borrowed) {
+        this.borrowed = borrowed;
+    }
 
-	    public void setSchema(String schema) {
-	        this.schema = schema;
-	    }
-	 
- 
+    public String getSchema() {
+        return schema;
+    }
+
+    public void setSchema(String schema) {
+        this.schema = schema;
+    }
+
+    public MySQLFrontConnection getMySQLFrontConnection() {
+        return mySQLFrontConnection;
+    }
+
+    public void setMySQLFrontConnection(MySQLFrontConnection mySQLFrontConnection) {
+        this.mySQLFrontConnection = mySQLFrontConnection;
+    }
+
+    public int getServerStatus() {
+        return serverStatus;
+    }
+
+    public void setServerStatus(int serverStatus) {
+        this.serverStatus = serverStatus;
+    }
 }

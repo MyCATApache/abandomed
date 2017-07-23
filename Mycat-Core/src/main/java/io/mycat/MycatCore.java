@@ -60,11 +60,6 @@ public class MycatCore {
 
     public static final String MOCK_SCHEMA = "mysql";
 
-
-    static {
-       
-    }
-
     public static void main(String[] args) throws IOException {
         // Business Executor ，用来执行那些耗时的任务
         NameableExecutor businessExecutor = ExecutorUtil.create("BusinessExecutor", 10);
@@ -73,7 +68,7 @@ public class MycatCore {
         SharedBufferPool sharedPool = new SharedBufferPool(1024 * 1024 * 100, 1024);
         new NetSystem(sharedPool, businessExecutor, timerExecutor);
         // Reactor pool
-        NIOReactorPool reactorPool = new NIOReactorPool("Reactor Pool", 5, sharedPool);
+        NIOReactorPool reactorPool = new NIOReactorPool("Reactor Pool", 1, sharedPool);
         SQLEngineCtx.INSTANCE().initReactorMap(reactorPool.getAllReactors());
         NIOConnector connector = new NIOConnector("NIOConnector", reactorPool);
         connector.start();
@@ -86,7 +81,7 @@ public class MycatCore {
         MySQLFrontendConnectionFactory frontFactory = new MySQLFrontendConnectionFactory();
         NIOAcceptor server = new NIOAcceptor("Server", "0.0.0.0", PORT, frontFactory, reactorPool);
         server.start();
-        // server started
+        // server started./
         
         LOGGER.info(server.getName() + " is started and listening on " + server.getPort());
         NormalSchemaSQLCommandHandler normalSchemaSQLCmdHandler=new NormalSchemaSQLCommandHandler();

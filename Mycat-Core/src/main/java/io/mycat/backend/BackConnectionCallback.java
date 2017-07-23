@@ -25,7 +25,7 @@ package io.mycat.backend;
 
 import java.io.IOException;
 
-import io.mycat.net2.ConDataBuffer;
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.net2.ConnectionException;
 /**
  * 后端数据库的事件处理回调接口
@@ -50,7 +50,7 @@ public interface BackConnectionCallback  {
     /**
      * 收到数据包的响应处理
      */
-    void handleResponse(MySQLBackendConnection conn,ConDataBuffer dataBuffer,byte packageType,int pkgStartPos,int pkgLen) throws IOException ;
+    void handleResponse(MySQLBackendConnection conn, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException ;
 
     /**
      * on connetion close event
