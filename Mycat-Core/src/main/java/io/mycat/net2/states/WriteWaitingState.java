@@ -29,11 +29,12 @@ public class WriteWaitingState implements NetworkState {
             needWakeup = true;
         } catch (Exception e) {
             LOGGER.warn("enable read fail " + e);
+            conn.setNextNetworkState(ClosingState.INSTANCE);
         }
         if (needWakeup) {
             processKey.selector().wakeup();
+            conn.setNextNetworkState(WriteState.INSTANCE);
         }
-		conn.setNextNetworkState(WriteState.INSTANCE);
 		return false;
 	}
 
