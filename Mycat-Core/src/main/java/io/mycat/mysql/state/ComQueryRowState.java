@@ -48,7 +48,8 @@ public class ComQueryRowState extends AbstractMysqlConnectionState {
     	            	dataBuffer.writeLimit(mySQLBackendConnection.getCurrentPacketLength());
     	            	packageType = mySQLBackendConnection.getCurrentPacketType();
     	                if (packageType == MySQLPacket.EOF_PACKET) {
-    	                    int serverStatus = 0;
+    	                	//TODO 开始位置计算并不精确
+    	                    int serverStatus = (int) dataBuffer.getFixInt(mySQLBackendConnection.getCurrentPacketStartPos()+7,2);
     	                    mySQLBackendConnection.setServerStatus(serverStatus);
     	                    //检查后面还有没有结果集
     	                    if ((mySQLBackendConnection.getServerStatus() & ServerStatus.SERVER_MORE_RESULTS_EXISTS) == 0) {
