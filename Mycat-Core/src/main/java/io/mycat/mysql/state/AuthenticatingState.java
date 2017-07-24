@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.engine.ErrorCode;
 import io.mycat.front.MySQLFrontConnection;
@@ -14,6 +15,7 @@ import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.states.ClosingState;
 import io.mycat.net2.states.ReadWaitingState;
 import io.mycat.util.CharsetUtil;
+import io.mycat.util.StringUtil;
 
 /**
  * 认证状态
@@ -80,7 +82,9 @@ public class AuthenticatingState extends AbstractMysqlConnectionState {
         LOGGER.debug("charset = {}, charsetIndex = {}", charset, charsetIndex);
         con.setCharset(charsetIndex, charset);
 
-        if (!con.setFrontSchema(auth.database)) {
+        String db = StringUtil.isEmpty(auth.database) 
+        		? SQLEngineCtx.INSTANCE().getDefaultMycatSchema().getName() : auth.database;
+        if (!con.setFrontSchema(db)) {
             final String errmsg = "No Mycat Schema defined: " + auth.database;
             LOGGER.debug(errmsg);
             con.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR,"42000".getBytes(), errmsg);

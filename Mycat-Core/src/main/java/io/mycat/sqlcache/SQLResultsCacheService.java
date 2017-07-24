@@ -1,8 +1,13 @@
 package io.mycat.sqlcache;
 
+import java.io.IOException;
+import java.util.ArrayList;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.mycat.NewSQLContext;
 import io.mycat.SQLContext;
-
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.backend.MySQLDataSource;
@@ -60,8 +65,11 @@ public class SQLResultsCacheService {
          * cache-time=xxx auto-refresh=true access-count=5000
          */
         String realSQL = sqlContext.getRealSQL(0);
-//        String key = "" + murmur3_32().hashUnencodedChars(realSQL);
-        Keyer<String, BigSQLResult> keyer = new Keyer<String, BigSQLResult>();
+
+        String key = "" ; // 屏蔽错误
+        // + murmur3_32().hashUnencodedChars(realSQL);
+        Keyer<String,BigSQLResult> keyer = new Keyer<String,BigSQLResult>();
+
         keyer.setSql(realSQL);
 //        keyer.setKey(key);
         keyer.setValue(bigSQLResult);
@@ -80,9 +88,10 @@ public class SQLResultsCacheService {
      * @return
      */
     public BigSQLResult getSQLResult(String sql) {
-//        String key = "" + murmur3_32().hashUnencodedChars(sql);
-//        return sqlResultCacheImp.get(key);
-        return null;
+
+        String key = ""; //+ murmur3_32().hashUnencodedChars(sql);
+        return sqlResultCacheImp.get(key);
+
     }
 
 
@@ -93,8 +102,9 @@ public class SQLResultsCacheService {
      */
     public void remove(String sql) {
 
-//        String key = "" + murmur3_32().hashUnencodedChars(sql);
-        String key = "";
+
+        String key = "" ;//+ murmur3_32().hashUnencodedChars(sql);
+
         sqlResultCacheImp.remove(key);
     }
 
@@ -121,9 +131,11 @@ public class SQLResultsCacheService {
         String realSql = sqlContext.getRealSQL(0);
         BigSQLResult sqlResultCache = getSQLResult(realSql);
 
-        if (sqlResultCache != null) {
-//            LOGGER.error(realSql + ":====>>>> Use Local Cache SQL Resuls");
-            sqlResultCacheDirectClient(frontCon, sqlResultCache);
+
+        if (sqlResultCache != null){
+            LOGGER.error(realSql + ":====>>>> Use Local Cache SQL Resuls");
+            //sqlResultCacheDirectClient(frontCon,sqlResultCache);
+
             return true;
         } else {
             /**从后端拉取数据进行缓存*/
@@ -143,7 +155,7 @@ public class SQLResultsCacheService {
          */
         MySQLBackendConnection existCon = null;
         UserSession session = frontCon.getSession();
-        ArrayList<MySQLBackendConnection> allBackCons = session.getBackendCons();
+        ArrayList<MySQLBackendConnection> allBackCons = null; //session.getBackendCons();
         if (!allBackCons.isEmpty()) {
             existCon = allBackCons.get(0);
         }
@@ -165,7 +177,8 @@ public class SQLResultsCacheService {
              * 如果该sql对应后端db，没有连接池，则创建连接池部分
              */
             final MySQLBackendConnection newCon = null;
-//                    datas.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, null);
+
+                   // datas.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, null);
 
 
             /**很关键的设置前端front 与 backend session*/
@@ -194,9 +207,11 @@ public class SQLResultsCacheService {
             /**
              * 否则直接写到后端即可
              */
-//            command.arg = realSql.getBytes(existCon.getCharset());
-//            existCon.getWriteDataBuffer().putBytes(command.write(existCon));
-//            existCon.enableWrite(false);
+
+            command.arg = realSql.getBytes(existCon.getCharset());
+ //           existCon.getWriteDataBuffer().putBytes(command.write(existCon));
+ //           existCon.enableWrite(false);
+
             /**设置后端连接池结果集处理handler,sqlResultCache缓存结果集类*/
             existCon.setUserCallback(new SQLResCacheHintHandler(sqlContext, sqlResultCache));
         }
