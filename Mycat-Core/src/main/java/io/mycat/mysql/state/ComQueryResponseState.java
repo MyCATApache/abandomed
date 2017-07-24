@@ -44,6 +44,7 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
                         //多结果集时会返回OK包，此时服务器的状态应该已经不是多结果集的状态了
 //                    MySQLMessage mySQLMessage = new MySQLMessage(dataBuffer);
 //                    mySQLMessage.position(mySQLBackendConnection.getCurrentPacketStartPos());
+                        //TODO serverStatus开始位置计算并不精确
                         int serverStatus = (int) mySQLBackendConnection.getDataBuffer().getFixInt(
                                 mySQLBackendConnection.getCurrentPacketStartPos() + 7,
                                 2
