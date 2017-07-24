@@ -55,6 +55,7 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
                         } else {
                             LOGGER.debug("后端连接，不在事务中，可以回收！{}", mySQLBackendConnection);
                         }
+                        mySQLBackendConnection.getDataBuffer().writeLimit(mySQLBackendConnection.getCurrentPacketLength());
                         mySQLBackendConnection.setNextState(IdleState.INSTANCE);
                         SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true, true, true);
                         returnflag = false;  //触发透传,退出当前状态机
