@@ -27,6 +27,9 @@ import io.mycat.mysql.packet.MySQLMessage;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.states.WriteWaitingState;
 
+import java.io.IOException;
+import java.util.ArrayList;
+
 /**
  * SQL 结果集缓存服务
  *
@@ -36,7 +39,7 @@ import io.mycat.net2.states.WriteWaitingState;
  */
 
 public class SQLResultsCacheService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SQLResultsCacheService.class);
+    //    private static final Logger LOGGER = LoggerFactory.getLogger(SQLResultsCacheService.class);
     private final CacheImp<String, BigSQLResult> sqlResultCacheImp;
 
     static class InitSQLResultsCacheService {
@@ -50,30 +53,32 @@ public class SQLResultsCacheService {
     /**
      * 将sql结果集缓存起来
      *
-     * @param sqlContext  Hint SQL相关信息
-     * @param bigSQLResult  sql结果集缓存
-     * @param loader  结果集load or reload 接口
-     * @param listener key被移除时，调用的接口
+     * @param sqlContext   Hint SQL相关信息
+     * @param bigSQLResult sql结果集缓存
+     * @param loader       结果集load or reload 接口
+     * @param listener     key被移除时，调用的接口
      */
-    public void cacheSQLResult(NewSQLContext sqlContext,BigSQLResult bigSQLResult,IDataLoader<String,BigSQLResult> loader,
-                               IRemoveKeyListener<String,BigSQLResult> listener){
+    public void cacheSQLResult(NewSQLContext sqlContext, BigSQLResult bigSQLResult, IDataLoader<String, BigSQLResult> loader,
+                               IRemoveKeyListener<String, BigSQLResult> listener) {
 
         /**
          * cache-time=xxx auto-refresh=true access-count=5000
          */
         String realSQL = sqlContext.getRealSQL(0);
+
         String key = "" ; // 屏蔽错误
         // + murmur3_32().hashUnencodedChars(realSQL);
         Keyer<String,BigSQLResult> keyer = new Keyer<String,BigSQLResult>();
+
         keyer.setSql(realSQL);
-        keyer.setKey(key);
+//        keyer.setKey(key);
         keyer.setValue(bigSQLResult);
         keyer.setCacheTTL(sqlContext.getAnnotationValue(NewSQLContext.ANNOTATION_CACHE_TIME));
         keyer.setAccessCount(sqlContext.getAnnotationValue(NewSQLContext.ANNOTATION_ACCESS_COUNT));
         // keyer.setAutoRefresh(sqlContext.getAnnotationValue(NewSQLContext.ANNOTATION_AUTO_REFRESH));
         keyer.setRemoveKeyListener(listener);
         keyer.setiDataLoader(loader);
-        sqlResultCacheImp.put(key, bigSQLResult, keyer);
+//        sqlResultCacheImp.put(key, bigSQLResult, keyer);
     }
 
     /**
@@ -83,8 +88,10 @@ public class SQLResultsCacheService {
      * @return
      */
     public BigSQLResult getSQLResult(String sql) {
+
         String key = ""; //+ murmur3_32().hashUnencodedChars(sql);
         return sqlResultCacheImp.get(key);
+
     }
 
 
@@ -95,7 +102,9 @@ public class SQLResultsCacheService {
      */
     public void remove(String sql) {
 
+
         String key = "" ;//+ murmur3_32().hashUnencodedChars(sql);
+
         sqlResultCacheImp.remove(key);
     }
 
@@ -106,8 +115,8 @@ public class SQLResultsCacheService {
      * @param frontCon
      * @param sqlContext
      * @param mySQLMessage
-     * @return
      * @throws IOException
+     * @return
      */
     public boolean processHintSQL(MySQLFrontConnection frontCon, NewSQLContext sqlContext, MySQLMessage mySQLMessage) throws IOException {
 
@@ -122,14 +131,16 @@ public class SQLResultsCacheService {
         String realSql = sqlContext.getRealSQL(0);
         BigSQLResult sqlResultCache = getSQLResult(realSql);
 
+
         if (sqlResultCache != null){
             LOGGER.error(realSql + ":====>>>> Use Local Cache SQL Resuls");
             //sqlResultCacheDirectClient(frontCon,sqlResultCache);
+
             return true;
         } else {
             /**从后端拉取数据进行缓存*/
-             sqlResultCache =
-                    new BigSQLResult(LocatePolicy.Normal,realSql,32*1024*1024/**TODO*/);
+            sqlResultCache =
+                    new BigSQLResult(LocatePolicy.Normal, realSql, 32 * 1024 * 1024/**TODO*/);
         }
 
         /**
@@ -153,7 +164,7 @@ public class SQLResultsCacheService {
                 session.removeBackCon(existCon);
             }
             if (frontCon.getMycatSchema() == null) {
-                frontCon.writeErrMessage(1450, "No schema selected");
+//                frontCon.writeErrMessage(1450, "No schema selected");
                 return false;
             }
 
@@ -166,13 +177,15 @@ public class SQLResultsCacheService {
              * 如果该sql对应后端db，没有连接池，则创建连接池部分
              */
             final MySQLBackendConnection newCon = null;
+
                    // datas.getConnection(frontCon.getReactor(), dnBean.getDatabase(), true, null);
+
 
             /**很关键的设置前端front 与 backend session*/
             newCon.setAttachement(frontCon);
 
             /**设置后端连接池结果集处理handler,sqlResultCache缓存结果集类*/
-            newCon.setUserCallback(new SQLResCacheHintHandler(sqlContext,sqlResultCache));
+            newCon.setUserCallback(new SQLResCacheHintHandler(sqlContext, sqlResultCache));
 
             /**
              * 执行sql语句
@@ -194,11 +207,13 @@ public class SQLResultsCacheService {
             /**
              * 否则直接写到后端即可
              */
+
             command.arg = realSql.getBytes(existCon.getCharset());
  //           existCon.getWriteDataBuffer().putBytes(command.write(existCon));
  //           existCon.enableWrite(false);
+
             /**设置后端连接池结果集处理handler,sqlResultCache缓存结果集类*/
-            existCon.setUserCallback(new SQLResCacheHintHandler(sqlContext,sqlResultCache));
+            existCon.setUserCallback(new SQLResCacheHintHandler(sqlContext, sqlResultCache));
         }
 
         return true;
