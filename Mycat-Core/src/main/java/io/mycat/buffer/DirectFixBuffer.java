@@ -3,14 +3,18 @@ package io.mycat.buffer;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by ynfeng on 2017/7/7.
  */
-public class DirectFixBuffer extends AbstractMycatByteBuffer {
+public class DirectFixBuffer extends AbstractMycatByteBuffer implements IterableBuffer {
     private ByteBuffer byteBuffer;
     private int capacity;
     private int mark;
+    private PacketIterator defaultPacketIterator;
+    private Map<String, PacketIterator> namedPacketIteratorMap;
 
     protected DirectFixBuffer(ByteBuffer byteBuffer, int capacity) {
         this.byteBuffer = byteBuffer;
@@ -19,7 +23,7 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
 
     @Override
     public int transferToChannel(SocketChannel socketChannel) throws IOException {
-        byteBuffer.limit(writeLimit()==0?writeIndex():writeLimit());
+        byteBuffer.limit(writeLimit() == 0 ? writeIndex() : writeLimit());
         byteBuffer.position(readIndex());
         int write = socketChannel.write(byteBuffer);
         readIndex(readIndex() + write);
@@ -59,6 +63,9 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
     @Override
     public void clear() {
         byteBuffer.clear();
+        defaultPacketIterator.reset();
+        namedPacketIteratorMap.clear();
+        namedPacketIteratorMap = null;
         writeIndex(0);
         writeLimit(0);
         readIndex(0);
@@ -124,4 +131,24 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
         return byteBuffer;
     }
 
+    @Override
+    public PacketIterator mysqlPacketIterator() {
+        if (defaultPacketIterator == null) {
+            defaultPacketIterator = new SimplePacketIterator(this);
+        }
+        return defaultPacketIterator;
+    }
+
+    @Override
+    public PacketIterator mysqlPacketIterator(String name) {
+        if (namedPacketIteratorMap == null) {
+            namedPacketIteratorMap = new HashMap<>();
+        }
+        PacketIterator iterator = namedPacketIteratorMap.get(name);
+        if (iterator == null) {
+            iterator = new SimplePacketIterator(this);
+            namedPacketIteratorMap.put(name, iterator);
+        }
+        return iterator;
+    }
 }
