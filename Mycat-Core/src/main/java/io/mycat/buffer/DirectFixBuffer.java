@@ -63,9 +63,13 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer implements Iterable
     @Override
     public void clear() {
         byteBuffer.clear();
-        defaultPacketIterator.reset();
-        namedPacketIteratorMap.clear();
-        namedPacketIteratorMap = null;
+        if (defaultPacketIterator != null) {
+            defaultPacketIterator.reset();
+        }
+        if (namedPacketIteratorMap != null) {
+            namedPacketIteratorMap.clear();
+            namedPacketIteratorMap = null;
+        }
         writeIndex(0);
         writeLimit(0);
         readIndex(0);
@@ -132,7 +136,7 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer implements Iterable
     }
 
     @Override
-    public PacketIterator mysqlPacketIterator() {
+    public PacketIterator packetIterator() {
         if (defaultPacketIterator == null) {
             defaultPacketIterator = new SimplePacketIterator(this);
         }
@@ -140,7 +144,7 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer implements Iterable
     }
 
     @Override
-    public PacketIterator mysqlPacketIterator(String name) {
+    public PacketIterator packetIterator(String name) {
         if (namedPacketIteratorMap == null) {
             namedPacketIteratorMap = new HashMap<>();
         }

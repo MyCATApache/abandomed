@@ -12,12 +12,12 @@ public interface IterableBuffer {
     /**
      * Gets an iterator named 'default'
      */
-    PacketIterator mysqlPacketIterator();
+    PacketIterator packetIterator();
 
     /**
      * Gets an iterator named {@code name}
      *
      * @param name The name of iterator
      */
-    PacketIterator mysqlPacketIterator(String name);
+    PacketIterator packetIterator(String name);
 }

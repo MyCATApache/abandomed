@@ -133,7 +133,7 @@ public class SQLResultsCacheService {
 
 
         if (sqlResultCache != null){
-            LOGGER.error(realSql + ":====>>>> Use Local Cache SQL Resuls");
+//            LOGGER.error(realSql + ":====>>>> Use Local Cache SQL Resuls");
             //sqlResultCacheDirectClient(frontCon,sqlResultCache);
 
             return true;

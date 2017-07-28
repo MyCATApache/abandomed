@@ -6,23 +6,54 @@ package io.mycat.buffer;
 public class PacketDescriptor {
 
     public static long setPacketType(long packetDescriptor, PacketType packetType) {
-        return (packetDescriptor | (packetType.getValue() & 0x03));
+        return (packetDescriptor & ~0x03L) | (packetType.getValue() & 0x03);
     }
 
-    public static long setCommandType(long packetDescriptor, int commandType) {
-        return packetDescriptor | ((commandType & 0x3F) << 2);
+    public static long setCommandType(long packetDescriptor, long commandType) {
+        return (packetDescriptor & ~(0xFFL << 2)) | ((commandType & 0xFF) << 2);
     }
 
-    public static long setPacketLen(long packetDescriptor, int packetLen) {
-        return packetDescriptor | ((packetLen & 0xFFFFFF) << 8);
+    public static long setPacketLen(long packetDescriptor, long packetLen) {
+        return (packetDescriptor & ~(0xFFFFFFL << 10)) | ((packetLen & 0xFFFFFF) << 10);
     }
 
-    public static long setPacketStartPos(long packetDescriptor, int packetStartPos) {
-        return packetDescriptor | ((packetStartPos & 0xFFFFFFFF) << 32);
+    public static long setPacketStartPos(long packetDescriptor, long packetStartPos) {
+        return (packetDescriptor & ~(0x2FFFFFFFL << 34)) | ((packetStartPos & 0x2FFFFFFF) << 34);
     }
 
-    static enum PacketType {
-        SHORT_HALF(0), LONG_HALF(1), FULL(2);
+    public static PacketType getPacketType(long packetDescriptor) {
+        int type = (int) (packetDescriptor & 0x03);
+        PacketType packetType = null;
+        switch (type) {
+            case 0:
+                packetType = PacketType.FULL;
+                break;
+            case 1:
+                packetType = PacketType.LONG_HALF;
+                break;
+            case 2:
+                packetType = packetType.SHORT_HALF;
+                break;
+            default:
+                throw new IllegalArgumentException("Wrong packetDescriptor " + packetDescriptor);
+        }
+        return packetType;
+    }
+
+    public static byte getCommandType(long packetDescriptor) {
+        return (byte) ((packetDescriptor >>> 2) & 0xFF);
+    }
+
+    public static int getPacketStartPos(long packetDescriptor) {
+        return (int) ((packetDescriptor >>> 34) & 0x2FFFFFFF);
+    }
+
+    public static int getPacketLen(long packetDescriptor) {
+        return (int) ((packetDescriptor >>> 10) & 0xFFFFFF);
+    }
+
+    enum PacketType {
+        FULL(0), LONG_HALF(1), SHORT_HALF(2);
 
         PacketType(int value) {
             this.value = value;
@@ -33,11 +64,5 @@ public class PacketDescriptor {
         public int getValue() {
             return value;
         }
-
-        public void setValue(int value) {
-            this.value = value;
-        }
     }
-
-
 }

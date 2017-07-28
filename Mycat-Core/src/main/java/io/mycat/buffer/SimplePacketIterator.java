@@ -5,8 +5,7 @@ package io.mycat.buffer;
  */
 public class SimplePacketIterator implements PacketIterator {
     private MycatByteBuffer buffer;
-    private int lastPacketPos;
-    private int lastPacketLen;
+    private int nextPacketPos;
 
     public SimplePacketIterator(MycatByteBuffer buffer) {
         this.buffer = buffer;
@@ -14,36 +13,42 @@ public class SimplePacketIterator implements PacketIterator {
 
     @Override
     public boolean hasPacket() {
-        return true;
+        int writeIndex = buffer.writeIndex();
+        if (writeIndex - 1 > nextPacketPos) {
+            return true;
+        }
+        return false;
     }
 
     @Override
     public long nextPacket() {
         long packetDescriptor = 0;
         int writeIndex = buffer.writeIndex();
-        if (writeIndex - lastPacketLen < 5) {
-            lastPacketPos += lastPacketLen;
-            packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, PacketDescriptor.PacketType.SHORT_HALF);
-            packetDescriptor = PacketDescriptor.setPacketStartPos(packetDescriptor, lastPacketPos);
-            return packetDescriptor;
-        }
-        lastPacketPos += lastPacketLen;
-        int packetLen = (int) buffer.getFixInt(lastPacketPos, 3);
-        int commandType = buffer.getByte(lastPacketPos + 4);
-        lastPacketLen = packetLen + 4;
-        packetDescriptor = PacketDescriptor.setPacketLen(packetDescriptor, packetLen);
-        packetDescriptor = PacketDescriptor.setPacketStartPos(packetDescriptor, lastPacketPos);
-        packetDescriptor = PacketDescriptor.setCommandType(packetDescriptor, commandType);
-        if (writeIndex >= (lastPacketPos + packetLen)) {
-            packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, PacketDescriptor.PacketType.LONG_HALF);
+        PacketDescriptor.PacketType packetType = null;
+        if (writeIndex - nextPacketPos >= 5) {
+            int packetLen = (int) buffer.getFixInt(nextPacketPos, 3);
+            int commandType = buffer.getByte(nextPacketPos + 4);
+            if (writeIndex - nextPacketPos < packetLen + 4) {
+                packetType = PacketDescriptor.PacketType.LONG_HALF;
+            } else {
+                packetType = PacketDescriptor.PacketType.FULL;
+            }
+            packetDescriptor = PacketDescriptor.setPacketLen(packetDescriptor, packetLen + 4);
+            packetDescriptor = PacketDescriptor.setPacketStartPos(packetDescriptor, nextPacketPos);
+            packetDescriptor = PacketDescriptor.setCommandType(packetDescriptor, commandType);
+            packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, packetType);
+            if (packetType == PacketDescriptor.PacketType.FULL) {
+                nextPacketPos += packetLen + 4;
+            }
         } else {
-            packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, PacketDescriptor.PacketType.FULL);
+            packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, PacketDescriptor.PacketType.SHORT_HALF);
+            packetDescriptor = PacketDescriptor.setPacketStartPos(packetDescriptor, nextPacketPos);
         }
         return packetDescriptor;
     }
 
     @Override
     public void reset() {
-        this.lastPacketLen = this.lastPacketPos = 0;
+        this.nextPacketPos = 0;
     }
 }
