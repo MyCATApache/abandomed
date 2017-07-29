@@ -1,6 +1,9 @@
 package io.mycat.buffer;
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by ynfeng on 2017/7/5.
  */
@@ -8,6 +11,8 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     private int writeIndex;
     private int readIndex;
     private int writeLimit;
+    private PacketIterator defaultPacketIterator;
+    private Map<String, PacketIterator> namedPacketIteratorMap;
 
     public AbstractMycatByteBuffer() {
         this.writeIndex = 0;
@@ -66,15 +71,15 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     public int writeIndex() {
         return writeIndex;
     }
-    
+
     @Override
-    public int writeLimit(){
-    	return writeLimit;
+    public int writeLimit() {
+        return writeLimit;
     }
-    
+
     @Override
-    public void writeLimit(int writeLimit){
-    	this.writeLimit = writeLimit;
+    public void writeLimit(int writeLimit) {
+        this.writeLimit = writeLimit;
     }
 
     @Override
@@ -356,6 +361,20 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     }
 
     @Override
+    public void clear() {
+        if (defaultPacketIterator != null) {
+            defaultPacketIterator.reset();
+        }
+        if (namedPacketIteratorMap != null) {
+            namedPacketIteratorMap.clear();
+            namedPacketIteratorMap = null;
+        }
+        writeIndex(0);
+        writeLimit(0);
+        readIndex(0);
+    }
+
+    @Override
     public MycatByteBuffer writeLenencBytes(byte[] bytes) {
         putLenencInt(writeIndex, bytes.length);
         int offset = getLenencLength(bytes.length);
@@ -369,5 +388,26 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
         this.putByte(writeIndex, val);
         writeIndex++;
         return this;
+    }
+
+    @Override
+    public PacketIterator packetIterator() {
+        if (defaultPacketIterator == null) {
+            defaultPacketIterator = new SimplePacketIterator(this);
+        }
+        return defaultPacketIterator;
+    }
+
+    @Override
+    public PacketIterator packetIterator(String name) {
+        if (namedPacketIteratorMap == null) {
+            namedPacketIteratorMap = new HashMap<>();
+        }
+        PacketIterator iterator = namedPacketIteratorMap.get(name);
+        if (iterator == null) {
+            iterator = new SimplePacketIterator(this);
+            namedPacketIteratorMap.put(name, iterator);
+        }
+        return iterator;
     }
 }

@@ -13,7 +13,7 @@ import java.nio.channels.SocketChannel;
  * <p>
  * Created by ynfeng on 2017/7/4.
  */
-public interface MycatByteBuffer {
+public interface MycatByteBuffer extends IterableBuffer {
 
     /**
      * 将readIndex和writeIndex之间的数据写出

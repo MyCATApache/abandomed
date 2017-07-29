@@ -9,12 +9,11 @@ import java.util.Map;
 /**
  * Created by ynfeng on 2017/7/7.
  */
-public class DirectFixBuffer extends AbstractMycatByteBuffer implements IterableBuffer {
+public class DirectFixBuffer extends AbstractMycatByteBuffer {
     private ByteBuffer byteBuffer;
     private int capacity;
     private int mark;
-    private PacketIterator defaultPacketIterator;
-    private Map<String, PacketIterator> namedPacketIteratorMap;
+
 
     protected DirectFixBuffer(ByteBuffer byteBuffer, int capacity) {
         this.byteBuffer = byteBuffer;
@@ -62,17 +61,8 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer implements Iterable
 
     @Override
     public void clear() {
+        super.clear();
         byteBuffer.clear();
-        if (defaultPacketIterator != null) {
-            defaultPacketIterator.reset();
-        }
-        if (namedPacketIteratorMap != null) {
-            namedPacketIteratorMap.clear();
-            namedPacketIteratorMap = null;
-        }
-        writeIndex(0);
-        writeLimit(0);
-        readIndex(0);
     }
 
     @Override
@@ -133,26 +123,5 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer implements Iterable
 
     public ByteBuffer getByteBuffer() {
         return byteBuffer;
-    }
-
-    @Override
-    public PacketIterator packetIterator() {
-        if (defaultPacketIterator == null) {
-            defaultPacketIterator = new SimplePacketIterator(this);
-        }
-        return defaultPacketIterator;
-    }
-
-    @Override
-    public PacketIterator packetIterator(String name) {
-        if (namedPacketIteratorMap == null) {
-            namedPacketIteratorMap = new HashMap<>();
-        }
-        PacketIterator iterator = namedPacketIteratorMap.get(name);
-        if (iterator == null) {
-            iterator = new SimplePacketIterator(this);
-            namedPacketIteratorMap.put(name, iterator);
-        }
-        return iterator;
     }
 }
