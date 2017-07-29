@@ -19,7 +19,6 @@ public class NetSystem {
 	public static final int SHUTING_DOWN = -1;
 	// private static final Logger LOGGER = Logger.getLogger("NetSystem");
 	private static NetSystem INSTANCE;
-	private final SharedBufferPool bufferPool;
 	// 用来执行那些耗时的任务
 	private final NameableExecutor executor;
 	// 用来执行定时任务
@@ -34,17 +33,12 @@ public class NetSystem {
 		return INSTANCE;
 	}
 
-	public NetSystem(SharedBufferPool bufferPool, NameableExecutor executor, NamebleScheduledExecutor timer)
+	public NetSystem(NameableExecutor executor, NamebleScheduledExecutor timer)
 			throws IOException {
-		this.bufferPool = bufferPool;
 		this.executor = executor;
 		this.timer = timer;
 		this.allConnections = new ConcurrentHashMap<Long, Connection>();
 		INSTANCE = this;
-	}
-
-	public SharedBufferPool getBufferPool() {
-		return bufferPool;
 	}
 
 	public NIOConnector getConnector() {

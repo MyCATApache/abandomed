@@ -21,9 +21,9 @@
  * https://code.google.com/p/opencloudb/.
  *
  */
- 
+
 package io.mycat;
- 
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
@@ -45,12 +45,10 @@ import io.mycat.net2.NIOReactorPool;
 import io.mycat.net2.NameableExecutor;
 import io.mycat.net2.NamebleScheduledExecutor;
 import io.mycat.net2.NetSystem;
-import io.mycat.net2.SharedBufferPool;
 import io.mycat.net2.SystemConfig;
+
 /**
- * 
  * @author wuzhihui
- *
  */
 public class MycatCore {
     private static final Logger LOGGER = LoggerFactory.getLogger(MycatCore.class);
@@ -65,10 +63,9 @@ public class MycatCore {
         NameableExecutor businessExecutor = ExecutorUtil.create("BusinessExecutor", 10);
         // 定时器Executor，用来执行定时任务
         NamebleScheduledExecutor timerExecutor = ExecutorUtil.createSheduledExecute("Timer", 5);
-        SharedBufferPool sharedPool = new SharedBufferPool(1024 * 1024 * 100, 1024);
-        new NetSystem(sharedPool, businessExecutor, timerExecutor);
+        new NetSystem(businessExecutor, timerExecutor);
         // Reactor pool
-        NIOReactorPool reactorPool = new NIOReactorPool("Reactor Pool", 1, sharedPool);
+        NIOReactorPool reactorPool = new NIOReactorPool("Reactor Pool", 1);
         SQLEngineCtx.INSTANCE().initReactorMap(reactorPool.getAllReactors());
         NIOConnector connector = new NIOConnector("NIOConnector", reactorPool);
         connector.start();
@@ -76,30 +73,28 @@ public class MycatCore {
         final SystemConfig sysconfig = new SystemConfig();
         sysconfig.setTraceProtocol(false);
         NetSystem.getInstance().setNetConfig(sysconfig);
-        MySQLBackendConnectionFactory bakcMySQLFactory=new MySQLBackendConnectionFactory();
+        MySQLBackendConnectionFactory bakcMySQLFactory = new MySQLBackendConnectionFactory();
         SQLEngineCtx.INSTANCE().setBackendMySQLConFactory(bakcMySQLFactory);
         MySQLFrontendConnectionFactory frontFactory = new MySQLFrontendConnectionFactory();
         NIOAcceptor server = new NIOAcceptor("Server", "0.0.0.0", PORT, frontFactory, reactorPool);
         server.start();
         // server started./
-        
+
         LOGGER.info(server.getName() + " is started and listening on " + server.getPort());
-        NormalSchemaSQLCommandHandler normalSchemaSQLCmdHandler=new NormalSchemaSQLCommandHandler();
-    	SQLEngineCtx.INSTANCE().setNormalSchemaSQLCmdHandler(normalSchemaSQLCmdHandler);
-    	PartionSchemaSQLCommandHandler partionSchemaSQLCmdHandler=new PartionSchemaSQLCommandHandler();
-    	SQLEngineCtx.INSTANCE().setPartionSchemaSQLCmdHandler(partionSchemaSQLCmdHandler);
-    	URL datasourceURL = ConfigLoader.class.getResource("/datasource.xml");
-    	List<MySQLRepBean> mysqlRepBeans = ConfigLoader.loadMySQLRepBean(datasourceURL.toString());
-        for(final MySQLRepBean repBean : mysqlRepBeans)
-        {
-        	MySQLReplicatSet mysqlRepSet = new MySQLReplicatSet(repBean,0);
-            SQLEngineCtx.INSTANCE().addMySQLReplicatSet(mysqlRepSet);	
+        NormalSchemaSQLCommandHandler normalSchemaSQLCmdHandler = new NormalSchemaSQLCommandHandler();
+        SQLEngineCtx.INSTANCE().setNormalSchemaSQLCmdHandler(normalSchemaSQLCmdHandler);
+        PartionSchemaSQLCommandHandler partionSchemaSQLCmdHandler = new PartionSchemaSQLCommandHandler();
+        SQLEngineCtx.INSTANCE().setPartionSchemaSQLCmdHandler(partionSchemaSQLCmdHandler);
+        URL datasourceURL = ConfigLoader.class.getResource("/datasource.xml");
+        List<MySQLRepBean> mysqlRepBeans = ConfigLoader.loadMySQLRepBean(datasourceURL.toString());
+        for (final MySQLRepBean repBean : mysqlRepBeans) {
+            MySQLReplicatSet mysqlRepSet = new MySQLReplicatSet(repBean, 0);
+            SQLEngineCtx.INSTANCE().addMySQLReplicatSet(mysqlRepSet);
         }
-        URL schemaURL=ConfigLoader.class.getResource("/schema.xml");
-        List<SchemaBean>  schemaBeans=ConfigLoader.loadSheamBeans(schemaURL.toString());
-        for(SchemaBean schemaBean:schemaBeans)
-        {
-        	SQLEngineCtx.INSTANCE().addSchemaBean(schemaBean);
+        URL schemaURL = ConfigLoader.class.getResource("/schema.xml");
+        List<SchemaBean> schemaBeans = ConfigLoader.loadSheamBeans(schemaURL.toString());
+        for (SchemaBean schemaBean : schemaBeans) {
+            SQLEngineCtx.INSTANCE().addSchemaBean(schemaBean);
         }
     }
 }

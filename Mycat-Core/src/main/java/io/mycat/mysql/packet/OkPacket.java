@@ -88,7 +88,7 @@ public class OkPacket extends MySQLPacket {
 //    }
 
     public byte[] writeToBytes() {
-        ByteBuffer buffer = NetSystem.getInstance().getBufferPool().allocate();
+        ByteBuffer buffer = null;//NetSystem.getInstance().getBufferPool().allocate();
         BufferUtil.writeUB3(buffer, calcPacketSize());
         buffer.put(packetId);
         buffer.put(fieldCount);
