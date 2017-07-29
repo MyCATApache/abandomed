@@ -38,7 +38,7 @@ public class SimplePacketIterator implements PacketIterator {
             packetDescriptor = PacketDescriptor.setCommandType(packetDescriptor, commandType);
             packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, packetType);
             if (packetType == PacketDescriptor.PacketType.FULL) {
-                nextPacketPos += packetLen + 4;
+                nextPacketPos += packetLen + 5;
             }
         } else {
             packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, PacketDescriptor.PacketType.SHORT_HALF);

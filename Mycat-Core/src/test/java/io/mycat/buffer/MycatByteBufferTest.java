@@ -357,7 +357,66 @@ public class MycatByteBufferTest {
         Assert.assertTrue(PacketDescriptor.getPacketStartPos(packetDescriptor) == 0);
         Assert.assertTrue(PacketDescriptor.getPacketLen(packetDescriptor) == 9);
         Assert.assertTrue(it.hasPacket() == false);
+        buffer.clear();
 
+        //模拟一个全包和一个长半包在一起的情况
+        buffer.writeFixInt(3, 5) //包长
+                .writeByte((byte) 1) //packetID
+                .writeByte((byte) 0xFE) //command type
+                .writeFixString("abcde"); //包内容
+        buffer.writeFixInt(3, 5)
+                .writeByte((byte) 1) //packetID
+                .writeByte((byte) 0xFE) //command type
+                .writeFixString("ab"); //包内容
+        it = buffer.packetIterator();
+
+        //迭代第一个整包
+        packetDescriptor = it.nextPacket();
+        Assert.assertTrue(packetDescriptor != 0);
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.FULL);
+        Assert.assertTrue(PacketDescriptor.getPacketStartPos(packetDescriptor) == 0);
+        Assert.assertTrue(PacketDescriptor.getPacketLen(packetDescriptor) == 9);
+        Assert.assertTrue(it.hasPacket() == true);
+        //迭代第二个长半包
+        packetDescriptor = it.nextPacket();
+        Assert.assertTrue(packetDescriptor != 0);
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.LONG_HALF);
+        Assert.assertTrue(PacketDescriptor.getPacketLen(packetDescriptor) == 9);
+        Assert.assertTrue(it.hasPacket() == true);
+        //模拟收到数据将第二个半包收满
+        buffer.writeFixString("cde");
+        packetDescriptor = it.nextPacket();
+        Assert.assertTrue(packetDescriptor != 0);
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.FULL);
+        Assert.assertTrue(PacketDescriptor.getPacketLen(packetDescriptor) == 9);
+        Assert.assertTrue(it.hasPacket() == false);
+        buffer.clear();
+
+        //模拟收到两个整包的情况
+        buffer.writeFixInt(3, 5) //包长
+                .writeByte((byte) 1) //packetID
+                .writeByte((byte) 0xFE) //command type
+                .writeFixString("abcde"); //包内容
+        buffer.writeFixInt(3, 5)
+                .writeByte((byte) 1) //packetID
+                .writeByte((byte) 0xFE) //command type
+                .writeFixString("abcde"); //包内容
+        it = buffer.packetIterator();
+
+        //迭代第一个整包
+        packetDescriptor = it.nextPacket();
+        Assert.assertTrue(packetDescriptor != 0);
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.FULL);
+        Assert.assertTrue(PacketDescriptor.getPacketStartPos(packetDescriptor) == 0);
+        Assert.assertTrue(PacketDescriptor.getPacketLen(packetDescriptor) == 9);
+        Assert.assertTrue(it.hasPacket() == true);
+        //迭代第二个整包
+        packetDescriptor = it.nextPacket();
+        Assert.assertTrue(packetDescriptor != 0);
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.FULL);
+        Assert.assertTrue(PacketDescriptor.getPacketStartPos(packetDescriptor) == 10);
+        Assert.assertTrue(PacketDescriptor.getPacketLen(packetDescriptor) == 9);
+        Assert.assertTrue(it.hasPacket() == false);
 
     }
 
