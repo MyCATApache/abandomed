@@ -1,8 +1,10 @@
 package io.mycat.mysql.state.backend;
 
 import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import io.mycat.net2.NetSystem;
 
 import org.slf4j.Logger;
@@ -25,15 +27,12 @@ public class BackendConnectingState extends AbstractMysqlConnectionState {
 
     /**
      * 连接后端服务器
-     *
-     * @param mySQLConnection
-     * @param attachment
      */
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) throws IOException {
+    public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) throws IOException {
         LOGGER.debug("Backend in FrontendConnectingState");
-        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) mySQLConnection;
-        mySQLBackendConnection.setNextState(BackendHandshakeState.INSTANCE);
+        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
+        mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendHandshakeState.INSTANCE);
         NetSystem.getInstance().getConnector().postConnect(mySQLBackendConnection);
         return false;
     }

@@ -3,8 +3,10 @@ package io.mycat.mysql.state.backend;
 
 import java.io.IOException;
 
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,15 +27,15 @@ public class BackendIdleState extends AbstractMysqlConnectionState {
     }
 
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) throws IOException {
-        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) mySQLConnection;
+    public boolean handle(StateMachine context, Connection connction, Object attachment) throws IOException {
+        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connction;
         LOGGER.debug("Backend in FrontendIdleState");
         boolean returnflag = false;
         processPacketHeader(mySQLBackendConnection);
         switch (mySQLBackendConnection.getCurrentPacketType()) {
             case MySQLPacket.COM_QUERY:
                 LOGGER.debug("Backend receive a COM_QUERY in FrontendIdleState");
-                mySQLBackendConnection.setNextState(BackendComQueryState.INSTANCE);
+                mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendComQueryState.INSTANCE);
                 returnflag = true;
                 break;
             default:

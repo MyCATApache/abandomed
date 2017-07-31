@@ -9,6 +9,7 @@ import io.mycat.backend.MySQLDataSource;
 import io.mycat.backend.MySQLReplicatSet;
 import io.mycat.beans.DNBean;
 import io.mycat.buffer.MycatByteBuffer;
+import io.mycat.machine.State;
 import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.MySQLConnection;
@@ -18,7 +19,7 @@ import io.mycat.mysql.MySQLConnection;
  *
  * @author ynfeng
  */
-public abstract class AbstractMysqlConnectionState implements MysqlConnectionState {
+public abstract class AbstractMysqlConnectionState implements State {
     /**
      * 处理报文头
      *

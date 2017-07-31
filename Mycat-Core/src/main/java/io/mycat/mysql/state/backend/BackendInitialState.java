@@ -1,8 +1,10 @@
 package io.mycat.mysql.state.backend;
 
 
-import io.mycat.mysql.MySQLConnection;
+import io.mycat.backend.MySQLBackendConnection;
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,14 +25,12 @@ public class BackendInitialState extends AbstractMysqlConnectionState {
 
     /**
      * 后端连接在初始状态下不做任何动作，转到至连接中状态
-     *
-     * @param mySQLConnection
-     * @param attachment
      */
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) {
+    public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) {
         LOGGER.debug("Backend in FrontendConnectingState");
-        mySQLConnection.setNextState(BackendConnectingState.INSTANCE);
+        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
+        mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendConnectingState.INSTANCE);
         return true;
     }
 }

@@ -1,8 +1,11 @@
 package io.mycat.mysql.state.frontend;
 
 
+import io.mycat.front.MySQLFrontConnection;
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import io.mycat.net2.states.ClosingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +24,10 @@ public class FrontendCloseState extends AbstractMysqlConnectionState {
     }
 
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) {
+    public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) {
         LOGGER.debug("Frontend in FrontendCloseState");
-        mySQLConnection.setNextNetworkState(ClosingState.INSTANCE);
+        MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
+        connection.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
         return false;
     }
 }

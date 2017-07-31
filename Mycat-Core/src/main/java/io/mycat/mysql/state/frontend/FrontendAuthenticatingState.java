@@ -4,11 +4,13 @@ package io.mycat.mysql.state.frontend;
 import io.mycat.SQLEngineCtx;
 import io.mycat.engine.ErrorCode;
 import io.mycat.front.MySQLFrontConnection;
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.AuthPacket;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
 import io.mycat.mysql.state.backend.BackendIdleState;
 import io.mycat.mysql.state.backend.BackendCloseState;
+import io.mycat.net2.Connection;
 import io.mycat.net2.states.ClosingState;
 import io.mycat.net2.states.ReadWaitingState;
 import io.mycat.util.CharsetUtil;
@@ -34,13 +36,10 @@ public class FrontendAuthenticatingState extends AbstractMysqlConnectionState {
 
     /**
      * 对握手响应包进行认证
-     *
-     * @param mySQLConnection
-     * @param attachment
      */
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) {
-        MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) mySQLConnection;
+    public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) {
+        MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
         try {
             LOGGER.debug("Frontend in FrontendAuthenticatingState");
             AuthPacket auth = new AuthPacket();
@@ -51,7 +50,7 @@ public class FrontendAuthenticatingState extends AbstractMysqlConnectionState {
             if (!auth.user.equals("root")) {
                 LOGGER.debug("User name error. " + auth.user);
                 mySQLFrontConnection.failure(ErrorCode.ER_ACCESS_DENIED_ERROR, "Access denied for user '" + auth.user + "'");
-                mySQLFrontConnection.setNextState(BackendCloseState.INSTANCE);
+                mySQLFrontConnection.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);
                 return true;
             }
 
@@ -64,7 +63,7 @@ public class FrontendAuthenticatingState extends AbstractMysqlConnectionState {
             return success(mySQLFrontConnection, auth);
         } catch (Throwable e) {
             LOGGER.warn("Frontend FrontendAuthenticatingState error:", e);
-            mySQLFrontConnection.setNextState(BackendCloseState.INSTANCE);
+            mySQLFrontConnection.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);
             return true;
         }
     }
@@ -78,7 +77,7 @@ public class FrontendAuthenticatingState extends AbstractMysqlConnectionState {
             final String errmsg = "Unknown charsetIndex:" + charsetIndex;
             LOGGER.warn(errmsg);
             con.writeErrMessage(ErrorCode.ER_UNKNOWN_CHARACTER_SET, errmsg);
-            con.setNextState(BackendCloseState.INSTANCE);
+            con.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);
             return true;
         }
         LOGGER.debug("charset = {}, charsetIndex = {}", charset, charsetIndex);
@@ -92,16 +91,16 @@ public class FrontendAuthenticatingState extends AbstractMysqlConnectionState {
             con.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "42000".getBytes(), errmsg);
 
             con.setWriteCompleteListener(() -> {
-                con.setNextState(BackendCloseState.INSTANCE);
-                con.setNextNetworkState(ClosingState.INSTANCE);
+                con.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);
+                con.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
             });
         } else {
             con.write(AUTH_OK);
             con.setWriteCompleteListener(() -> {
-                con.setNextState(FrontendIdleState.INSTANCE);
+                con.getNetworkStateMachine().setNextState(FrontendIdleState.INSTANCE);
                 con.clearCurrentPacket();
                 con.getDataBuffer().clear();
-                con.setNextNetworkState(ReadWaitingState.INSTANCE);
+                con.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
             });
         }
         return false;

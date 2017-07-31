@@ -1,8 +1,10 @@
 package io.mycat.mysql.state.backend;
 
 
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +24,7 @@ public class BackendCloseState extends AbstractMysqlConnectionState {
 
 
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) {
+    public boolean handle(StateMachine context, Connection connection, Object attachment) {
         return false;
     }
 }

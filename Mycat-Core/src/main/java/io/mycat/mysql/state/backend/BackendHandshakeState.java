@@ -1,8 +1,9 @@
 package io.mycat.mysql.state.backend;
 
 
-import io.mycat.mysql.MySQLConnection;
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,28 +27,29 @@ public class BackendHandshakeState extends AbstractMysqlConnectionState {
     /**
      * 向服务器响应握手包
      *
-     * @param mySQLConnection
+     * @param context
+     * @param connection
      * @param attachment
      */
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) {
-        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) mySQLConnection;
-        LOGGER.debug("Backend in FrontendHandshakeState");
+    public boolean handle(StateMachine context, Connection connection, Object attachment) {
+        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
+        LOGGER.debug("Backend in HandshakeState");
         boolean returnflag;
         try {
             processHandShakePacket(mySQLBackendConnection);
             mySQLBackendConnection.authenticate();
-            mySQLBackendConnection.setNextState(BackendAuthenticatingState.INSTANCE);
+            mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendAuthenticatingState.INSTANCE);
             mySQLBackendConnection.setWriteCompleteListener(() -> {
                 mySQLBackendConnection.clearCurrentPacket();
                 mySQLBackendConnection.getDataBuffer().clear();
-                mySQLBackendConnection.setNextNetworkState(ReadWaitingState.INSTANCE);
+                mySQLBackendConnection.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
             });
 
             returnflag = false;
         } catch (Throwable e) {
-            LOGGER.warn("frontend FrontendInitialState error", e);
-            mySQLBackendConnection.setNextState(BackendCloseState.INSTANCE);
+            LOGGER.warn("Backend InitialState error", e);
+            mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);
             returnflag = true;
         }
         return returnflag;

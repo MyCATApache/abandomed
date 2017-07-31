@@ -1,8 +1,10 @@
 package io.mycat.mysql.state.frontend;
 
 
-import io.mycat.mysql.MySQLConnection;
+import io.mycat.front.MySQLFrontConnection;
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,14 +22,12 @@ public class FrontendHandshakeState extends AbstractMysqlConnectionState {
 
     /**
      * 接收客户端的握手响应包,转至认证状态
-     *
-     * @param mySQLConnection
-     * @param attachment
      */
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) {
+    public boolean handle(StateMachine context, Connection connection, Object attachment) {
         LOGGER.debug("Frontend in FrontendHandshakeState");
-        mySQLConnection.setNextState(FrontendAuthenticatingState.INSTANCE);
+        MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
+        mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendAuthenticatingState.INSTANCE);
         return true;
     }
 

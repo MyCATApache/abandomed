@@ -26,7 +26,9 @@ package io.mycat.mysql;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 
-import io.mycat.mysql.state.frontend.FrontendInitialState;
+import io.mycat.machine.SimpleStateMachine;
+import io.mycat.machine.State;
+import io.mycat.machine.StateMachine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +36,6 @@ import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.mysql.packet.ErrorPacket;
 import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.mysql.state.backend.BackendInitialState;
-import io.mycat.mysql.state.MysqlConnectionState;
 import io.mycat.net2.Connection;
 import io.mycat.net2.states.WriteWaitingState;
 import io.mycat.util.RandomUtil;
@@ -45,11 +45,9 @@ import io.mycat.util.RandomUtil;
  *
  * @author wuzhihui
  */
-public class MySQLConnection extends Connection implements StatefulConnection {
+public class MySQLConnection extends Connection {
     protected final static Logger LOGGER = LoggerFactory.getLogger(MySQLConnection.class);
 
-    protected MysqlConnectionState state;
-    private MysqlConnectionState nextState;
 
     public final static int msyql_packetHeaderSize = 4;
 
@@ -59,8 +57,11 @@ public class MySQLConnection extends Connection implements StatefulConnection {
     protected int charsetIndex;
     protected byte[] seed;
 
-    public MySQLConnection(SocketChannel channel) {
+    public final ProtocolStateMachine protocolStateMachine;
+
+    public MySQLConnection(SocketChannel channel, State initialState) {
         super(channel);
+        protocolStateMachine = new ProtocolStateMachine(this, initialState);
     }
 
     public static final boolean validateHeader(final long offset, final long position) {
@@ -155,7 +156,7 @@ public class MySQLConnection extends Connection implements StatefulConnection {
     public void writeMsqlPackage(MySQLPacket pkg) throws IOException {
         int pkgSize = pkg.calcPacketSize();
         pkg.write(getDataBuffer(), pkgSize);
-        setNextNetworkState(WriteWaitingState.INSTANCE);
+        getNetworkStateMachine().setNextState(WriteWaitingState.INSTANCE);
     }
 
     public void writeErrMessage(int errno, String info) throws IOException {
@@ -204,37 +205,14 @@ public class MySQLConnection extends Connection implements StatefulConnection {
         this.charset = charsetName;
     }
 
-
-    @Override
-    public MySQLConnection setNextState(MysqlConnectionState state) {
-        this.nextState = state;
-        return this;
+    public ProtocolStateMachine getProtocolStateMachine() {
+        return protocolStateMachine;
     }
 
-    @Override
-    public MysqlConnectionState getNextState() {
-        return nextState;
+    public class ProtocolStateMachine extends SimpleStateMachine {
+
+        public ProtocolStateMachine(Connection connection, State initialState) {
+            super(connection, initialState);
+        }
     }
-
-    @Override
-    public void driveState(Object attachment) throws IOException {
-
-        do {
-            if (this.nextState != null) {
-                this.state = nextState;
-                this.nextState = null;
-            }
-        } while (this.state.handle(this, attachment));
-    }
-
-    @Override
-    public void driveState() throws IOException {
-        driveState(null);
-    }
-
-    @Override
-    public MysqlConnectionState getCurrentState() {
-        return state;
-    }
-
 }

@@ -1,13 +1,13 @@
 package io.mycat.mysql.state.frontend;
 
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.mysql.MySQLConnection;
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import io.mycat.net2.states.ReadWaitingState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 
 
 /**
@@ -25,26 +25,24 @@ public class FrontendConnectingState extends AbstractMysqlConnectionState {
     /**
      * 向客户端响应握手包
      *
-     * @param mySQLConnection
-     * @param attachment
      */
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) throws IOException {
+    public boolean handle(StateMachine context, Connection connection, Object attachment) {
         LOGGER.debug("Frontend in FrontendConnectingState");
-        MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) mySQLConnection;
+        MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
         boolean returnflag = false;
         try {
             mySQLFrontConnection.sendAuthPackge();
             mySQLFrontConnection.setWriteCompleteListener(() -> {
                 mySQLFrontConnection.clearCurrentPacket();
                 mySQLFrontConnection.getDataBuffer().clear();
-                mySQLFrontConnection.setNextNetworkState(ReadWaitingState.INSTANCE);
+                mySQLFrontConnection.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
             });
-            mySQLFrontConnection.setNextState(FrontendHandshakeState.INSTANCE);
+            mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendHandshakeState.INSTANCE);
             returnflag = false;
         } catch (Throwable e) {
             LOGGER.warn("frontend FrontendInitialState error", e);
-            mySQLFrontConnection.setNextState(FrontendCloseState.INSTANCE);
+            mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendCloseState.INSTANCE);
             returnflag = true;
         }
         return returnflag;

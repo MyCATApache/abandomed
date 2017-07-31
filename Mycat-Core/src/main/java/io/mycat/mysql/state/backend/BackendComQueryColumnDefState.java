@@ -3,8 +3,10 @@ package io.mycat.mysql.state.backend;
 
 import java.io.IOException;
 
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,9 +29,9 @@ public class BackendComQueryColumnDefState extends AbstractMysqlConnectionState 
     }
 
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) {
+    public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) {
         LOGGER.debug("Backend in BackendComQueryColumnDefState");
-        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) mySQLConnection;
+        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
         boolean returnflag = false;
         try {
             //  如果当前状态数据报文可能有多个，需要透传
@@ -43,7 +45,7 @@ public class BackendComQueryColumnDefState extends AbstractMysqlConnectionState 
                         //设置当前包结束位置
                         dataBuffer.writeLimit(mySQLBackendConnection.getCurrentPacketLength());
                         if (packageType == MySQLPacket.EOF_PACKET) {
-                            mySQLBackendConnection.setNextState(BackendComQueryRowState.INSTANCE);
+                            mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendComQueryRowState.INSTANCE);
                             return true;
                         }
                         break;
@@ -75,7 +77,7 @@ public class BackendComQueryColumnDefState extends AbstractMysqlConnectionState 
 
         } catch (IOException e) {
             LOGGER.warn("Backend BackendComQueryColumnDefState error", e);
-            mySQLBackendConnection.setNextState(BackendCloseState.INSTANCE);
+            mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);
             returnflag = false;
         }
         return returnflag;

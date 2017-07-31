@@ -53,7 +53,7 @@ public class MySQLBackendConnection extends MySQLConnection {
     private BackConnectionCallback userCallback;
     private MySQLDataSource dataSource;
     @SuppressWarnings("unused")
-	private boolean borrowed;
+    private boolean borrowed;
     private String schema;
     private HandshakePacket handshake;
     private MySQLFrontConnection mySQLFrontConnection;
@@ -70,18 +70,17 @@ public class MySQLBackendConnection extends MySQLConnection {
     private int serverStatus;
 
     public MySQLBackendConnection(MySQLDataSource datasource, SocketChannel channel) {
-        super(channel);
-        this.state = BackendInitialState.INSTANCE;
+        super(channel, BackendInitialState.INSTANCE);
         this.datasource = datasource;
         this.fromSlaveDB = datasource.isSlaveNode();
         this.clientFlags = initClientFlags();
     }
-    
+
     @Override
     public boolean init() throws IOException {
-    	setProcessKey(channel.register(getSelector(), SelectionKey.OP_READ, this));
-    	setNextNetworkState(ReadState.INSTANCE);
-    	return false;
+        setProcessKey(channel.register(getSelector(), SelectionKey.OP_READ, this));
+        this.getNetworkStateMachine().setNextState(ReadState.INSTANCE);
+        return false;
     }
 
     private static long initClientFlags() {

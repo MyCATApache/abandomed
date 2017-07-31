@@ -3,8 +3,10 @@ package io.mycat.mysql.state.backend;
 
 import java.io.IOException;
 
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +30,9 @@ public class BackendComQueryRowState extends AbstractMysqlConnectionState {
     }
 
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) {
+    public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) {
         LOGGER.debug("Backend in BackendComQueryRowState");
-        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) mySQLConnection;
+        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
         boolean returnflag = false;
         try {
 
@@ -50,12 +52,12 @@ public class BackendComQueryRowState extends AbstractMysqlConnectionState {
                             //检查后面还有没有结果集
                             if ((mySQLBackendConnection.getServerStatus() & ServerStatus.SERVER_MORE_RESULTS_EXISTS) == 0) {
                                 LOGGER.debug("backend com query response complete change to idle state");
-                                mySQLBackendConnection.setNextState(BackendIdleState.INSTANCE);
+                                mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendIdleState.INSTANCE);
                                 SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true, true, true);
                                 return false;
                             } else {
                                 LOGGER.debug("backend com query response state have multi result");
-                                mySQLBackendConnection.setNextState(BackendComQueryResponseState.INSTANCE);
+                                mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendComQueryResponseState.INSTANCE);
                                 return true;
                             }
                         }
@@ -92,7 +94,7 @@ public class BackendComQueryRowState extends AbstractMysqlConnectionState {
             }
         } catch (IOException e) {
             LOGGER.warn("frontend BackendComQueryRowState error", e);
-            mySQLBackendConnection.setNextState(BackendCloseState.INSTANCE);
+            mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);
             returnflag = false;
         }
         return returnflag;

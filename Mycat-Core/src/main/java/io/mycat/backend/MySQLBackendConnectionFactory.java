@@ -40,6 +40,7 @@ import io.mycat.net2.states.ReadState;
 public class MySQLBackendConnectionFactory {
 
     private final DummyCallBack dummyCallBack = new DummyCallBack();
+
     public MySQLBackendConnection make(MySQLDataSource pool, String reactor, String schema, MySQLFrontConnection mySQLFrontConnection, BackConnectionCallback userCallback) throws IOException {
         BackConnectionCallback callback = userCallback == null ? dummyCallBack : userCallback;
         MySQLBean dsc = pool.getConfig();
@@ -59,7 +60,7 @@ public class MySQLBackendConnectionFactory {
         c.setMySQLFrontConnection(mySQLFrontConnection);
         c.setUserCallback(callback);
         c.setIdleTimeout(NetSystem.getInstance().getNetConfig().getConIdleTimeout() * 60 * 1000L);
-        c.driveState();
-        return c; 
+        c.getProtocolStateMachine().driveState();
+        return c;
     }
 }

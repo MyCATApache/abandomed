@@ -3,8 +3,10 @@ package io.mycat.mysql.state.backend;
 
 import java.io.IOException;
 
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,9 +28,9 @@ public class BackendComQueryResponseState extends AbstractMysqlConnectionState {
     }
 
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) throws IOException {
+    public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) throws IOException {
         LOGGER.debug("Backend in BackendComQueryResponseState");
-        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) mySQLConnection;
+        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
         boolean returnflag = false;
         try {
             processPacketHeader(mySQLBackendConnection);
@@ -52,14 +54,14 @@ public class BackendComQueryResponseState extends AbstractMysqlConnectionState {
                             LOGGER.debug("后端连接，不在事务中，可以回收！{}", mySQLBackendConnection);
                         }
                         mySQLBackendConnection.getDataBuffer().writeLimit(mySQLBackendConnection.getCurrentPacketLength());
-                        mySQLBackendConnection.setNextState(BackendIdleState.INSTANCE);
+                        mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendIdleState.INSTANCE);
                         SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true, true, true);
                         returnflag = false;  //触发透传,退出当前状态机
                     } else if (packageType == MySQLPacket.REQUEST_FILE_FIELD_COUNT) {
 //                        mySQLBackendConnection.setNextState(FrontendComLoadState.INSTANCE);
                         SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true, true, false);
                     } else {
-                        mySQLBackendConnection.setNextState(BackendComQueryColumnDefState.INSTANCE);
+                        mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendComQueryColumnDefState.INSTANCE);
                         mySQLBackendConnection.getDataBuffer().writeLimit(mySQLBackendConnection.getCurrentPacketLength());
                         returnflag = true;   //状态机自驱进入下一个状态
                     }
@@ -73,7 +75,7 @@ public class BackendComQueryResponseState extends AbstractMysqlConnectionState {
             }
         } catch (IOException e) {
             LOGGER.error("Backend BackendComQueryResponseState error", e);
-            mySQLBackendConnection.setNextState(BackendCloseState.INSTANCE);
+            mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);
             returnflag = false;
         }
         return returnflag;

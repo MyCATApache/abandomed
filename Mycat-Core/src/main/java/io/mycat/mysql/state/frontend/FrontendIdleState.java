@@ -2,9 +2,11 @@ package io.mycat.mysql.state.frontend;
 
 
 import io.mycat.front.MySQLFrontConnection;
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,21 +26,21 @@ public class FrontendIdleState extends AbstractMysqlConnectionState {
     }
 
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) throws IOException {
+    public boolean handle(StateMachine context, Connection connection, Object attachment) throws IOException {
         LOGGER.debug("Frontend in FrontendIdleState");
-        MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) mySQLConnection;
+        MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
         processPacketHeader(mySQLFrontConnection);
         int packetType = mySQLFrontConnection.getCurrentPacketType();
         boolean returnflag = false;
         switch (packetType) {
             case MySQLPacket.COM_QUERY:
                 LOGGER.debug("Frontend receive a COM_QUERY in FrontendIdleState");
-                mySQLFrontConnection.setNextState(FrontendComQueryState.INSTANCE);
+                mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendComQueryState.INSTANCE);
                 returnflag = true;
                 break;
             case MySQLPacket.COM_QUIT:
                 LOGGER.debug("Frontend receive a COM_QUIT in FrontendIdleState");
-                mySQLFrontConnection.setNextState(FrontendCloseState.INSTANCE);
+                mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendCloseState.INSTANCE);
                 returnflag = true;
             default:
                 break;

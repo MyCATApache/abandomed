@@ -5,6 +5,8 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
+import io.mycat.machine.SimpleStateMachine;
+import io.mycat.machine.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,12 +14,11 @@ import io.mycat.backend.WriteCompleteListener;
 import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.buffer.MycatByteBufferAllocator;
 import io.mycat.engine.dataChannel.TransferMode;
-import io.mycat.mysql.StatefulConnection;
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.states.ClosedState;
 import io.mycat.net2.states.ClosingState;
 import io.mycat.net2.states.ListeningState;
-import io.mycat.net2.states.NetworkState;
 import io.mycat.net2.states.WriteWaitingState;
 import io.mycat.net2.states.network.TRANSMIT_RESULT;
 import io.mycat.net2.states.network.TRY_READ_RESULT;
@@ -25,14 +26,14 @@ import io.mycat.net2.states.network.TRY_READ_RESULT;
 /**
  * @author wuzh
  */
-public abstract class Connection implements ClosableConnection, StatefulConnection {
-	
+public abstract class Connection implements ClosableConnection {
+
     public static Logger LOGGER = LoggerFactory.getLogger(Connection.class);
     protected String host;
     protected int port;
     protected int localPort;
     protected long id;
-    private String  reactor;
+    private String reactor;
     private Object attachement;
 
     // 连接的方向，in表示是客户端连接过来的，out表示自己作为客户端去连接对端Sever
@@ -59,25 +60,28 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
     protected int pkgTotalCount;
     private long idleTimeout;
     private long lastPerfCollectTime;
-    
-    private NetworkState networkState = ListeningState.INSTANCE;
-    private NetworkState nextNetworkState;  /** which state to go into after finishing current write */
-    
+
+
+    /**
+     * which state to go into after finishing current write
+     */
+
     private Selector selector;
     private MycatByteBufferAllocator mycatByteBufferAllocator;
     private WriteCompleteListener writeCompleteListener;
-    
+
     private byte[] tmpWriteBytes;  // 该字段用于 在非透传模式下,net buffer 大小小于写出报文大小时,临时记录报文数据.用于分批 写出到 net buffer
     private int tmplastwritePos;   // 写缓冲区可用时, tmpWriteBytes 上次写到 net buffer 缓冲区中的位置
     private TransferMode directTransferMode = TransferMode.NONE;            //透传模式
     private boolean passthrough = false;   //是否透传
-    
+
     private int currentPacketLength;
     private byte currentPacketType;
     private int currentPacketStartPos;
-    
+
     private MycatByteBuffer shareBuffer;
-        
+    private final NetworkStateMachine networkStateMachine;
+
     public Connection(SocketChannel channel) {
         this.channel = channel;
         this.isClosed = false;
@@ -85,54 +89,41 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
         this.lastReadTime = startupTime;
         this.lastWriteTime = startupTime;
         this.lastPerfCollectTime = startupTime;
+        this.networkStateMachine = new NetworkStateMachine(this, ListeningState.INSTANCE);
     }
-    
+
     /**
      * 连接初始化模板方法
      */
-    public boolean init()throws IOException{
-    	return false;
+    public boolean init() throws IOException {
+        return false;
     }
-    
-	public void networkDriverMachine(){
 
-    	try {
-    		do{
-    			if(this.nextNetworkState!=null){
-    				this.networkState = nextNetworkState;
-    				this.nextNetworkState = null;
-    			}
-    		}while(networkState.handler(this));
-		} catch (Exception e) {
-			LOGGER.error("server error", e);
-			close(" close connection!");
-		}
-	}
-    
+
     /*
      * 处理新的命令
      */
     public TRY_READ_RESULT try_read_network() {
-    	final MycatByteBuffer buffer = dataBuffer;
-		int got = 0;
-		try {
-			got = buffer.transferFromChannel(channel);
-			
-			switch (got) {
-	            case 0: {
-	            	return TRY_READ_RESULT.READ_NO_DATA_RECEIVED;
-	            }
-	            case -1:{
-	            	return TRY_READ_RESULT.READ_ERROR;
-	            }
-	            default: {
-	            	return TRY_READ_RESULT.READ_DATA_RECEIVED;
-	            }
-			}
-		} catch (Exception e) {
-			LOGGER.error("read netwok data error !!", e);
-			return TRY_READ_RESULT.READ_ERROR;
-		}
+        final MycatByteBuffer buffer = dataBuffer;
+        int got = 0;
+        try {
+            got = buffer.transferFromChannel(channel);
+
+            switch (got) {
+                case 0: {
+                    return TRY_READ_RESULT.READ_NO_DATA_RECEIVED;
+                }
+                case -1: {
+                    return TRY_READ_RESULT.READ_ERROR;
+                }
+                default: {
+                    return TRY_READ_RESULT.READ_DATA_RECEIVED;
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("read netwok data error !!", e);
+            return TRY_READ_RESULT.READ_ERROR;
+        }
     }
 
     public void resetPerfCollectTime() {
@@ -215,9 +206,11 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
     public long getNetOutBytes() {
         return netOutBytes;
     }
- 
+
     public boolean isConnected() {
-        return (!this.networkState.equals(ClosedState.INSTANCE) && !networkState.equals(ClosingState.INSTANCE) && !networkState.equals(ListeningState.INSTANCE));
+        return (this.getNetworkStateMachine().getCurrentState() != ClosedState.INSTANCE &&
+                this.getNetworkStateMachine().getCurrentState() != ClosingState.INSTANCE &&
+                this.getNetworkStateMachine().getCurrentState() != ListeningState.INSTANCE);
     }
 
     public void close(String reason) {
@@ -250,33 +243,35 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
             try {
                 mycatByteBufferAllocator.recyle(dataBuffer);
             } catch (Exception e) {
-                e.printStackTrace(); }
+                e.printStackTrace();
+            }
             dataBuffer = null;
         }
     }
 
-  	public void setNIOReactor(String reactorName) {
-		this.reactor = reactorName;
-	}
-  	
-  	/**
-  	 * 如果 报文长度大于缓冲区长度,分段发送
-  	 * @param data
-  	 * @throws IOException
-  	 */
-    public void write(byte[] data) throws IOException{
-        //TODO 是否有BUG?连续多次调用,造成tmpWriteBytes被覆盖，进而丢失数据？
-    	int remains = dataBuffer.writableBytes();
-    	if(remains >= data.length){
-    		dataBuffer.writeBytes(data);
-    	}else{
-    		tmpWriteBytes = data;
-       	}
-    	this.directTransferMode = TransferMode.NONE;
-    	this.passthrough = false; 
-    	setNextNetworkState(WriteWaitingState.INSTANCE);
+    public void setNIOReactor(String reactorName) {
+        this.reactor = reactorName;
     }
-  	
+
+    /**
+     * 如果 报文长度大于缓冲区长度,分段发送
+     *
+     * @param data
+     * @throws IOException
+     */
+    public void write(byte[] data) throws IOException {
+        //TODO 是否有BUG?连续多次调用,造成tmpWriteBytes被覆盖，进而丢失数据？
+        int remains = dataBuffer.writableBytes();
+        if (remains >= data.length) {
+            dataBuffer.writeBytes(data);
+        } else {
+            tmpWriteBytes = data;
+        }
+        this.directTransferMode = TransferMode.NONE;
+        this.passthrough = false;
+        this.getNetworkStateMachine().setNextState(WriteWaitingState.INSTANCE);
+    }
+
     /*
      * Returns:
      *   TRANSMIT_COMPLETE   All done writing.
@@ -285,41 +280,41 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
      *   TRANSMIT_HARD_ERROR Can't write (networkState is set to conn_closing)
      */
     public TRANSMIT_RESULT write() throws IOException {
-    	
-    	final NetSystem nets = NetSystem.getInstance();
+
+        final NetSystem nets = NetSystem.getInstance();
         final MycatByteBuffer buffer = this.dataBuffer;
         int written = 0;
         int remains = 0;
-        if(passthrough){
-        	written = buffer.transferToChannel(this.channel);
-        	remains = buffer.writeLimit()-buffer.readIndex();//buffer.getReadPos() - buffer.getLastWritePos();
-        }else{
-        	/**
-        	 * 在非透传模式下,如果 local buffer > net buffer 剩余长度,分批透传
-        	 */
-        	if(tmpWriteBytes!=null&&tmplastwritePos<(tmpWriteBytes.length-1)){
-        		dataBuffer.compact();
-        		int tempremains = tmpWriteBytes.length - tmplastwritePos;
-        		int localbufferremains = dataBuffer.writableBytes();//dataBuffer.getTotalSize() - dataBuffer.getWritePos();
-        		if(tempremains >= localbufferremains){
+        if (passthrough) {
+            written = buffer.transferToChannel(this.channel);
+            remains = buffer.writeLimit() - buffer.readIndex();//buffer.getReadPos() - buffer.getLastWritePos();
+        } else {
+            /**
+             * 在非透传模式下,如果 local buffer > net buffer 剩余长度,分批透传
+             */
+            if (tmpWriteBytes != null && tmplastwritePos < (tmpWriteBytes.length - 1)) {
+                dataBuffer.compact();
+                int tempremains = tmpWriteBytes.length - tmplastwritePos;
+                int localbufferremains = dataBuffer.writableBytes();//dataBuffer.getTotalSize() - dataBuffer.getWritePos();
+                if (tempremains >= localbufferremains) {
 //        			dataBuffer.putBytes(tmpWriteBytes,tmplastwritePos,localbufferremains);
-                    dataBuffer.writeBytes(localbufferremains,tmpWriteBytes);
-        			tmplastwritePos += localbufferremains;
-        		}else{
+                    dataBuffer.writeBytes(localbufferremains, tmpWriteBytes);
+                    tmplastwritePos += localbufferremains;
+                } else {
 //        			dataBuffer.putBytes(tmpWriteBytes,tmplastwritePos,tempremains);
                     dataBuffer.writeBytes(tmpWriteBytes);
-        			tmpWriteBytes = null;
-        			tmplastwritePos = 0;
-        		}
-        	}
-        	written = buffer.transferToChannel(this.channel);
-        	remains = buffer.readableBytes() ;//buffer.getWritePos() - buffer.getLastWritePos();
+                    tmpWriteBytes = null;
+                    tmplastwritePos = 0;
+                }
+            }
+            written = buffer.transferToChannel(this.channel);
+            remains = buffer.readableBytes();//buffer.getWritePos() - buffer.getLastWritePos();
         }
-        
-       	if(written > 0){
-    		netOutBytes += written;
+
+        if (written > 0) {
+            netOutBytes += written;
             nets.addNetOutBytes(written);
-         // trace-protocol
+            // trace-protocol
             // @author little-pan
             // @since 2016-09-29
 //            if (nets.getNetConfig().isTraceProtocol()) {
@@ -328,29 +323,30 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
 //                        "C#{}B#{}: last writed = {} bytes, remain to write = {} bytes, written bytes\n{}",
 //                        getId(), buffer.hashCode(), written, remains, hexs);
 //            }
-    		if (remains >0) {  // 还有数据没有写完
-        		return TRANSMIT_RESULT.TRANSMIT_INCOMPLETE;
-    		} else {
-    			return TRANSMIT_RESULT.TRANSMIT_COMPLETE;
-    		}
-    	}else if(written <= 0){
-    		try {
-    			processKey.interestOps(processKey.interestOps() | SelectionKey.OP_WRITE);
-			} catch (Exception e) {
-				LOGGER.error("couldn't update write event",e);
-				return TRANSMIT_RESULT.TRANSMIT_HARD_ERROR;
-			}
-    		return TRANSMIT_RESULT.TRANSMIT_SOFT_ERROR;
-    	}
-    	return TRANSMIT_RESULT.TRANSMIT_COMPLETE;
+            if (remains > 0) {  // 还有数据没有写完
+                return TRANSMIT_RESULT.TRANSMIT_INCOMPLETE;
+            } else {
+                return TRANSMIT_RESULT.TRANSMIT_COMPLETE;
+            }
+        } else if (written <= 0) {
+            try {
+                processKey.interestOps(processKey.interestOps() | SelectionKey.OP_WRITE);
+            } catch (Exception e) {
+                LOGGER.error("couldn't update write event", e);
+                return TRANSMIT_RESULT.TRANSMIT_HARD_ERROR;
+            }
+            return TRANSMIT_RESULT.TRANSMIT_SOFT_ERROR;
+        }
+        return TRANSMIT_RESULT.TRANSMIT_COMPLETE;
     }
 
     public Object getAttachement() {
-		return attachement;
-	}
-	public void setAttachement(Object attachement) {
-		this.attachement = attachement;
-	}
+        return attachement;
+    }
+
+    public void setAttachement(Object attachement) {
+        this.attachement = attachement;
+    }
 
     private void closeSocket() {
 
@@ -387,73 +383,66 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
 
     @Override
     public String toString() {
-        return "Connection [host=" + host + ",  port=" + port + ", id=" + id + ", state=" + networkState + ", direction="
+        return "Connection [host=" + host + ",  port=" + port + ", id=" + id + ", state=" + networkStateMachine.getCurrentState() + ", direction="
                 + direction + ", startupTime=" + startupTime + ", lastReadTime=" + lastReadTime + ", lastWriteTime="
                 + lastWriteTime + "]";
     }
-    public String getReactor()
-    {
-    	return this.reactor;
+
+    public String getReactor() {
+        return this.reactor;
     }
-	public boolean belongsActor(String reacotr) {
-		return reactor.equals(reacotr);
-	}
 
-	public NetworkState getNextNetworkState() {
-		return nextNetworkState;
-	}
+    public boolean belongsActor(String reacotr) {
+        return reactor.equals(reacotr);
+    }
 
-	public Connection setNextNetworkState(NetworkState nextConnState) {
-		this.nextNetworkState = nextConnState;
-		return this;
-	}
 
-	public Selector getSelector() {
-		return selector;
-	}
+    public Selector getSelector() {
+        return selector;
+    }
 
-	public void setSelector(Selector selector) {
-		this.selector = selector;
-	}
+    public void setSelector(Selector selector) {
+        this.selector = selector;
+    }
 
-	public SelectionKey getProcessKey() {
-		return processKey;
-	}
+    public SelectionKey getProcessKey() {
+        return processKey;
+    }
 
-	public void setProcessKey(SelectionKey processKey) {
-		this.processKey = processKey;
-	}
-	
-	public WriteCompleteListener getWriteCompleteListener() {
-		return writeCompleteListener;
-	}
+    public void setProcessKey(SelectionKey processKey) {
+        this.processKey = processKey;
+    }
 
-	public Connection setWriteCompleteListener(WriteCompleteListener writeCompleteListener) {
-		this.writeCompleteListener = writeCompleteListener;
-		return this;
-	}
+    public WriteCompleteListener getWriteCompleteListener() {
+        return writeCompleteListener;
+    }
 
-	public MycatByteBuffer getDataBuffer() {
-		return dataBuffer;
-	}
+    public Connection setWriteCompleteListener(WriteCompleteListener writeCompleteListener) {
+        this.writeCompleteListener = writeCompleteListener;
+        return this;
+    }
 
-	public Connection setDataBuffer(MycatByteBuffer dataBuffer) {
-		this.dataBuffer = dataBuffer;
-		return this;
-	}
-	
-	public TransferMode getDirectTransferMode() {
-		return directTransferMode;
-	}
+    public MycatByteBuffer getDataBuffer() {
+        return dataBuffer;
+    }
 
-	public Connection setDirectTransferMode(TransferMode directTransferMode) {
-		this.directTransferMode = directTransferMode;
-		return this;
-	}
+    public Connection setDataBuffer(MycatByteBuffer dataBuffer) {
+        this.dataBuffer = dataBuffer;
+        return this;
+    }
 
-	public byte[] getTmpWriteBytes() {
-		return tmpWriteBytes;
-	}
+    public TransferMode getDirectTransferMode() {
+        return directTransferMode;
+    }
+
+    public Connection setDirectTransferMode(TransferMode directTransferMode) {
+        this.directTransferMode = directTransferMode;
+        return this;
+    }
+
+    public byte[] getTmpWriteBytes() {
+        return tmpWriteBytes;
+    }
 
     public MycatByteBufferAllocator getMycatByteBufferAllocator() {
         return mycatByteBufferAllocator;
@@ -463,15 +452,15 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
         this.mycatByteBufferAllocator = mycatByteBufferAllocator;
     }
 
-	public boolean isPassthrough() {
-		return passthrough;
-	}
+    public boolean isPassthrough() {
+        return passthrough;
+    }
 
-	public Connection setPassthrough(boolean passthrough) {
-		this.passthrough = passthrough;
-		return this;
-	}
-	
+    public Connection setPassthrough(boolean passthrough) {
+        this.passthrough = passthrough;
+        return this;
+    }
+
     public int getCurrentPacketLength() {
         return currentPacketLength;
     }
@@ -498,9 +487,9 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
         this.currentPacketStartPos = currentPacketStartPos;
         return this;
     }
-	/**
 
     /**
+     * /**
      * 清除关于当前包的记录状态
      */
     public void clearCurrentPacket() {
@@ -508,7 +497,7 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
         this.currentPacketType = MySQLPacket.COM_SLEEP;
         this.currentPacketStartPos = 0;
     }
-    
+
     public MycatByteBuffer getShareBuffer() {
         return shareBuffer;
     }
@@ -516,5 +505,16 @@ public abstract class Connection implements ClosableConnection, StatefulConnecti
     public Connection setShareBuffer(MycatByteBuffer shareBuffer) {
         this.shareBuffer = shareBuffer;
         return this;
+    }
+
+    public NetworkStateMachine getNetworkStateMachine() {
+        return networkStateMachine;
+    }
+
+    public class NetworkStateMachine extends SimpleStateMachine{
+
+        public NetworkStateMachine(Connection connection, State initialState) {
+            super(connection, initialState);
+        }
     }
 }

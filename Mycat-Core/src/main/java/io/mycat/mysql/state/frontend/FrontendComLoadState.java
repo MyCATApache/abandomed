@@ -2,7 +2,9 @@ package io.mycat.mysql.state.frontend;
 
 import java.io.IOException;
 
+import io.mycat.machine.StateMachine;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,12 +23,12 @@ public class FrontendComLoadState extends AbstractMysqlConnectionState {
     }
 
     @Override
-    public boolean handle(MySQLConnection mySQLConnection, Object attachment) throws IOException {
+    public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) throws IOException {
         LOGGER.debug("Frontend in FrontendComLoadState");
-        MySQLFrontConnection frontCon = (MySQLFrontConnection) mySQLConnection;
+        MySQLFrontConnection frontCon = (MySQLFrontConnection) connection;
         boolean returnflag = false;
         try {
-            frontCon.setNextNetworkState(NoReadAndWriteState.INSTANCE);
+            frontCon.getNetworkStateMachine().setNextState(NoReadAndWriteState.INSTANCE);
             //  如果当前状态数据报文可能有多个，需要透传
             while (true) {
                 processPacketHeader(frontCon);
@@ -60,7 +62,7 @@ public class FrontendComLoadState extends AbstractMysqlConnectionState {
             }
         } catch (IOException e) {
             LOGGER.warn("Backend BackendComQueryColumnDefState error", e);
-            frontCon.setNextState(FrontendCloseState.INSTANCE);
+            frontCon.getProtocolStateMachine().setNextState(FrontendCloseState.INSTANCE);
             returnflag = false;
         }
         return returnflag;
