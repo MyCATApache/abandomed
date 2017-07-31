@@ -6,7 +6,7 @@ import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.mysql.state.ComQueryResponseState;
+import io.mycat.mysql.state.backend.BackendComQueryResponseState;
 import io.mycat.net2.states.NoReadAndWriteState;
 
 /**
@@ -20,7 +20,7 @@ public class FrontendComQueryCommandHandler extends AbstractComQueryCommandHandl
 
     @Override
     public void processCmd(MySQLFrontConnection frontCon, MycatByteBuffer dataBuffer, byte packageType, int pkgStartPos, int pkgLen) throws IOException {
-        frontCon.setNextState(ComQueryResponseState.INSTANCE);
+        frontCon.setNextState(BackendComQueryResponseState.INSTANCE);
         MySQLBackendConnection backendConnection = frontCon.getBackendConnection();
         if (backendConnection == null) {
             backendConnection = getBackendFrontConnection(frontCon);

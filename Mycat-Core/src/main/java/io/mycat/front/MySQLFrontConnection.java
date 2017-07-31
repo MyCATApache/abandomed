@@ -34,6 +34,7 @@ import io.mycat.beans.SchemaBean;
 import io.mycat.engine.NoneBlockTask;
 import io.mycat.engine.UserSession;
 import io.mycat.mysql.MySQLConnection;
+import io.mycat.mysql.state.frontend.FrontendInitialState;
 
 /**
  * front mysql connection
@@ -48,14 +49,15 @@ public class MySQLFrontConnection extends MySQLConnection {
 
     public MySQLFrontConnection(SocketChannel channel) {
         super(channel);
+        this.state = FrontendInitialState.INSTANCE;
         session = new UserSession();
     }
-    
+
     @Override
     public boolean init() throws IOException {
-    	setProcessKey(channel.register(getSelector(), SelectionKey.OP_CONNECT, this));
-    	driveState();
-    	return true;
+        setProcessKey(channel.register(getSelector(), SelectionKey.OP_CONNECT, this));
+        driveState();
+        return true;
     }
 
     /**
@@ -96,7 +98,7 @@ public class MySQLFrontConnection extends MySQLConnection {
         try {
             task.execute();
         } catch (Exception e) {
-        	
+
         }
     }
 

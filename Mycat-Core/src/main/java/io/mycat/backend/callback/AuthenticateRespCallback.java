@@ -2,11 +2,6 @@ package io.mycat.backend.callback;
 
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.front.MySQLFrontConnection;
-import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.mysql.state.CloseState;
-import io.mycat.mysql.state.IdleState;
-import io.mycat.net2.states.ReadWaitingState;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

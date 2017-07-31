@@ -28,6 +28,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.security.NoSuchAlgorithmException;
 
+import io.mycat.mysql.state.backend.BackendInitialState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +71,7 @@ public class MySQLBackendConnection extends MySQLConnection {
 
     public MySQLBackendConnection(MySQLDataSource datasource, SocketChannel channel) {
         super(channel);
+        this.state = BackendInitialState.INSTANCE;
         this.datasource = datasource;
         this.fromSlaveDB = datasource.isSlaveNode();
         this.clientFlags = initClientFlags();

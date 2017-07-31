@@ -25,6 +25,7 @@ package io.mycat.mysql.packet;
 
 import java.nio.ByteBuffer;
 
+import io.mycat.buffer.DirectFixBuffer;
 import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.net2.NetSystem;
 import io.mycat.util.BufferUtil;
@@ -88,7 +89,7 @@ public class OkPacket extends MySQLPacket {
 //    }
 
     public byte[] writeToBytes() {
-        ByteBuffer buffer = null;//NetSystem.getInstance().getBufferPool().allocate();
+        ByteBuffer buffer = ByteBuffer.allocateDirect(100);//NetSystem.getInstance().getBufferPool().allocate();
         BufferUtil.writeUB3(buffer, calcPacketSize());
         buffer.put(packetId);
         buffer.put(fieldCount);

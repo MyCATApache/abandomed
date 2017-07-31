@@ -11,7 +11,6 @@ import io.mycat.engine.dataChannel.DataHandler;
 import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.MySQLConnection;
-import io.mycat.mysql.state.IdleState;
 import io.mycat.net2.states.NoReadAndWriteState;
 import io.mycat.net2.states.ReadWaitingState;
 import io.mycat.net2.states.WriteWaitingState;

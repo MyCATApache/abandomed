@@ -44,7 +44,7 @@ public abstract class AbstractSchemaSQLCommandHandler implements SQLCommandHandl
 //        switch (packageType) {
 //            case MySQLPacket.COM_QUIT:
 //                LOGGER.info("Client quit.");
-//                frontCon.changeState(CloseState.INSTANCE,"quit packet");
+//                frontCon.changeState(FrontendCloseState.INSTANCE,"quit packet");
 //                break;
 //            case MySQLPacket.COM_INIT_DB:
 //                initDb(frontCon, dataBuffer);

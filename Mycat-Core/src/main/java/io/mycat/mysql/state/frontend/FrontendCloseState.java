@@ -1,0 +1,29 @@
+package io.mycat.mysql.state.frontend;
+
+
+import io.mycat.mysql.MySQLConnection;
+import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.states.ClosingState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * 关闭状态
+ *
+ * @author ynfeng
+ */
+public class FrontendCloseState extends AbstractMysqlConnectionState {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FrontendCloseState.class);
+
+    public static final FrontendCloseState INSTANCE = new FrontendCloseState();
+
+    private FrontendCloseState() {
+    }
+
+    @Override
+    public boolean handle(MySQLConnection mySQLConnection, Object attachment) {
+        LOGGER.debug("Frontend in FrontendCloseState");
+        mySQLConnection.setNextNetworkState(ClosingState.INSTANCE);
+        return false;
+    }
+}
