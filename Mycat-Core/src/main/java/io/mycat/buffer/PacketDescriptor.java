@@ -52,7 +52,7 @@ public class PacketDescriptor {
         return (int) ((packetDescriptor >>> 10) & 0xFFFFFF);
     }
 
-    enum PacketType {
+    public enum PacketType {
         FULL(0), LONG_HALF(1), SHORT_HALF(2);
 
         PacketType(int value) {

@@ -8,6 +8,7 @@ import io.mycat.machine.StateMachine;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.AuthPacket;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.mysql.state.PacketProcessStateTemplete;
 import io.mycat.mysql.state.backend.BackendIdleState;
 import io.mycat.mysql.state.backend.BackendCloseState;
 import io.mycat.net2.Connection;
@@ -25,7 +26,7 @@ import java.io.IOException;
  *
  * @author ynfeng
  */
-public class FrontendAuthenticatingState extends AbstractMysqlConnectionState {
+public class FrontendAuthenticatingState extends PacketProcessStateTemplete {
     private static final Logger LOGGER = LoggerFactory.getLogger(FrontendAuthenticatingState.class);
     public static final FrontendAuthenticatingState INSTANCE = new FrontendAuthenticatingState();
 
@@ -34,11 +35,23 @@ public class FrontendAuthenticatingState extends AbstractMysqlConnectionState {
     private FrontendAuthenticatingState() {
     }
 
-    /**
-     * 对握手响应包进行认证
-     */
     @Override
-    public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) {
+    public boolean stopProcess() {
+        return true;
+    }
+
+    @Override
+    public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) {
+        return false;
+    }
+
+    @Override
+    public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
+        return false;
+    }
+
+    @Override
+    public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
         MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
         try {
             LOGGER.debug("Frontend in FrontendAuthenticatingState");
@@ -89,19 +102,15 @@ public class FrontendAuthenticatingState extends AbstractMysqlConnectionState {
             final String errmsg = "No Mycat Schema defined: " + auth.database;
             LOGGER.debug(errmsg);
             con.writeErrMessage(ErrorCode.ER_BAD_DB_ERROR, "42000".getBytes(), errmsg);
-
             con.setWriteCompleteListener(() -> {
                 con.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);
                 con.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
             });
         } else {
-            con.write(AUTH_OK);
-            con.setWriteCompleteListener(() -> {
-                con.getNetworkStateMachine().setNextState(FrontendIdleState.INSTANCE);
-                con.clearCurrentPacket();
-                con.getDataBuffer().clear();
-                con.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
-            });
+            con.getDataBuffer().clear();
+            con.getDataBuffer().writeBytes(AUTH_OK);
+            con.startTransfer(con.getDataBuffer());
+            con.getProtocolStateMachine().setNextState(FrontendIdleState.INSTANCE);
         }
         return false;
     }

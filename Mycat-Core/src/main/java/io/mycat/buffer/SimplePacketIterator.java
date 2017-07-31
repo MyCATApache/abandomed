@@ -51,4 +51,14 @@ public class SimplePacketIterator implements PacketIterator {
     public void reset() {
         this.nextPacketPos = 0;
     }
+
+    protected void setNextPacketPos(int nextPacketPos) {
+        if (this.nextPacketPos != 0) {
+            this.nextPacketPos = nextPacketPos;
+        }
+    }
+
+    public int getNextPacketPos() {
+        return nextPacketPos;
+    }
 }

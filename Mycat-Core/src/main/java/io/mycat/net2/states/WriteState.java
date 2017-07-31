@@ -1,9 +1,12 @@
 package io.mycat.net2.states;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
+import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.machine.State;
 import io.mycat.machine.StateMachine;
+import io.mycat.mysql.MySQLConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,21 +24,20 @@ public class WriteState implements State {
     @Override
     public boolean handle(StateMachine context, Connection conn, Object attachment)
             throws IOException {
-        TRANSMIT_RESULT result = conn.write();
+        LOGGER.debug("Current conn in WriteState. conn is " + conn.getClass());
+        Connection.NetworkStateMachine networkStateMachine = (Connection.NetworkStateMachine) context;
+        MycatByteBuffer byteBuffer = conn.getDataBuffer();
+        TRANSMIT_RESULT result = networkStateMachine.getDest().write(byteBuffer);
         switch (result) {
             case TRANSMIT_COMPLETE:
-
-                if (!conn.isPassthrough()) {
-                    if (conn.getTmpWriteBytes() != null) {  //说明还有数据没有传输完成,保持当前状态,继续传输数据.
-                        LOGGER.debug("Current conn in WriteState. tmpWriteBytes is not null conn is " + conn.getClass());
-                        return true;
-                    }
-                }
                 LOGGER.debug("Current conn in WriteState  TRANSMIT_COMPLETE. conn is " + conn.getClass());
+                networkStateMachine.setWriteRemaining(0);
                 conn.getNetworkStateMachine().setNextState(NewCmdState.INSTANCE);
                 return true;
             case TRANSMIT_INCOMPLETE:
                 LOGGER.debug("Current conn in WriteState TRANSMIT_INCOMPLETE conn is " + conn.getClass());
+                int updateReamning = networkStateMachine.getWriteRemaining() - (networkStateMachine.getWriteRemaining() - byteBuffer.readableBytes());
+                networkStateMachine.setWriteRemaining(updateReamning);
                 return true;  //没有传输完成,继续保持当前状态,继续传输
             case TRANSMIT_HARD_ERROR: /* 连接断开了... */
                 LOGGER.debug("Current conn in WriteState TRANSMIT_HARD_ERROR conn is " + conn.getClass());

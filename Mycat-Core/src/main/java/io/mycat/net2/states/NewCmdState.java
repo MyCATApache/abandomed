@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import io.mycat.machine.State;
 import io.mycat.machine.StateMachine;
+import io.mycat.mysql.MySQLConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,19 +28,18 @@ public class NewCmdState implements State {
     @Override
     public boolean handle(StateMachine context, Connection conn, Object attachment) throws IOException {
         LOGGER.debug("Current conn in NewCmdState. conn is " + conn.getClass());
-        //处于透传模式时,不指定connState. 由 listener 通过设置nextConnState 指定.
-        // 通过回调可以设置业务状态机的状态等操作
-        WriteCompleteListener listener = conn.getWriteCompleteListener();
-        if (listener != null) {
-            listener.wirteComplete();
-            conn.setWriteCompleteListener(null);
+        MySQLConnection mySQLConnection = (MySQLConnection) conn;
+        if (mySQLConnection.getProtocolStateMachine().getNextState() == null) {
+            throw new IllegalStateException(conn + " has no nextState!");
         }
-
+        conn.getDataBuffer().compact();
+        conn.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
         if (conn.getNetworkStateMachine().getNextState() == null) {
             /* 命令解析完成后,应该制定后续状态,这里打印出 error 日志      */
             LOGGER.error("Current conn in ReadWaitingState. conn is " + conn.getClass());
             throw new RuntimeException(" error connState,you must set nextConnState ");
         }
+
         return true;
     }
 

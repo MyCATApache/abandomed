@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.mysql.packet.HandshakePacket;
-import io.mycat.net2.states.ReadWaitingState;
 import io.mycat.util.CharsetUtil;
 
 /**
@@ -35,24 +34,16 @@ public class BackendHandshakeState extends AbstractMysqlConnectionState {
     public boolean handle(StateMachine context, Connection connection, Object attachment) {
         MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
         LOGGER.debug("Backend in HandshakeState");
-        boolean returnflag;
         try {
             processHandShakePacket(mySQLBackendConnection);
             mySQLBackendConnection.authenticate();
             mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendAuthenticatingState.INSTANCE);
-            mySQLBackendConnection.setWriteCompleteListener(() -> {
-                mySQLBackendConnection.clearCurrentPacket();
-                mySQLBackendConnection.getDataBuffer().clear();
-                mySQLBackendConnection.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
-            });
-
-            returnflag = false;
+            return false;
         } catch (Throwable e) {
             LOGGER.warn("Backend InitialState error", e);
             mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);
-            returnflag = true;
+            return true;
         }
-        return returnflag;
     }
 
     private void processHandShakePacket(MySQLBackendConnection conn) {

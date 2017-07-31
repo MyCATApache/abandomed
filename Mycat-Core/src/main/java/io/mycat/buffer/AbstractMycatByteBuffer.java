@@ -1,6 +1,8 @@
 package io.mycat.buffer;
 
 
+import io.mycat.machine.SimpleStateMachine;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -121,6 +123,29 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
         } else {
             return getInt(index, 1);
         }
+    }
+
+    @Override
+    public MycatByteBuffer compact() {
+        int oldWriteIndex = writeIndex;
+        writeIndex(writeIndex() - readIndex());
+        writeLimit(0);
+        readIndex(0);
+        if (defaultPacketIterator != null && defaultPacketIterator instanceof SimplePacketIterator) {
+            SimplePacketIterator simplePacketIterator = ((SimplePacketIterator) defaultPacketIterator);
+            int oldPacketPos = simplePacketIterator.getNextPacketPos();
+            simplePacketIterator.setNextPacketPos(oldPacketPos - (oldWriteIndex - writeIndex));
+        }
+        if (namedPacketIteratorMap != null) {
+            for (PacketIterator packetIterator : namedPacketIteratorMap.values()) {
+                if (packetIterator instanceof SimplePacketIterator) {
+                    SimplePacketIterator simplePacketIterator = ((SimplePacketIterator) packetIterator);
+                    int oldPacketPos = simplePacketIterator.getNextPacketPos();
+                    simplePacketIterator.setNextPacketPos(oldPacketPos - (oldWriteIndex - writeIndex));
+                }
+            }
+        }
+        return this;
     }
 
     @Override

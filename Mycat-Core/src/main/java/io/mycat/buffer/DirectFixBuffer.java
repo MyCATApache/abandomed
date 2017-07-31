@@ -30,6 +30,15 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
     }
 
     @Override
+    public int transferToChannel(SocketChannel socketChannel, int length) throws IOException {
+        byteBuffer.limit(readIndex() + length);
+        byteBuffer.position(readIndex());
+        int write = socketChannel.write(byteBuffer);
+        readIndex(readIndex() + write);
+        return write;
+    }
+
+    @Override
     public int transferFromChannel(SocketChannel socketChannel) throws IOException {
         byteBuffer.limit(capacity());
         byteBuffer.position(writeIndex());
@@ -53,9 +62,7 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
         byteBuffer.position(readIndex());
         byteBuffer.limit(writeIndex());
         byteBuffer.compact();
-        writeIndex(writeIndex() - readIndex());
-        writeLimit(0);
-        readIndex(0);
+        super.compact();
         return this;
     }
 

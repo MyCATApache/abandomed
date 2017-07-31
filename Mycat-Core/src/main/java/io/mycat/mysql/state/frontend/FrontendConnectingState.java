@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-
 /**
  * 连接中状态
  *
@@ -24,27 +23,19 @@ public class FrontendConnectingState extends AbstractMysqlConnectionState {
 
     /**
      * 向客户端响应握手包
-     *
      */
     @Override
     public boolean handle(StateMachine context, Connection connection, Object attachment) {
         LOGGER.debug("Frontend in FrontendConnectingState");
         MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
-        boolean returnflag = false;
         try {
             mySQLFrontConnection.sendAuthPackge();
-            mySQLFrontConnection.setWriteCompleteListener(() -> {
-                mySQLFrontConnection.clearCurrentPacket();
-                mySQLFrontConnection.getDataBuffer().clear();
-                mySQLFrontConnection.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
-            });
             mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendHandshakeState.INSTANCE);
-            returnflag = false;
+            return false;
         } catch (Throwable e) {
             LOGGER.warn("frontend FrontendInitialState error", e);
             mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendCloseState.INSTANCE);
-            returnflag = true;
+            return true;
         }
-        return returnflag;
     }
 }

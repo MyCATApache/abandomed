@@ -6,6 +6,7 @@ import io.mycat.machine.StateMachine;
 import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.mysql.state.PacketProcessStateTemplete;
 import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ import java.io.IOException;
  *
  * @author ynfeng
  */
-public class FrontendIdleState extends AbstractMysqlConnectionState {
+public class FrontendIdleState extends PacketProcessStateTemplete {
     private static final Logger LOGGER = LoggerFactory.getLogger(FrontendIdleState.class);
 
     public static final FrontendIdleState INSTANCE = new FrontendIdleState();
@@ -25,26 +26,38 @@ public class FrontendIdleState extends AbstractMysqlConnectionState {
     private FrontendIdleState() {
     }
 
+
     @Override
-    public boolean handle(StateMachine context, Connection connection, Object attachment) throws IOException {
+    public boolean stopProcess() {
+        return true;
+    }
+
+    @Override
+    public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) {
+        return false;
+    }
+
+    @Override
+    public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
+        return false;
+    }
+
+    @Override
+    public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
         LOGGER.debug("Frontend in FrontendIdleState");
         MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
-        processPacketHeader(mySQLFrontConnection);
-        int packetType = mySQLFrontConnection.getCurrentPacketType();
-        boolean returnflag = false;
-        switch (packetType) {
+        switch (type) {
             case MySQLPacket.COM_QUERY:
                 LOGGER.debug("Frontend receive a COM_QUERY in FrontendIdleState");
                 mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendComQueryState.INSTANCE);
-                returnflag = true;
-                break;
+                return true;
             case MySQLPacket.COM_QUIT:
                 LOGGER.debug("Frontend receive a COM_QUIT in FrontendIdleState");
                 mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendCloseState.INSTANCE);
-                returnflag = true;
+                return true;
             default:
                 break;
         }
-        return returnflag;
+        return false;
     }
 }

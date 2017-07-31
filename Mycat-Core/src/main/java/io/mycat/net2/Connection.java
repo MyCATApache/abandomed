@@ -253,25 +253,6 @@ public abstract class Connection implements ClosableConnection {
         this.reactor = reactorName;
     }
 
-    /**
-     * 如果 报文长度大于缓冲区长度,分段发送
-     *
-     * @param data
-     * @throws IOException
-     */
-    public void write(byte[] data) throws IOException {
-        //TODO 是否有BUG?连续多次调用,造成tmpWriteBytes被覆盖，进而丢失数据？
-        int remains = dataBuffer.writableBytes();
-        if (remains >= data.length) {
-            dataBuffer.writeBytes(data);
-        } else {
-            tmpWriteBytes = data;
-        }
-        this.directTransferMode = TransferMode.NONE;
-        this.passthrough = false;
-        this.getNetworkStateMachine().setNextState(WriteWaitingState.INSTANCE);
-    }
-
     /*
      * Returns:
      *   TRANSMIT_COMPLETE   All done writing.
@@ -279,50 +260,15 @@ public abstract class Connection implements ClosableConnection {
      *   TRANSMIT_SOFT_ERROR Can't write any more right now.
      *   TRANSMIT_HARD_ERROR Can't write (networkState is set to conn_closing)
      */
-    public TRANSMIT_RESULT write() throws IOException {
-
+    public TRANSMIT_RESULT write(MycatByteBuffer buffer) throws IOException {
         final NetSystem nets = NetSystem.getInstance();
-        final MycatByteBuffer buffer = this.dataBuffer;
         int written = 0;
         int remains = 0;
-        if (passthrough) {
-            written = buffer.transferToChannel(this.channel);
-            remains = buffer.writeLimit() - buffer.readIndex();//buffer.getReadPos() - buffer.getLastWritePos();
-        } else {
-            /**
-             * 在非透传模式下,如果 local buffer > net buffer 剩余长度,分批透传
-             */
-            if (tmpWriteBytes != null && tmplastwritePos < (tmpWriteBytes.length - 1)) {
-                dataBuffer.compact();
-                int tempremains = tmpWriteBytes.length - tmplastwritePos;
-                int localbufferremains = dataBuffer.writableBytes();//dataBuffer.getTotalSize() - dataBuffer.getWritePos();
-                if (tempremains >= localbufferremains) {
-//        			dataBuffer.putBytes(tmpWriteBytes,tmplastwritePos,localbufferremains);
-                    dataBuffer.writeBytes(localbufferremains, tmpWriteBytes);
-                    tmplastwritePos += localbufferremains;
-                } else {
-//        			dataBuffer.putBytes(tmpWriteBytes,tmplastwritePos,tempremains);
-                    dataBuffer.writeBytes(tmpWriteBytes);
-                    tmpWriteBytes = null;
-                    tmplastwritePos = 0;
-                }
-            }
-            written = buffer.transferToChannel(this.channel);
-            remains = buffer.readableBytes();//buffer.getWritePos() - buffer.getLastWritePos();
-        }
-
+        written = buffer.transferToChannel(this.channel, this.getNetworkStateMachine().getWriteRemaining());
+        remains = buffer.readableBytes();//buffer.getWritePos() - buffer.getLastWritePos();
         if (written > 0) {
             netOutBytes += written;
             nets.addNetOutBytes(written);
-            // trace-protocol
-            // @author little-pan
-            // @since 2016-09-29
-//            if (nets.getNetConfig().isTraceProtocol()) {
-//                final String hexs = StringUtil.dumpAsHex(buffer, buffer.readPos() - written, written);
-//                LOGGER.info(
-//                        "C#{}B#{}: last writed = {} bytes, remain to write = {} bytes, written bytes\n{}",
-//                        getId(), buffer.hashCode(), written, remains, hexs);
-//            }
             if (remains > 0) {  // 还有数据没有写完
                 return TRANSMIT_RESULT.TRANSMIT_INCOMPLETE;
             } else {
@@ -339,6 +285,49 @@ public abstract class Connection implements ClosableConnection {
         }
         return TRANSMIT_RESULT.TRANSMIT_COMPLETE;
     }
+
+    /**
+     * Transfer{@code length} bytes from {@code mycatByteBuffer} to {@code dest} {@link Connection}.
+     *
+     * @param dest
+     * @param mycatByteBuffer
+     * @param length
+     */
+    public void startTransfer(Connection dest, MycatByteBuffer mycatByteBuffer, int length) throws IOException {
+        NetworkStateMachine networkStateMachine = this.getNetworkStateMachine();
+        if (networkStateMachine.getWriteRemaining() != 0) {
+            throw new IOException("A transmission is in progress!");
+        }
+        networkStateMachine.setDest(dest);
+        networkStateMachine.setSrc(this);
+        networkStateMachine.setWriteRemaining(length);
+        networkStateMachine.setNextState(WriteWaitingState.INSTANCE);
+        networkStateMachine.driveState();
+    }
+
+    /**
+     * Transfer all writable bytes from {@code mycatByteBuffer} to {@code dest} {@link Connection}
+     */
+    public void startTransfer(Connection dest, MycatByteBuffer mycatByteBuffer) throws IOException {
+        this.startTransfer(dest, mycatByteBuffer, mycatByteBuffer.readableBytes());
+    }
+
+    /**
+     * Transfer{@code length} bytes from {@code mycatByteBuffer} to self SocketChannel.
+     */
+    public void startTransfer(MycatByteBuffer mycatByteBuffer, int length) throws IOException {
+        this.startTransfer(this, mycatByteBuffer, length);
+    }
+
+    /**
+     * Transfer all writable bytes from {@code mycatByteBuffer} to self SocketChannel.
+     *
+     * @param mycatByteBuffer
+     */
+    public void startTransfer(MycatByteBuffer mycatByteBuffer) throws IOException {
+        this.startTransfer(this, mycatByteBuffer);
+    }
+
 
     public Object getAttachement() {
         return attachement;
@@ -511,10 +500,37 @@ public abstract class Connection implements ClosableConnection {
         return networkStateMachine;
     }
 
-    public class NetworkStateMachine extends SimpleStateMachine{
+    public class NetworkStateMachine extends SimpleStateMachine {
+        private int writeRemaining;
+        private Connection src;
+        private Connection dest;
 
         public NetworkStateMachine(Connection connection, State initialState) {
             super(connection, initialState);
+        }
+
+        public int getWriteRemaining() {
+            return writeRemaining;
+        }
+
+        public void setWriteRemaining(int writeRemaining) {
+            this.writeRemaining = writeRemaining;
+        }
+
+        public Connection getSrc() {
+            return src;
+        }
+
+        public void setSrc(Connection src) {
+            this.src = src;
+        }
+
+        public Connection getDest() {
+            return dest;
+        }
+
+        public void setDest(Connection dest) {
+            this.dest = dest;
         }
     }
 }

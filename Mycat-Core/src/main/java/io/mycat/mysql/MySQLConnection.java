@@ -28,7 +28,6 @@ import java.nio.channels.SocketChannel;
 
 import io.mycat.machine.SimpleStateMachine;
 import io.mycat.machine.State;
-import io.mycat.machine.StateMachine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,7 +155,7 @@ public class MySQLConnection extends Connection {
     public void writeMsqlPackage(MySQLPacket pkg) throws IOException {
         int pkgSize = pkg.calcPacketSize();
         pkg.write(getDataBuffer(), pkgSize);
-        getNetworkStateMachine().setNextState(WriteWaitingState.INSTANCE);
+        this.startTransfer(getDataBuffer(), pkgSize + 4);
     }
 
     public void writeErrMessage(int errno, String info) throws IOException {
@@ -174,7 +173,6 @@ public class MySQLConnection extends Connection {
         err.errno = errno;
         err.message = info.getBytes();
         err.sqlState = sqlstate;
-        this.writeMsqlPackage(err);
         this.writeMsqlPackage(err);
     }
 
