@@ -4,16 +4,11 @@ package io.mycat.mysql.state.frontend;
 import io.mycat.SQLEngineCtx;
 import io.mycat.engine.ErrorCode;
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.machine.StateMachine;
-import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.AuthPacket;
-import io.mycat.mysql.state.AbstractMysqlConnectionState;
 import io.mycat.mysql.state.PacketProcessStateTemplete;
-import io.mycat.mysql.state.backend.BackendIdleState;
 import io.mycat.mysql.state.backend.BackendCloseState;
 import io.mycat.net2.Connection;
 import io.mycat.net2.states.ClosingState;
-import io.mycat.net2.states.ReadWaitingState;
 import io.mycat.util.CharsetUtil;
 import io.mycat.util.StringUtil;
 import org.slf4j.Logger;
@@ -33,11 +28,6 @@ public class FrontendAuthenticatingState extends PacketProcessStateTemplete {
     private static final byte[] AUTH_OK = new byte[]{7, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0};
 
     private FrontendAuthenticatingState() {
-    }
-
-    @Override
-    public boolean stopProcess() {
-        return true;
     }
 
     @Override
@@ -107,10 +97,10 @@ public class FrontendAuthenticatingState extends PacketProcessStateTemplete {
                 con.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
             });
         } else {
-            con.getDataBuffer().clear();
             con.getDataBuffer().writeBytes(AUTH_OK);
             con.startTransfer(con.getDataBuffer());
             con.getProtocolStateMachine().setNextState(FrontendIdleState.INSTANCE);
+            interruptIterate();
         }
         return false;
     }

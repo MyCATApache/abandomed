@@ -29,11 +29,6 @@ public class BackendAuthenticatingState extends PacketProcessStateTemplete {
     }
 
     @Override
-    public boolean stopProcess() {
-        return true;
-    }
-
-    @Override
     public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) {
         return false;
     }

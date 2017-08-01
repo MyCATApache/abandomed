@@ -1,8 +1,10 @@
 package io.mycat.mysql.state.backend;
 
 
+import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
 import io.mycat.machine.StateMachine;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.mysql.state.PacketProcessStateTemplete;
 import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,28 +18,32 @@ import io.mycat.util.CharsetUtil;
  *
  * @author ynfeng
  */
-public class BackendHandshakeState extends AbstractMysqlConnectionState {
+public class BackendHandshakeState extends PacketProcessStateTemplete {
     private static final Logger LOGGER = LoggerFactory.getLogger(BackendHandshakeState.class);
     public static final BackendHandshakeState INSTANCE = new BackendHandshakeState();
 
     private BackendHandshakeState() {
     }
 
-    /**
-     * 向服务器响应握手包
-     *
-     * @param context
-     * @param connection
-     * @param attachment
-     */
     @Override
-    public boolean handle(StateMachine context, Connection connection, Object attachment) {
+    public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) {
+        return false;
+    }
+
+    @Override
+    public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
+        return false;
+    }
+
+    @Override
+    public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
         MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
         LOGGER.debug("Backend in HandshakeState");
         try {
             processHandShakePacket(mySQLBackendConnection);
             mySQLBackendConnection.authenticate();
             mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendAuthenticatingState.INSTANCE);
+            interruptIterate();
             return false;
         } catch (Throwable e) {
             LOGGER.warn("Backend InitialState error", e);

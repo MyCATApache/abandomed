@@ -5,13 +5,20 @@ import io.mycat.buffer.PacketDescriptor;
 import io.mycat.buffer.PacketIterator;
 import io.mycat.machine.StateMachine;
 import io.mycat.net2.Connection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 /**
  * Created by ynfeng on 2017/7/31.
+ * <p>
+ * 当状态需要处理收到的包时可继承此类，方便处理.如果不继承此类需要自行处理短半包，长半包和全包的情况
  */
 public abstract class PacketProcessStateTemplete extends AbstractMysqlConnectionState {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PacketProcessStateTemplete.class);
+    private boolean interrupted = false;
+
 
     @Override
     public boolean handle(StateMachine context, Connection connection, Object attachment) throws IOException {
@@ -20,6 +27,7 @@ public abstract class PacketProcessStateTemplete extends AbstractMysqlConnection
         boolean result = false;
         while (it.hasPacket()) {
             long pakcetDescriptor = it.nextPacket();
+            LOGGER.debug("Iterate packet {}", pakcetDescriptor);
             int packetStartPos = PacketDescriptor.getPacketStartPos(pakcetDescriptor);
             int packetLen = PacketDescriptor.getPacketLen(pakcetDescriptor);
             byte type = PacketDescriptor.getCommandType(pakcetDescriptor);
@@ -35,14 +43,21 @@ public abstract class PacketProcessStateTemplete extends AbstractMysqlConnection
                     result = handleShortHalfPacket(connection, attachment, packetStartPos);
                     break;
             }
-            if (stopProcess()) {
+            if (interrupted) {
                 return result;
             }
         }
         return result;
     }
 
-    public abstract boolean stopProcess();
+    /**
+     * 用于强行停止迭代过程
+     * 注意：因为读写缓冲区共享的原因，如果在迭代过程中向缓冲区写入了包，
+     * 则必须要调用此方法中止迭代过程，否则会一直迭代新写入的包
+     */
+    public void interruptIterate() {
+        this.interrupted = true;
+    }
 
     public abstract boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos);
 
