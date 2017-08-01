@@ -32,26 +32,16 @@ public class FrontendComQueryState extends PacketProcessStateTemplete {
     @Override
     public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         LOGGER.debug("Frontend in FrontendComQueryState long half packet");
-        MySQLFrontConnection frontCon = (MySQLFrontConnection) connection;
-        MySQLBackendConnection backendConnection = frontCon.getBackendConnection();
-        frontCon.getNetworkStateMachine().setNextState(NoReadAndWriteState.INSTANCE);
-        if (backendConnection == null) {   //往往新建立连接时,后端连接会是空
-            backendConnection = getBackendFrontConnection(frontCon);
-            MySQLBackendConnection finalBackendConnection = backendConnection;
-            frontCon.addTodoTask(() -> {
-                //保持当前状态
-                frontCon.startTransfer(finalBackendConnection, frontCon.getDataBuffer());
-            });
-        } else {
-            //保持当前状态
-            frontCon.startTransfer(backendConnection, frontCon.getDataBuffer());
-        }
-        return false;
+        return internalProcess(connection, false);
     }
 
     @Override
     public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         LOGGER.debug("Frontend in FrontendComQueryState");
+        return internalProcess(connection, true);
+    }
+
+    private boolean internalProcess(Connection connection, boolean isFullPacket) throws IOException {
         MySQLFrontConnection frontCon = (MySQLFrontConnection) connection;
         MySQLBackendConnection backendConnection = frontCon.getBackendConnection();
         if (backendConnection == null) {   //往往新建立连接时,后端连接会是空
@@ -59,12 +49,17 @@ public class FrontendComQueryState extends PacketProcessStateTemplete {
             MySQLBackendConnection finalBackendConnection = backendConnection;
             frontCon.addTodoTask(() -> {
                 frontCon.startTransfer(finalBackendConnection, frontCon.getDataBuffer());
-                frontCon.getProtocolStateMachine().setNextState(FrontendIdleState.INSTANCE);
+                if (isFullPacket) {
+                    frontCon.getProtocolStateMachine().setNextState(FrontendIdleState.INSTANCE);
+                }
             });
         } else {
             frontCon.startTransfer(backendConnection, frontCon.getDataBuffer());
-            frontCon.getProtocolStateMachine().setNextState(FrontendIdleState.INSTANCE);
+            if (isFullPacket) {
+                frontCon.getProtocolStateMachine().setNextState(FrontendIdleState.INSTANCE);
+            }
         }
         return false;
     }
+
 }
