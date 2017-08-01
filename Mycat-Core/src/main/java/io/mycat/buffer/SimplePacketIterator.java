@@ -6,6 +6,10 @@ package io.mycat.buffer;
 public class SimplePacketIterator implements PacketIterator {
     private MycatByteBuffer buffer;
     private int nextPacketPos;
+    private PacketDescriptor.PacketType lastPacketType;
+    private int lastPacketPos;
+    private int lastPacketLen;
+    private int lastCommandType;
 
     public SimplePacketIterator(MycatByteBuffer buffer) {
         this.buffer = buffer;
@@ -14,9 +18,16 @@ public class SimplePacketIterator implements PacketIterator {
     @Override
     public boolean hasPacket() {
         int writeIndex = buffer.writeIndex();
-        if (writeIndex - 1 > nextPacketPos) {
+        if (nextPacketPos < 0) {
+            /**
+             * 小于0是因为一次compact造成，正在迭代的包数据被清空。
+             * 此时应该处于半包状态,所以是有包需要处理的
+             */
+            return true;
+        } else if (writeIndex - 1 > nextPacketPos) {
             return true;
         }
+
         return false;
     }
 
@@ -25,9 +36,25 @@ public class SimplePacketIterator implements PacketIterator {
         long packetDescriptor = 0;
         int writeIndex = buffer.writeIndex();
         PacketDescriptor.PacketType packetType = null;
+        int packetLen = 0;
+        byte commandType = 0;
+        if (nextPacketPos < 0) {
+            //TODO 未测试
+            //进行包对齐操作
+            if (nextPacketPos + writeIndex < lastPacketLen) {
+                packetDescriptor = PacketDescriptor.setPacketLen(packetDescriptor, lastPacketLen + 4);
+                packetDescriptor = PacketDescriptor.setPacketStartPos(packetDescriptor, nextPacketPos);
+                packetDescriptor = PacketDescriptor.setCommandType(packetDescriptor, lastCommandType);
+                packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, lastPacketType);
+                return packetDescriptor;
+            } else {
+                nextPacketPos = lastPacketLen - writeIndex;
+            }
+        }
         if (writeIndex - nextPacketPos >= 5) {
-            int packetLen = (int) buffer.getFixInt(nextPacketPos, 3);
-            int commandType = buffer.getByte(nextPacketPos + 4);
+            packetLen = (int) buffer.getFixInt(nextPacketPos, 3);
+            int s = (int) buffer.getFixInt(nextPacketPos + 3, 1);
+            commandType = buffer.getByte(nextPacketPos + 4);
             if (writeIndex - nextPacketPos < packetLen + 4) {
                 packetType = PacketDescriptor.PacketType.LONG_HALF;
             } else {
@@ -38,18 +65,32 @@ public class SimplePacketIterator implements PacketIterator {
             packetDescriptor = PacketDescriptor.setCommandType(packetDescriptor, commandType);
             packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, packetType);
             if (packetType == PacketDescriptor.PacketType.FULL) {
-                nextPacketPos += packetLen + 5;
+                nextPacketPos += packetLen + 4;
             }
         } else {
-            packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, PacketDescriptor.PacketType.SHORT_HALF);
+            packetType = PacketDescriptor.PacketType.SHORT_HALF;
+            packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, packetType);
             packetDescriptor = PacketDescriptor.setPacketStartPos(packetDescriptor, nextPacketPos);
         }
+        lastPacketType = packetType;
+        lastCommandType = commandType;
+        lastPacketPos = nextPacketPos;
+        lastPacketLen = packetLen;
         return packetDescriptor;
     }
 
     @Override
     public void reset() {
         this.nextPacketPos = 0;
+    }
+
+    @Override
+    public boolean fallback() {
+        if (nextPacketPos - lastPacketPos >= 0) {
+            nextPacketPos -= lastPacketPos;
+            return true;
+        }
+        return false;
     }
 
     protected void setNextPacketPos(int nextPacketPos) {
@@ -60,5 +101,11 @@ public class SimplePacketIterator implements PacketIterator {
 
     public int getNextPacketPos() {
         return nextPacketPos;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + "[nextPacketPos=" + nextPacketPos + ",lastPacketType=" + lastPacketType + "" +
+                ",lastCommandType=" + lastCommandType + ",lastPacketLen=" + lastPacketLen + ",lastPacketPos=" + lastPacketPos + "]";
     }
 }

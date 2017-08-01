@@ -1,9 +1,6 @@
 package io.mycat.mysql.state.backend;
 
 
-import com.sun.xml.internal.bind.v2.runtime.reflect.Lister;
-import io.mycat.machine.StateMachine;
-import io.mycat.mysql.state.AbstractMysqlConnectionState;
 import io.mycat.mysql.state.PacketProcessStateTemplete;
 import io.mycat.net2.Connection;
 import org.slf4j.Logger;
@@ -12,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.util.CharsetUtil;
+
+import java.io.IOException;
 
 /**
  * 握手状态
@@ -26,17 +25,17 @@ public class BackendHandshakeState extends PacketProcessStateTemplete {
     }
 
     @Override
-    public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) {
+    public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) throws IOException {
         return false;
     }
 
     @Override
-    public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
+    public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         return false;
     }
 
     @Override
-    public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
+    public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
         LOGGER.debug("Backend in HandshakeState");
         try {

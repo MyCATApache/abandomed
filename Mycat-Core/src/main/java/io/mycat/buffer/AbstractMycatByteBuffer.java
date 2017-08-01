@@ -1,8 +1,6 @@
 package io.mycat.buffer;
 
 
-import io.mycat.machine.SimpleStateMachine;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -127,24 +125,31 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
 
     @Override
     public MycatByteBuffer compact() {
-        int oldWriteIndex = writeIndex;
-        writeIndex(writeIndex() - readIndex());
-        writeLimit(0);
-        readIndex(0);
         if (defaultPacketIterator != null && defaultPacketIterator instanceof SimplePacketIterator) {
+            //先将迭代器向后迭代至最后一个非整包
+            while (defaultPacketIterator.hasPacket()
+                    && PacketDescriptor.getPacketType(defaultPacketIterator.nextPacket()) == PacketDescriptor.PacketType.FULL)
+                ;
             SimplePacketIterator simplePacketIterator = ((SimplePacketIterator) defaultPacketIterator);
             int oldPacketPos = simplePacketIterator.getNextPacketPos();
-            simplePacketIterator.setNextPacketPos(oldPacketPos - (oldWriteIndex - writeIndex));
+            simplePacketIterator.setNextPacketPos(oldPacketPos - readIndex());
         }
         if (namedPacketIteratorMap != null) {
             for (PacketIterator packetIterator : namedPacketIteratorMap.values()) {
                 if (packetIterator instanceof SimplePacketIterator) {
                     SimplePacketIterator simplePacketIterator = ((SimplePacketIterator) packetIterator);
+                    //先将迭代器向后迭代至最后一个非整包
+                    while (defaultPacketIterator.hasPacket()
+                            && PacketDescriptor.getPacketType(defaultPacketIterator.nextPacket()) == PacketDescriptor.PacketType.FULL)
+                        ;
                     int oldPacketPos = simplePacketIterator.getNextPacketPos();
-                    simplePacketIterator.setNextPacketPos(oldPacketPos - (oldWriteIndex - writeIndex));
+                    simplePacketIterator.setNextPacketPos(oldPacketPos - readIndex());
                 }
             }
         }
+        writeIndex(writeIndex() - readIndex());
+        writeLimit(0);
+        readIndex(0);
         return this;
     }
 
@@ -435,4 +440,15 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
         }
         return iterator;
     }
+
+    @Override
+    public String toString() {
+        String str = this.getClass().getSimpleName() + "[writeIndex = " + writeIndex() + ",readIndex=" + readIndex() + ",writeLimit=" + writeLimit() + "]";
+        if (defaultPacketIterator != null) {
+            str += "," + defaultPacketIterator.toString();
+        }
+        return str;
+    }
+
+
 }

@@ -27,7 +27,7 @@ public class ReadWaitingState implements State {
             conn.getProcessKey().interestOps(conn.getProcessKey().interestOps() | SelectionKey.OP_READ);
             needWakeup = true;
         } catch (Exception e) {
-            LOGGER.warn("enable read fail " + e);
+            LOGGER.warn("enable read fail ", e);
             conn.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
         }
         if (needWakeup) {

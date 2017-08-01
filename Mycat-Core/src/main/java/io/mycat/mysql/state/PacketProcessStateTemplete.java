@@ -22,6 +22,7 @@ public abstract class PacketProcessStateTemplete extends AbstractMysqlConnection
 
     @Override
     public boolean handle(StateMachine context, Connection connection, Object attachment) throws IOException {
+        LOGGER.debug(this.getClass().getSimpleName() + " handle packet = " + connection.getDataBuffer());
         MycatByteBuffer buffer = connection.getDataBuffer();
         PacketIterator it = buffer.packetIterator();
         boolean result = false;
@@ -59,9 +60,9 @@ public abstract class PacketProcessStateTemplete extends AbstractMysqlConnection
         this.interrupted = true;
     }
 
-    public abstract boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos);
+    public abstract boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) throws IOException;
 
-    public abstract boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type);
+    public abstract boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException;
 
-    public abstract boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type);
+    public abstract boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException;
 }

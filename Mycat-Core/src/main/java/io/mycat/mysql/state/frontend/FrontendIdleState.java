@@ -2,10 +2,7 @@ package io.mycat.mysql.state.frontend;
 
 
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.machine.StateMachine;
-import io.mycat.mysql.MySQLConnection;
 import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.mysql.state.AbstractMysqlConnectionState;
 import io.mycat.mysql.state.PacketProcessStateTemplete;
 import io.mycat.net2.Connection;
 import org.slf4j.Logger;
@@ -28,23 +25,31 @@ public class FrontendIdleState extends PacketProcessStateTemplete {
 
 
     @Override
-    public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) {
+    public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) throws IOException {
         return false;
     }
 
     @Override
-    public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
-        return false;
+    public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
+        LOGGER.debug("Frontend in FrontendIdleState long half packet");
+        //与全包处理相同
+        boolean result = handleFullPacket(connection, attachment, packetStartPos, packetLen, type);
+        //因为是半包，所以立即中止迭代,进入下一状态
+        interruptIterate();
+        return result;
     }
 
     @Override
-    public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
+    public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         LOGGER.debug("Frontend in FrontendIdleState");
         MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
         switch (type) {
             case MySQLPacket.COM_QUERY:
                 LOGGER.debug("Frontend receive a COM_QUERY in FrontendIdleState");
+                //因为收到一个完整包，下一个状态不能迭代了，所以回退到上一个包，也就是本次的包，并立即中止迭代
+                mySQLFrontConnection.getDataBuffer().packetIterator().fallback();
                 mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendComQueryState.INSTANCE);
+                interruptIterate();
                 return true;
             case MySQLPacket.COM_QUIT:
                 LOGGER.debug("Frontend receive a COM_QUIT in FrontendIdleState");

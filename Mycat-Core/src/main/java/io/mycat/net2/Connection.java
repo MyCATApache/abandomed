@@ -260,11 +260,11 @@ public abstract class Connection implements ClosableConnection {
      *   TRANSMIT_SOFT_ERROR Can't write any more right now.
      *   TRANSMIT_HARD_ERROR Can't write (networkState is set to conn_closing)
      */
-    public TRANSMIT_RESULT write(MycatByteBuffer buffer) throws IOException {
+    public TRANSMIT_RESULT write(MycatByteBuffer buffer,int length) throws IOException {
         final NetSystem nets = NetSystem.getInstance();
         int written = 0;
         int remains = 0;
-        written = buffer.transferToChannel(this.channel, this.getNetworkStateMachine().getWriteRemaining());
+        written = buffer.transferToChannel(this.channel,length);
         remains = buffer.readableBytes();//buffer.getWritePos() - buffer.getLastWritePos();
         if (written > 0) {
             netOutBytes += written;

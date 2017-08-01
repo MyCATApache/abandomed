@@ -31,4 +31,10 @@ public interface PacketIterator {
      * Reset the internal state.
      */
     void reset();
+
+    /**
+     * fallback to previous packet.
+     * if success return {@code true}
+     */
+    boolean fallback();
 }

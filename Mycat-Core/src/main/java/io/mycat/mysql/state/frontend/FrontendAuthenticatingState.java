@@ -31,17 +31,17 @@ public class FrontendAuthenticatingState extends PacketProcessStateTemplete {
     }
 
     @Override
-    public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) {
+    public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) throws IOException {
         return false;
     }
 
     @Override
-    public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
+    public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         return false;
     }
 
     @Override
-    public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
+    public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
         try {
             LOGGER.debug("Frontend in FrontendAuthenticatingState");

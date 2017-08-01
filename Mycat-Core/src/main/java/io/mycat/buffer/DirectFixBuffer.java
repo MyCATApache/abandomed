@@ -59,8 +59,8 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
 
     @Override
     public MycatByteBuffer compact() {
-        byteBuffer.position(readIndex());
-        byteBuffer.limit(writeIndex());
+        byteBuffer.position(0);
+        byteBuffer.limit(readIndex());
         byteBuffer.compact();
         super.compact();
         return this;

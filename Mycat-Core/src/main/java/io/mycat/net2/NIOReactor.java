@@ -109,7 +109,7 @@ public final class NIOReactor {
                                     LOGGER.debug(con + " socket key canceled");
                                 }
                             } else {
-                                LOGGER.warn(con + " " + e);
+                                LOGGER.warn(con + "", e);
                             }
                         }
                     }

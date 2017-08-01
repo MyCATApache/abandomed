@@ -27,17 +27,17 @@ public class WriteState implements State {
         LOGGER.debug("Current conn in WriteState. conn is " + conn.getClass());
         Connection.NetworkStateMachine networkStateMachine = (Connection.NetworkStateMachine) context;
         MycatByteBuffer byteBuffer = conn.getDataBuffer();
-        TRANSMIT_RESULT result = networkStateMachine.getDest().write(byteBuffer);
+        TRANSMIT_RESULT result = networkStateMachine.getDest().write(byteBuffer, networkStateMachine.getWriteRemaining());
         switch (result) {
             case TRANSMIT_COMPLETE:
-                LOGGER.debug("Current conn in WriteState  TRANSMIT_COMPLETE. conn is " + conn.getClass());
+                LOGGER.debug("Current conn in WriteState  TRANSMIT_COMPLETE. conn is " + conn.getClass() + " buffer is " + byteBuffer);
                 networkStateMachine.setWriteRemaining(0);
                 conn.getNetworkStateMachine().setNextState(NewCmdState.INSTANCE);
                 return true;
             case TRANSMIT_INCOMPLETE:
                 LOGGER.debug("Current conn in WriteState TRANSMIT_INCOMPLETE conn is " + conn.getClass());
-                int updateReamning = networkStateMachine.getWriteRemaining() - (networkStateMachine.getWriteRemaining() - byteBuffer.readableBytes());
-                networkStateMachine.setWriteRemaining(updateReamning);
+                int updateRemaining = networkStateMachine.getWriteRemaining() - (networkStateMachine.getWriteRemaining() - byteBuffer.readableBytes());
+                networkStateMachine.setWriteRemaining(updateRemaining);
                 return true;  //没有传输完成,继续保持当前状态,继续传输
             case TRANSMIT_HARD_ERROR: /* 连接断开了... */
                 LOGGER.debug("Current conn in WriteState TRANSMIT_HARD_ERROR conn is " + conn.getClass());

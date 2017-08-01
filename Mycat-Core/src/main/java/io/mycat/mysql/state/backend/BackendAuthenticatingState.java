@@ -1,12 +1,6 @@
 package io.mycat.mysql.state.backend;
 
 
-import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.buffer.PacketDescriptor;
-import io.mycat.buffer.PacketIterator;
-import io.mycat.machine.StateMachine;
-import io.mycat.mysql.MySQLConnection;
-import io.mycat.mysql.state.AbstractMysqlConnectionState;
 import io.mycat.mysql.state.PacketProcessStateTemplete;
 import io.mycat.net2.Connection;
 import org.slf4j.Logger;
@@ -15,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.packet.MySQLPacket;
+
+import java.io.IOException;
 
 /**
  * 认证状态
@@ -29,17 +25,17 @@ public class BackendAuthenticatingState extends PacketProcessStateTemplete {
     }
 
     @Override
-    public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) {
+    public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) throws IOException {
         return false;
     }
 
     @Override
-    public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
+    public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         return false;
     }
 
     @Override
-    public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) {
+    public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
         LOGGER.debug("Backend in AuthenticatingState");
         try {

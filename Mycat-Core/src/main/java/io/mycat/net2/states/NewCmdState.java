@@ -33,13 +33,8 @@ public class NewCmdState implements State {
             throw new IllegalStateException(conn + " has no nextState!");
         }
         conn.getDataBuffer().compact();
+        LOGGER.debug("Current conn in NewCmdState. conn is " + conn.getClass() + " after compact " + conn.getDataBuffer());
         conn.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
-        if (conn.getNetworkStateMachine().getNextState() == null) {
-            /* 命令解析完成后,应该制定后续状态,这里打印出 error 日志      */
-            LOGGER.error("Current conn in ReadWaitingState. conn is " + conn.getClass());
-            throw new RuntimeException(" error connState,you must set nextConnState ");
-        }
-
         return true;
     }
 

@@ -23,7 +23,6 @@ public class ParseCmdState implements State {
             throws IOException {
         LOGGER.debug("Current conn in ParseCmdState. conn is " + conn.getClass());
         ((MySQLConnection) conn).getProtocolStateMachine().driveState(null);
-        //有数据没传输完不设置状态
         if (conn.getNetworkStateMachine().getWriteRemaining() == 0) {
             conn.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
         }
