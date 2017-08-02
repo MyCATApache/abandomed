@@ -13,7 +13,7 @@ import java.nio.channels.SocketChannel;
  * <p>
  * Created by ynfeng on 2017/7/4.
  */
-public interface MycatByteBuffer {
+public interface MycatByteBuffer extends IterableBuffer {
 
     /**
      * 将readIndex和writeIndex之间的数据写出
@@ -23,6 +23,17 @@ public interface MycatByteBuffer {
      * @return 写出的字节数
      */
     int transferToChannel(SocketChannel socketChannel) throws IOException;
+
+    /**
+     * 向socketChannel写出length字节的数据
+     * 影响readIdex
+     *
+     * @param socketChannel 目标channel
+     * @param length        长度
+     * @return
+     * @throws IOException
+     */
+    int transferToChannel(SocketChannel socketChannel, int length) throws IOException;
 
     /**
      * 从channel中读取数据
@@ -98,16 +109,18 @@ public interface MycatByteBuffer {
      * @return 当前的写位置
      */
     int writeIndex();
-    
-    
+
+
     /**
      * 获取当前写出指针位置
+     *
      * @return
      */
     int writeLimit();
-    
+
     /**
      * 设置当前写指针位置
+     *
      * @param currentWriteIndex
      */
     void writeLimit(int writeLimit);
@@ -436,7 +449,7 @@ public interface MycatByteBuffer {
      * @param bytes byte数组
      * @return 本身的实例
      */
-    MycatByteBuffer putLenencBytes(int index,byte[] bytes);
+    MycatByteBuffer putLenencBytes(int index, byte[] bytes);
 
     /**
      * 在指定的位置放入byte,

@@ -3,6 +3,8 @@ package io.mycat.buffer;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by ynfeng on 2017/7/7.
@@ -12,6 +14,7 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
     private int capacity;
     private int mark;
 
+
     protected DirectFixBuffer(ByteBuffer byteBuffer, int capacity) {
         this.byteBuffer = byteBuffer;
         this.capacity = capacity;
@@ -19,7 +22,16 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
 
     @Override
     public int transferToChannel(SocketChannel socketChannel) throws IOException {
-        byteBuffer.limit(writeLimit()==0?writeIndex():writeLimit());
+        byteBuffer.limit(writeLimit() == 0 ? writeIndex() : writeLimit());
+        byteBuffer.position(readIndex());
+        int write = socketChannel.write(byteBuffer);
+        readIndex(readIndex() + write);
+        return write;
+    }
+
+    @Override
+    public int transferToChannel(SocketChannel socketChannel, int length) throws IOException {
+        byteBuffer.limit(readIndex() + length);
         byteBuffer.position(readIndex());
         int write = socketChannel.write(byteBuffer);
         readIndex(readIndex() + write);
@@ -47,21 +59,17 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
 
     @Override
     public MycatByteBuffer compact() {
-        byteBuffer.position(readIndex());
         byteBuffer.limit(writeIndex());
+        byteBuffer.position(readIndex());
         byteBuffer.compact();
-        writeIndex(writeIndex() - readIndex());
-        writeLimit(0);
-        readIndex(0);
+        super.compact();
         return this;
     }
 
     @Override
     public void clear() {
+        super.clear();
         byteBuffer.clear();
-        writeIndex(0);
-        writeLimit(0);
-        readIndex(0);
     }
 
     @Override
@@ -123,5 +131,4 @@ public class DirectFixBuffer extends AbstractMycatByteBuffer {
     public ByteBuffer getByteBuffer() {
         return byteBuffer;
     }
-
 }

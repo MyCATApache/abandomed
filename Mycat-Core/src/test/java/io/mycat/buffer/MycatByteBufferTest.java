@@ -188,8 +188,78 @@ public class MycatByteBufferTest {
         buffer.compact();
         Assert.assertTrue(buffer.readIndex() == 0);
         Assert.assertTrue(buffer.writeIndex() == 5);
-        Assert.assertTrue(buffer.readFixString(5).equals("world"));
+        String lastStr = buffer.readFixString(5);
+        Assert.assertTrue(lastStr.equals("world"));
         Assert.assertTrue(buffer.readableBytes() == 0);
+        buffer.clear();
+
+        buffer.writeFixInt(3, 5) //包长
+                .writeByte((byte) 1) //packetID
+                .writeByte((byte) 0xFE) //command type
+                .writeFixString("abcd"); //包内容
+        PacketIterator it = buffer.packetIterator();
+        long packetDescriptor = it.nextPacket();
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.FULL);
+        Assert.assertTrue(PacketDescriptor.getPacketLen(packetDescriptor) == 9);
+        buffer.writeFixInt(3, 5) //包长
+                .writeByte((byte) 1) //packetID
+                .writeByte((byte) 0xFE) //command type
+                .writeFixString("abcd"); //包内容
+        //模拟一次数据全写出
+        buffer.readIndex(buffer.writeIndex());
+        buffer.compact();
+        buffer.writeFixInt(3, 5) //包长
+                .writeByte((byte) 1) //packetID
+                .writeByte((byte) 0xFE) //command type
+                .writeFixString("abcd"); //包内容
+
+        packetDescriptor = it.nextPacket();
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.FULL);
+        Assert.assertTrue(PacketDescriptor.getPacketLen(packetDescriptor) == 9);
+        Assert.assertTrue(it.hasPacket() == false);
+        buffer.clear();
+
+        buffer.writeFixInt(3, 5) //包长
+                .writeByte((byte) 1) //packetID
+                .writeByte((byte) 0xFE) //command type
+                .writeFixString("abcd"); //包内容
+        it = buffer.packetIterator();
+        packetDescriptor = it.nextPacket();
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.FULL);
+        Assert.assertTrue(PacketDescriptor.getPacketLen(packetDescriptor) == 9);
+
+        buffer.writeFixInt(3, 5);
+        buffer.writeByte((byte) 1); //packetID
+        buffer.readIndex(buffer.writeIndex() - 4);
+        buffer.compact();
+        packetDescriptor = it.nextPacket();
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.SHORT_HALF);
+        buffer.clear();
+
+        buffer.writeFixInt(3, 5) //包长
+                .writeByte((byte) 1) //packetID
+                .writeByte((byte) 0xFE) //command type
+                .writeFixString("abcd"); //包内容
+        it = buffer.packetIterator();
+        packetDescriptor = it.nextPacket();
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.FULL);
+        Assert.assertTrue(PacketDescriptor.getPacketLen(packetDescriptor) == 9);
+
+        buffer.writeFixInt(3, 5) //包长
+                .writeByte((byte) 1) //packetID
+                .writeByte((byte) 0xFE) //command type
+                .writeFixString("ab"); //包内容
+
+        packetDescriptor = it.nextPacket();
+        Assert.assertTrue(it.hasPacket());
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.LONG_HALF);
+        buffer.compact();
+        Assert.assertTrue(it.hasPacket());
+        buffer.writeFixString("cd");
+        Assert.assertTrue(it.hasPacket());
+        packetDescriptor = it.nextPacket();
+        Assert.assertTrue(PacketDescriptor.getPacketType(packetDescriptor) == PacketDescriptor.PacketType.FULL);
+        buffer.clear();
         allocator.recyle(buffer);
     }
 
@@ -239,7 +309,7 @@ public class MycatByteBufferTest {
     }
 
     @Test
-    public void testSkip(){
+    public void testSkip() {
         MycatByteBuffer buffer = allocator.allocate();
         buffer.skip(10);
         Assert.assertTrue(buffer.readIndex() == 10);
@@ -247,9 +317,9 @@ public class MycatByteBufferTest {
     }
 
     @Test
-    public void testLenencBytesReadWrite(){
+    public void testLenencBytesReadWrite() {
         MycatByteBuffer buffer = allocator.allocate();
-        buffer.putLenencBytes(0,"hello".getBytes());
+        buffer.putLenencBytes(0, "hello".getBytes());
         Assert.assertTrue(buffer.readIndex() == 0);
         Assert.assertTrue(buffer.writeIndex() == 0);
         Assert.assertTrue(new String(buffer.getLenencBytes(0)).equals("hello"));
@@ -261,6 +331,10 @@ public class MycatByteBufferTest {
         Assert.assertTrue(new String(buffer.readLenencBytes()).equals("hello"));
         Assert.assertTrue(buffer.readIndex() == 6);
         allocator.recyle(buffer);
+    }
+
+    @Test
+    public void testPacketIterator() {
     }
 
     private String randomString(int length) {

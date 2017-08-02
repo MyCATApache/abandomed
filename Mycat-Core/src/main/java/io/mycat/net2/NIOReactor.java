@@ -74,7 +74,7 @@ public final class NIOReactor {
             this.setName(name);
             this.selector = Selector.open();
             this.registerQueue = new ConcurrentLinkedQueue<Connection>();
-            this.mycatByteBufferAllocator = new DirectFixBufferAllocator(15000);
+            this.mycatByteBufferAllocator = new DirectFixBufferAllocator(1024);
         }
 
         @Override
@@ -99,7 +99,7 @@ public final class NIOReactor {
                             LOGGER.debug("select-key-readyOps = {}, attachment = {}", key.readyOps(), att);
                             if (att != null && key.isValid()) {
                                 con = (Connection) att;
-                                con.networkDriverMachine();
+                                con.getNetworkStateMachine().driveState();
                             } else {
                                 key.cancel();
                             }
@@ -109,7 +109,7 @@ public final class NIOReactor {
                                     LOGGER.debug(con + " socket key canceled");
                                 }
                             } else {
-                                LOGGER.warn(con + " " + e);
+                                LOGGER.warn(con + "", e);
                             }
                         }
                     }
@@ -156,7 +156,7 @@ public final class NIOReactor {
                 try {
                     c.setSelector(selector);
                     c.setMycatByteBufferAllocator(mycatByteBufferAllocator);
-                    c.networkDriverMachine();
+                    c.getNetworkStateMachine().driveState();
                 } catch (Throwable e) {
                     LOGGER.warn("register error ", e);
                     c.close("register err");

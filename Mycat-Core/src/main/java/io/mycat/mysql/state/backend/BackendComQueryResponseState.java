@@ -1,14 +1,17 @@
-package io.mycat.mysql.state;
+package io.mycat.mysql.state.backend;
 
 
 import java.io.IOException;
 
+import io.mycat.machine.StateMachine;
+import io.mycat.mysql.MySQLConnection;
+import io.mycat.mysql.state.AbstractMysqlConnectionState;
+import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.ServerStatus;
 import io.mycat.mysql.packet.MySQLPacket;
 
@@ -17,22 +20,17 @@ import io.mycat.mysql.packet.MySQLPacket;
  *
  * @author ynfeng
  */
-public class ComQueryResponseState extends AbstractMysqlConnectionState {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ComQueryResponseState.class);
-    public static final ComQueryResponseState INSTANCE = new ComQueryResponseState();
+public class BackendComQueryResponseState extends AbstractMysqlConnectionState {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BackendComQueryResponseState.class);
+    public static final BackendComQueryResponseState INSTANCE = new BackendComQueryResponseState();
 
-    private ComQueryResponseState() {
+    private BackendComQueryResponseState() {
     }
 
     @Override
-    protected boolean frontendHandle(MySQLFrontConnection mySQLFrontConnection, Object attachment) throws IOException {
-        LOGGER.debug("Frontend in ComQueryResponseState");
-        return true;
-    }
-
-    @Override
-    protected boolean backendHandle(MySQLBackendConnection mySQLBackendConnection, Object attachment) throws IOException {
-        LOGGER.debug("Backend in ComQueryResponseState");
+    public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) throws IOException {
+        LOGGER.debug("Backend in BackendComQueryResponseState");
+        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
         boolean returnflag = false;
         try {
             processPacketHeader(mySQLBackendConnection);
@@ -56,14 +54,14 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
                             LOGGER.debug("后端连接，不在事务中，可以回收！{}", mySQLBackendConnection);
                         }
                         mySQLBackendConnection.getDataBuffer().writeLimit(mySQLBackendConnection.getCurrentPacketLength());
-                        mySQLBackendConnection.setNextState(IdleState.INSTANCE);
+                        mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendIdleState.INSTANCE);
                         SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true, true, true);
                         returnflag = false;  //触发透传,退出当前状态机
                     } else if (packageType == MySQLPacket.REQUEST_FILE_FIELD_COUNT) {
-                        mySQLBackendConnection.setNextState(ComLoadState.INSTANCE);
+//                        mySQLBackendConnection.setNextState(FrontendComLoadState.INSTANCE);
                         SQLEngineCtx.INSTANCE().getDataTransferChannel().transferToFront(mySQLBackendConnection, true, true, false);
                     } else {
-                        mySQLBackendConnection.setNextState(ComQueryColumnDefState.INSTANCE);
+                        mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendComQueryColumnDefState.INSTANCE);
                         mySQLBackendConnection.getDataBuffer().writeLimit(mySQLBackendConnection.getCurrentPacketLength());
                         returnflag = true;   //状态机自驱进入下一个状态
                     }
@@ -76,8 +74,8 @@ public class ComQueryResponseState extends AbstractMysqlConnectionState {
                     break;
             }
         } catch (IOException e) {
-            LOGGER.error("Backend ComQueryResponseState error", e);
-            mySQLBackendConnection.setNextState(CloseState.INSTANCE);
+            LOGGER.error("Backend BackendComQueryResponseState error", e);
+            mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);
             returnflag = false;
         }
         return returnflag;

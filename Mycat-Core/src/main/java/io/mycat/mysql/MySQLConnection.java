@@ -26,6 +26,8 @@ package io.mycat.mysql;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 
+import io.mycat.machine.SimpleStateMachine;
+import io.mycat.machine.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,23 +35,18 @@ import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.mysql.packet.ErrorPacket;
 import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.mysql.packet.MySQLPacket;
-import io.mycat.mysql.state.InitialState;
-import io.mycat.mysql.state.MysqlConnectionState;
 import io.mycat.net2.Connection;
 import io.mycat.net2.states.WriteWaitingState;
 import io.mycat.util.RandomUtil;
 
 /**
- * Mysql connection 
+ * Mysql connection
  *
  * @author wuzhihui
- *
  */
-public class MySQLConnection extends Connection implements StatefulConnection{
+public class MySQLConnection extends Connection {
     protected final static Logger LOGGER = LoggerFactory.getLogger(MySQLConnection.class);
 
-    private MysqlConnectionState state;
-    private MysqlConnectionState nextState;
 
     public final static int msyql_packetHeaderSize = 4;
 
@@ -59,9 +56,11 @@ public class MySQLConnection extends Connection implements StatefulConnection{
     protected int charsetIndex;
     protected byte[] seed;
 
-    public MySQLConnection(SocketChannel channel) {
+    public final ProtocolStateMachine protocolStateMachine;
+
+    public MySQLConnection(SocketChannel channel, State initialState) {
         super(channel);
-        this.state = InitialState.INSTANCE;
+        protocolStateMachine = new ProtocolStateMachine(this, initialState);
     }
 
     public static final boolean validateHeader(final long offset, final long position) {
@@ -156,7 +155,7 @@ public class MySQLConnection extends Connection implements StatefulConnection{
     public void writeMsqlPackage(MySQLPacket pkg) throws IOException {
         int pkgSize = pkg.calcPacketSize();
         pkg.write(getDataBuffer(), pkgSize);
-    	setNextNetworkState(WriteWaitingState.INSTANCE);
+        this.startTransfer(getDataBuffer(), pkgSize + 4);
     }
 
     public void writeErrMessage(int errno, String info) throws IOException {
@@ -164,7 +163,7 @@ public class MySQLConnection extends Connection implements StatefulConnection{
         err.packetId = 2;
         err.errno = errno;
         err.message = info.getBytes();
-       this.writeMsqlPackage(err);
+        this.writeMsqlPackage(err);
         this.writeMsqlPackage(err);
     }
 
@@ -174,10 +173,9 @@ public class MySQLConnection extends Connection implements StatefulConnection{
         err.errno = errno;
         err.message = info.getBytes();
         err.sqlState = sqlstate;
-       this.writeMsqlPackage(err);
         this.writeMsqlPackage(err);
     }
-    
+
 
     public String getUser() {
         return user;
@@ -195,48 +193,24 @@ public class MySQLConnection extends Connection implements StatefulConnection{
         this.password = password;
     }
 
-   
 
     public String getCharset() {
-		return charset;
-	}
+        return charset;
+    }
 
     public void setCharset(int charsetIndex, String charsetName) {
         this.charsetIndex = charsetIndex;
         this.charset = charsetName;
     }
 
-
-    @Override
-    public MySQLConnection setNextState(MysqlConnectionState state) {
-        this.nextState = state;
-        return this;
-    }
-    
-	@Override
-	public MysqlConnectionState getNextState() {
-		return nextState;
-	}
-
-    @Override
-    public void driveState(Object attachment)throws IOException {
-    	
-    	do{
-    		if (this.nextState != null) {
-                this.state = nextState;
-                this.nextState = null;
-            }
-    	}while(this.state.handle(this, attachment));
+    public ProtocolStateMachine getProtocolStateMachine() {
+        return protocolStateMachine;
     }
 
-    @Override
-    public void driveState()throws IOException {
-        driveState(null);
-    }
+    public class ProtocolStateMachine extends SimpleStateMachine {
 
-    @Override
-    public MysqlConnectionState getCurrentState() {
-        return state;
+        public ProtocolStateMachine(Connection connection, State initialState) {
+            super(connection, initialState);
+        }
     }
-
 }
