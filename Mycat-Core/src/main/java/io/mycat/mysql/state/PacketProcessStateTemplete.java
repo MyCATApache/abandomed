@@ -47,6 +47,7 @@ public abstract class PacketProcessStateTemplete extends AbstractMysqlConnection
                     break;
             }
             if (interrupted) {
+                interrupted = false;
                 return result;
             }
         }
