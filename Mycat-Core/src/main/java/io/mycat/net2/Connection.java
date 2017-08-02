@@ -260,11 +260,11 @@ public abstract class Connection implements ClosableConnection {
      *   TRANSMIT_SOFT_ERROR Can't write any more right now.
      *   TRANSMIT_HARD_ERROR Can't write (networkState is set to conn_closing)
      */
-    public TRANSMIT_RESULT write(MycatByteBuffer buffer,int length) throws IOException {
+    public TRANSMIT_RESULT write(MycatByteBuffer buffer, int length) throws IOException {
         final NetSystem nets = NetSystem.getInstance();
         int written = 0;
         int remains = 0;
-        written = buffer.transferToChannel(this.channel,length);
+        written = buffer.transferToChannel(this.channel, length);
         remains = buffer.readableBytes();//buffer.getWritePos() - buffer.getLastWritePos();
         if (written > 0) {
             netOutBytes += written;
@@ -294,12 +294,13 @@ public abstract class Connection implements ClosableConnection {
      * @param length
      */
     public void startTransfer(Connection dest, MycatByteBuffer mycatByteBuffer, int length) throws IOException {
-        NetworkStateMachine networkStateMachine = this.getNetworkStateMachine();
+        NetworkStateMachine networkStateMachine = dest.getNetworkStateMachine();
         if (networkStateMachine.getWriteRemaining() != 0) {
             throw new IOException("A transmission is in progress!");
         }
         networkStateMachine.setDest(dest);
         networkStateMachine.setSrc(this);
+        networkStateMachine.setBuffer(mycatByteBuffer);
         networkStateMachine.setWriteRemaining(length);
         networkStateMachine.setNextState(WriteWaitingState.INSTANCE);
         networkStateMachine.driveState();
@@ -504,6 +505,7 @@ public abstract class Connection implements ClosableConnection {
         private int writeRemaining;
         private Connection src;
         private Connection dest;
+        private MycatByteBuffer buffer;
 
         public NetworkStateMachine(Connection connection, State initialState) {
             super(connection, initialState);
@@ -531,6 +533,14 @@ public abstract class Connection implements ClosableConnection {
 
         public void setDest(Connection dest) {
             this.dest = dest;
+        }
+
+        public MycatByteBuffer getBuffer() {
+            return buffer;
+        }
+
+        public void setBuffer(MycatByteBuffer buffer) {
+            this.buffer = buffer;
         }
     }
 }

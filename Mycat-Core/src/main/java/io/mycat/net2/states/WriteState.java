@@ -26,8 +26,8 @@ public class WriteState implements State {
             throws IOException {
         LOGGER.debug("Current conn in WriteState. conn is " + conn.getClass());
         Connection.NetworkStateMachine networkStateMachine = (Connection.NetworkStateMachine) context;
-        MycatByteBuffer byteBuffer = conn.getDataBuffer();
-        TRANSMIT_RESULT result = networkStateMachine.getDest().write(byteBuffer, networkStateMachine.getWriteRemaining());
+        MycatByteBuffer byteBuffer = networkStateMachine.getBuffer();
+        TRANSMIT_RESULT result = conn.write(byteBuffer, networkStateMachine.getWriteRemaining());
         switch (result) {
             case TRANSMIT_COMPLETE:
                 LOGGER.debug("Current conn in WriteState  TRANSMIT_COMPLETE. conn is " + conn.getClass() + " buffer is " + byteBuffer);
