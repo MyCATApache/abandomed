@@ -32,7 +32,7 @@ public class NewCmdState implements State {
         if (mySQLConnection.getProtocolStateMachine().getNextState() == null) {
             throw new IllegalStateException(conn + " has no nextState!");
         }
-        conn.getDataBuffer().compact();
+        ((Connection.NetworkStateMachine) context).getBuffer().compact();
         LOGGER.debug("Current conn in NewCmdState. conn is " + conn.getClass() + " after compact " + conn.getDataBuffer());
         conn.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
         return true;

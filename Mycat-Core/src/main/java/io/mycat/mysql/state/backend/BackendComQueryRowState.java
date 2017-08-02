@@ -13,8 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.mysql.ServerStatus;
 import io.mycat.mysql.packet.MySQLPacket;
 
 /**
@@ -33,6 +31,8 @@ public class BackendComQueryRowState extends PacketProcessStateTemplete {
 
     @Override
     public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) throws IOException {
+        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
+        mySQLBackendConnection.startTransfer(mySQLBackendConnection.getMySQLFrontConnection(), mySQLBackendConnection.getDataBuffer());
         return false;
     }
 
@@ -46,12 +46,14 @@ public class BackendComQueryRowState extends PacketProcessStateTemplete {
     @Override
     public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
-        if (type == (byte) 0xfe) {
+        if (type == MySQLPacket.EOF_PACKET) {
             mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendIdleState.INSTANCE);
             mySQLBackendConnection.startTransfer(mySQLBackendConnection.getMySQLFrontConnection(), mySQLBackendConnection.getDataBuffer());
             interruptIterate();
             return false;
         }
+        //TODO bug!!!此处如果不透传，刚好buffer满了，网络状态机会一直卡在读状
+        mySQLBackendConnection.startTransfer(mySQLBackendConnection.getMySQLFrontConnection(), mySQLBackendConnection.getDataBuffer());
         return false;
     }
 }
