@@ -60,6 +60,7 @@ public class FrontendComQueryState extends PacketProcessStateTemplete {
                 }
             });
         } else {
+            backendConnection.getDataBuffer().clear();
             frontCon.startTransfer(backendConnection, frontCon.getDataBuffer());
             if (isFullPacket) {
                 backendConnection.getProtocolStateMachine().setNextState(BackendComQueryResponseState.INSTANCE);

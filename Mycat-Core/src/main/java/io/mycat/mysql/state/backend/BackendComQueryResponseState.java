@@ -44,8 +44,15 @@ public class BackendComQueryResponseState extends PacketProcessStateTemplete {
     @Override
     public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
-        mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendComQueryColumnDefState.INSTANCE);
-        interruptIterate();
-        return true;
+        if (type == MySQLPacket.ERROR_PACKET) {
+            mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendIdleState.INSTANCE);
+            mySQLBackendConnection.startTransfer(mySQLBackendConnection.getMySQLFrontConnection(), mySQLBackendConnection.getDataBuffer());
+            interruptIterate();
+            return false;
+        } else {
+            mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendComQueryColumnDefState.INSTANCE);
+            interruptIterate();
+            return true;
+        }
     }
 }

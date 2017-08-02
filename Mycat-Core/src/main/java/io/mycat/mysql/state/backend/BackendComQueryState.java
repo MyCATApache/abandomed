@@ -29,7 +29,7 @@ public class BackendComQueryState extends AbstractMysqlConnectionState {
 
     @Override
     public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) throws IOException {
-        LOGGER.debug("Backend in FrontendComQueryState");
+        LOGGER.debug("Backend in ComQueryState");
         MySQLBackendConnection conn = (MySQLBackendConnection) connection;
         MycatByteBuffer writeBuffer = conn.getDataBuffer();
         if (conn.isPassthrough()) {    //如果处于透传模式下,需要从共享buffer 获取数据
