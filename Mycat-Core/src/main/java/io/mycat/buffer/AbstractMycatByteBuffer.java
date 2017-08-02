@@ -126,24 +126,12 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
     @Override
     public MycatByteBuffer compact() {
         if (defaultPacketIterator != null && defaultPacketIterator instanceof SimplePacketIterator) {
-            //先将迭代器向后迭代至最后一个非整包
-            while (defaultPacketIterator.hasPacket()
-                    && PacketDescriptor.getPacketType(defaultPacketIterator.nextPacket()) == PacketDescriptor.PacketType.FULL)
-                ;
-            SimplePacketIterator simplePacketIterator = ((SimplePacketIterator) defaultPacketIterator);
-            int oldPacketPos = simplePacketIterator.getNextPacketPos();
-            simplePacketIterator.setNextPacketPos(oldPacketPos - readIndex());
+            adjustIterator((SimplePacketIterator) defaultPacketIterator);
         }
         if (namedPacketIteratorMap != null) {
             for (PacketIterator packetIterator : namedPacketIteratorMap.values()) {
                 if (packetIterator instanceof SimplePacketIterator) {
-                    SimplePacketIterator simplePacketIterator = ((SimplePacketIterator) packetIterator);
-                    //先将迭代器向后迭代至最后一个非整包
-                    while (defaultPacketIterator.hasPacket()
-                            && PacketDescriptor.getPacketType(defaultPacketIterator.nextPacket()) == PacketDescriptor.PacketType.FULL)
-                        ;
-                    int oldPacketPos = simplePacketIterator.getNextPacketPos();
-                    simplePacketIterator.setNextPacketPos(oldPacketPos - readIndex());
+                    adjustIterator((SimplePacketIterator) defaultPacketIterator);
                 }
             }
         }
@@ -151,6 +139,21 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
         writeLimit(0);
         readIndex(0);
         return this;
+    }
+
+    private void adjustIterator(SimplePacketIterator simplePacketIterator) {
+        int oldPacketPos = simplePacketIterator.getNextPacketPos();
+        int unhandled = 0;
+        int updatePos = 0;
+        if (simplePacketIterator.hasPacket()) {
+            if (PacketDescriptor.getPacketType(simplePacketIterator.nextPacket()) == PacketDescriptor.PacketType.FULL) {
+                unhandled = writeIndex() - oldPacketPos;
+            }
+            simplePacketIterator.fallback();
+            simplePacketIterator.nextPacket();
+        }
+        updatePos = oldPacketPos - readIndex() + unhandled;
+        simplePacketIterator.setNextPacketPos(updatePos);
     }
 
     @Override

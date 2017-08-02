@@ -24,7 +24,7 @@ public class SimplePacketIterator implements PacketIterator {
              * 此时应该处于半包状态,所以是有包需要处理的
              */
             return true;
-        } else if (writeIndex - 1 > nextPacketPos) {
+        } else if (writeIndex > nextPacketPos) {
             return true;
         }
 
@@ -39,21 +39,21 @@ public class SimplePacketIterator implements PacketIterator {
         int packetLen = 0;
         byte commandType = 0;
         if (nextPacketPos < 0) {
-            //TODO 未测试
-            //进行包对齐操作
-            if (nextPacketPos + writeIndex < lastPacketLen) {
+            //对齐指针
+            if (lastPacketType == PacketDescriptor.PacketType.LONG_HALF ||
+                    lastPacketType == PacketDescriptor.PacketType.FULL) {
+                if (nextPacketPos + lastPacketLen + 3 <= writeIndex) {
+                    nextPacketPos = writeIndex + 1;
+                }
                 packetDescriptor = PacketDescriptor.setPacketLen(packetDescriptor, lastPacketLen + 4);
                 packetDescriptor = PacketDescriptor.setPacketStartPos(packetDescriptor, nextPacketPos);
                 packetDescriptor = PacketDescriptor.setCommandType(packetDescriptor, lastCommandType);
                 packetDescriptor = PacketDescriptor.setPacketType(packetDescriptor, lastPacketType);
                 return packetDescriptor;
-            } else {
-                nextPacketPos = lastPacketLen - writeIndex;
             }
         }
         if (writeIndex - nextPacketPos >= 5) {
             packetLen = (int) buffer.getFixInt(nextPacketPos, 3);
-            int s = (int) buffer.getFixInt(nextPacketPos + 3, 1);
             commandType = buffer.getByte(nextPacketPos + 4);
             if (writeIndex - nextPacketPos < packetLen + 4) {
                 packetType = PacketDescriptor.PacketType.LONG_HALF;
@@ -94,9 +94,7 @@ public class SimplePacketIterator implements PacketIterator {
     }
 
     protected void setNextPacketPos(int nextPacketPos) {
-        if (this.nextPacketPos != 0) {
-            this.nextPacketPos = nextPacketPos;
-        }
+        this.nextPacketPos = nextPacketPos;
     }
 
     public int getNextPacketPos() {

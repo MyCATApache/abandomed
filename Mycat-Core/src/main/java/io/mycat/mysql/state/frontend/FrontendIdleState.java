@@ -33,10 +33,7 @@ public class FrontendIdleState extends PacketProcessStateTemplete {
     public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         LOGGER.debug("Frontend in FrontendIdleState long half packet");
         //与全包处理相同
-        boolean result = handleFullPacket(connection, attachment, packetStartPos, packetLen, type);
-        //因为是半包，所以立即中止迭代,进入下一状态
-        interruptIterate();
-        return result;
+        return handleFullPacket(connection, attachment, packetStartPos, packetLen, type);
     }
 
     @Override

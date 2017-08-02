@@ -39,9 +39,11 @@ public abstract class PacketProcessStateTemplete extends AbstractMysqlConnection
                     break;
                 case LONG_HALF:
                     result = handleLongHalfPacket(connection, attachment, packetStartPos, packetLen, type);
+                    interruptIterate();
                     break;
                 case SHORT_HALF:
                     result = handleShortHalfPacket(connection, attachment, packetStartPos);
+                    interruptIterate();
                     break;
             }
             if (interrupted) {
@@ -54,7 +56,9 @@ public abstract class PacketProcessStateTemplete extends AbstractMysqlConnection
     /**
      * 用于强行停止迭代过程
      * 注意：因为读写缓冲区共享的原因，如果在迭代过程中向缓冲区写入了包，
-     * 则必须要调用此方法中止迭代过程，否则会一直迭代新写入的包
+     * 则必须要调用此方法中止迭代过程，否则会一直迭代新写入的包。
+     * 另外当前包为两种半包的情况下也会一直迭代
+     * //TODO 能否有更清晰的处理方式？
      */
     public void interruptIterate() {
         this.interrupted = true;
