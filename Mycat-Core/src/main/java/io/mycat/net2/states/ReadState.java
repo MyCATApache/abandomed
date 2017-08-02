@@ -23,7 +23,7 @@ public class ReadState implements State {
     public boolean handle(StateMachine context, Connection conn, Object attachment)
             throws IOException {
         TRY_READ_RESULT res;
-        LOGGER.debug("Current conn in ReadState. conn is " + conn.getClass());
+        LOGGER.debug("Current conn in ReadState. conn is " + conn.getClass() + ",buffer is" + conn.getDataBuffer());
         res = conn.try_read_network();     /* writePos 指针向前移动   */
         switch (res) {
             case READ_NO_DATA_RECEIVED:
