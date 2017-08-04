@@ -16,6 +16,9 @@ public class NoWriteState implements State {
     private static final Logger LOGGER = LoggerFactory.getLogger(NoReadAndWriteState.class);
     public static final NoWriteState INSTANCE = new NoWriteState();
 
+    private NoWriteState() {
+    }
+
     @Override
     public boolean handle(StateMachine context, Connection connection, Object attachment) throws IOException {
         SelectionKey processKey = connection.getProcessKey();

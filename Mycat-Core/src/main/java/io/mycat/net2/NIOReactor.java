@@ -40,7 +40,6 @@ public final class NIOReactor {
 
     public void ensureInActorThread() {
         if (Thread.currentThread().getId() != reactorR.getId()) {
-            //System.out.println("thread "+Thread.currentThread().getId()+ ","+reactorR.getId());
             throw new RuntimeException("must called in actor thread ,connection.invokeLater(...) ,cur thread: " + Thread.currentThread().getName() + " should in thread: " + reactorR.getName());
         }
     }

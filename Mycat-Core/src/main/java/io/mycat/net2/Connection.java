@@ -295,9 +295,7 @@ public abstract class Connection implements ClosableConnection {
      */
     public void startTransfer(Connection dest, MycatByteBuffer mycatByteBuffer, int length) throws IOException {
         NetworkStateMachine networkStateMachine = dest.getNetworkStateMachine();
-        if (networkStateMachine.getWriteRemaining() != 0) {
-            throw new IOException("A transmission is in progress!");
-        }
+        networkStateMachine.setWriteRemaining(networkStateMachine.getWriteRemaining() + length);
         networkStateMachine.setDest(dest);
         networkStateMachine.setSrc(this);
         networkStateMachine.setBuffer(mycatByteBuffer);
@@ -541,6 +539,16 @@ public abstract class Connection implements ClosableConnection {
 
         public void setBuffer(MycatByteBuffer buffer) {
             this.buffer = buffer;
+        }
+
+        @Override
+        public String toString() {
+            return "NetworkStateMachine[" +
+                    "writeRemaining=" + writeRemaining +
+                    ", src=" + src +
+                    ", dest=" + dest +
+                    ", buffer=" + buffer +
+                    ']';
         }
     }
 }

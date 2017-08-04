@@ -16,6 +16,9 @@ public class NoReadState implements State {
     private static final Logger LOGGER = LoggerFactory.getLogger(NoReadAndWriteState.class);
     public static final NoReadState INSTANCE = new NoReadState();
 
+    private NoReadState() {
+    }
+
     @Override
     public boolean handle(StateMachine context, Connection connection, Object attachment) throws IOException {
         SelectionKey processKey = connection.getProcessKey();
