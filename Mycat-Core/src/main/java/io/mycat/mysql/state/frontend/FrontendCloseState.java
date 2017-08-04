@@ -25,8 +25,6 @@ public class FrontendCloseState extends AbstractMysqlConnectionState {
 
     @Override
     public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) {
-        LOGGER.debug("Frontend in FrontendCloseState");
-        MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
         connection.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
         return false;
     }

@@ -22,7 +22,6 @@ import io.mycat.mysql.packet.MySQLPacket;
  * @author ynfeng
  */
 public class BackendComQueryResponseState extends PacketProcessStateTemplete {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BackendComQueryResponseState.class);
     public static final BackendComQueryResponseState INSTANCE = new BackendComQueryResponseState();
 
     private BackendComQueryResponseState() {

@@ -26,7 +26,7 @@ public class FrontendConnectingState extends AbstractMysqlConnectionState {
      */
     @Override
     public boolean handle(StateMachine context, Connection connection, Object attachment) {
-        LOGGER.debug("Frontend in FrontendConnectingState");
+        LOGGER.debug(connection.getClass().getSimpleName() + " in " + this.getClass().getSimpleName());
         MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
         try {
             mySQLFrontConnection.sendAuthPackge();

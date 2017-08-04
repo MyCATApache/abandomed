@@ -12,7 +12,6 @@ import io.mycat.net2.states.network.TRY_READ_RESULT;
 
 
 public class ReadState implements State {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadState.class);
     public static final ReadState INSTANCE = new ReadState();
 
@@ -20,23 +19,23 @@ public class ReadState implements State {
     }
 
     @Override
-    public boolean handle(StateMachine context, Connection conn, Object attachment)
+    public boolean handle(StateMachine context, Connection connection, Object attachment)
             throws IOException {
         TRY_READ_RESULT res;
-        LOGGER.debug("Current conn in ReadState. conn is " + conn.getClass() + ",buffer is" + conn.getDataBuffer());
-        res = conn.try_read_network();     /* writePos 指针向前移动   */
+        res = connection.try_read_network();
+        LOGGER.debug(connection.getClass().getSimpleName() + " read from network result " + res + "." + connection);
         switch (res) {
             case READ_NO_DATA_RECEIVED:
-                conn.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
+                connection.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
                 break;
             case READ_DATA_RECEIVED:   /* 数据读取完成,开始解析命令 */
-                conn.getNetworkStateMachine().setNextState(ParseCmdState.INSTANCE);
+                connection.getNetworkStateMachine().setNextState(ParseCmdState.INSTANCE);
                 break;
             case READ_ERROR:
-                conn.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
+                connection.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
                 break;
             case READ_MEMORY_ERROR: /* Failed to allocate more memory */
-                conn.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
+                connection.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
                 break;
         }
         return true;

@@ -22,7 +22,6 @@ public class WriteWaitingState implements State {
     @Override
     public boolean handle(StateMachine context, Connection conn, Object attachment)
             throws IOException {
-        LOGGER.debug("Current conn in WriteWaitingState. conn is " + conn.getClass());
         boolean needWakeup = false;
         SelectionKey processKey = conn.getProcessKey();
         try {

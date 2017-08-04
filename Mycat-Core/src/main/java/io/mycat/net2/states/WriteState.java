@@ -22,29 +22,25 @@ public class WriteState implements State {
     }
 
     @Override
-    public boolean handle(StateMachine context, Connection conn, Object attachment)
+    public boolean handle(StateMachine context, Connection connection, Object attachment)
             throws IOException {
-        LOGGER.debug("Current conn in WriteState. conn is " + conn.getClass());
         Connection.NetworkStateMachine networkStateMachine = (Connection.NetworkStateMachine) context;
         MycatByteBuffer byteBuffer = networkStateMachine.getBuffer();
-        TRANSMIT_RESULT result = conn.write(byteBuffer, networkStateMachine.getWriteRemaining());
+        TRANSMIT_RESULT result = connection.write(byteBuffer, networkStateMachine.getWriteRemaining());
+        LOGGER.debug(connection.getClass().getSimpleName() + " write to network result " + result + "." + connection);
         switch (result) {
             case TRANSMIT_COMPLETE:
-                LOGGER.debug("Current conn in WriteState  TRANSMIT_COMPLETE. conn is " + conn.getClass() + " buffer is " + byteBuffer);
                 networkStateMachine.setWriteRemaining(0);
-                conn.getNetworkStateMachine().setNextState(NewCmdState.INSTANCE);
+                connection.getNetworkStateMachine().setNextState(NewCmdState.INSTANCE);
                 return true;
             case TRANSMIT_INCOMPLETE:
-                LOGGER.debug("Current conn in WriteState TRANSMIT_INCOMPLETE conn is " + conn.getClass());
                 int updateRemaining = networkStateMachine.getWriteRemaining() - (networkStateMachine.getWriteRemaining() - byteBuffer.readableBytes());
                 networkStateMachine.setWriteRemaining(updateRemaining);
                 return true;  //没有传输完成,继续保持当前状态,继续传输
             case TRANSMIT_HARD_ERROR: /* 连接断开了... */
-                LOGGER.debug("Current conn in WriteState TRANSMIT_HARD_ERROR conn is " + conn.getClass());
-                conn.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
+                connection.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
                 return true;
             case TRANSMIT_SOFT_ERROR:  /* socket write buffer pool is full */
-                LOGGER.debug("Current conn in WriteState ,socket write buffer pool is full. conn is " + conn.getClass());
                 return false;
         }
         return true;

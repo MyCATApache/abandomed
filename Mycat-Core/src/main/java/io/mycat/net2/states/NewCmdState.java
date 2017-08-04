@@ -18,7 +18,6 @@ import io.mycat.net2.Connection;
  */
 public class NewCmdState implements State {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NewCmdState.class);
     public static final NewCmdState INSTANCE = new NewCmdState();
 
 
@@ -27,13 +26,11 @@ public class NewCmdState implements State {
 
     @Override
     public boolean handle(StateMachine context, Connection conn, Object attachment) throws IOException {
-        LOGGER.debug("Current conn in NewCmdState. conn is " + conn.getClass());
         MySQLConnection mySQLConnection = (MySQLConnection) conn;
         if (mySQLConnection.getProtocolStateMachine().getNextState() == null) {
             throw new IllegalStateException(conn + " has no nextState!");
         }
         ((Connection.NetworkStateMachine) context).getBuffer().compact();
-        LOGGER.debug("Current conn in NewCmdState. conn is " + conn.getClass() + " after compact " + conn.getDataBuffer());
         conn.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
         return true;
     }

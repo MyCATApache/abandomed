@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
  * @author ynfeng
  */
 public class FrontendHandshakeState extends AbstractMysqlConnectionState {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FrontendHandshakeState.class);
     public static final FrontendHandshakeState INSTANCE = new FrontendHandshakeState();
 
     private FrontendHandshakeState() {
@@ -25,7 +24,6 @@ public class FrontendHandshakeState extends AbstractMysqlConnectionState {
      */
     @Override
     public boolean handle(StateMachine context, Connection connection, Object attachment) {
-        LOGGER.debug("Frontend in FrontendHandshakeState");
         MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
         mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendAuthenticatingState.INSTANCE);
         return true;

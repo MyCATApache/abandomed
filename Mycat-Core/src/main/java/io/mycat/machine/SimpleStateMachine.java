@@ -1,6 +1,8 @@
 package io.mycat.machine;
 
 import io.mycat.net2.Connection;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
@@ -8,6 +10,7 @@ import java.io.IOException;
  * Created by ynfeng on 2017/7/31.
  */
 public class SimpleStateMachine implements StateMachine {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleStateMachine.class);
     protected State state;
     private State nextState;
     private Connection connection;
@@ -30,13 +33,15 @@ public class SimpleStateMachine implements StateMachine {
 
     @Override
     public void driveState(Object attachment) throws IOException {
-
+        boolean result;
         do {
             if (this.nextState != null) {
                 this.state = nextState;
                 this.nextState = null;
             }
-        } while (this.state.handle(this, connection, attachment));
+            LOGGER.debug(connection.getClass().getSimpleName() + "'s " + this.getClass().getSimpleName() + " drive to " + state.getClass().getSimpleName());
+            result = this.state.handle(this, connection, attachment);
+        } while (result);
     }
 
     @Override
