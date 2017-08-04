@@ -208,8 +208,23 @@ public class MySQLConnection extends Connection {
 
     public class ProtocolStateMachine extends SimpleStateMachine {
 
-        public ProtocolStateMachine(Connection connection, State initialState) {
+        public ProtocolStateMachine(Connection connection, State initialState)
+        {
             super(connection, initialState);
         }
+
+        @Override
+        public String toString() {
+            return "ProtocolStateMachine{" +
+                    "state=" + state +
+                    '}';
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "MySQLConnection{" +
+                "protocolStateMachine=" + protocolStateMachine +
+                '}' + super.toString();
     }
 }

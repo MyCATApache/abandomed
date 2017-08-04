@@ -44,9 +44,6 @@ public class FrontendComQueryState extends PacketProcessStateTemplete {
             frontCon.addTodoTask(() -> {
                 frontCon.startTransfer(finalBackendConnection, frontCon.getDataBuffer());
                 if (isFullPacket) {
-                    //TODO 这种人工干预的内存清理操作要想办法自动处理
-                    //TODO 另外前后端的流量匹配应该在网络状态机中自动完成
-                    //TODO 网络状态机上下文中已经放置了传输时的两个连接和buffer
                     finalBackendConnection.getDataBuffer().clear();
                     finalBackendConnection.getProtocolStateMachine().setNextState(BackendComQueryResponseState.INSTANCE);
                     frontCon.getProtocolStateMachine().setNextState(FrontendIdleState.INSTANCE);

@@ -41,6 +41,8 @@ public class BackendComQueryColumnDefState extends PacketProcessStateTemplete {
             interruptIterate();
             return true;
         }
+        //TODO bug!!!此处如果不透传，刚好buffer满了，网络状态机会一直卡在读状
+        mySQLBackendConnection.startTransfer(mySQLBackendConnection.getMySQLFrontConnection(), mySQLBackendConnection.getDataBuffer());
         return false;
     }
 }

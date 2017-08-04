@@ -446,12 +446,12 @@ public abstract class AbstractMycatByteBuffer implements MycatByteBuffer {
 
     @Override
     public String toString() {
-        String str = this.getClass().getSimpleName() + "[writeIndex = " + writeIndex() + ",readIndex=" + readIndex() + ",writeLimit=" + writeLimit() + "]";
-        if (defaultPacketIterator != null) {
-            str += "," + defaultPacketIterator.toString();
-        }
-        return str;
+        return "AbstractMycatByteBuffer{" +
+                "writeIndex=" + writeIndex +
+                ", readIndex=" + readIndex +
+                ", writeLimit=" + writeLimit +
+                ", defaultPacketIterator=" + defaultPacketIterator +
+                ", namedPacketIteratorMap=" + namedPacketIteratorMap +
+                '}';
     }
-
-
 }

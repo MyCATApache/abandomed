@@ -29,7 +29,6 @@ public class FrontendIdleState extends PacketProcessStateTemplete {
 
     @Override
     public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
-        //与全包处理相同
         return handleFullPacket(connection, attachment, packetStartPos, packetLen, type);
     }
 

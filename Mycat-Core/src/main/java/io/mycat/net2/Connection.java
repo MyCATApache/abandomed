@@ -372,7 +372,7 @@ public abstract class Connection implements ClosableConnection {
     public String toString() {
         return "Connection [host=" + host + ",  port=" + port + ", id=" + id + ", state=" + networkStateMachine.getCurrentState() + ", direction="
                 + direction + ", startupTime=" + startupTime + ", lastReadTime=" + lastReadTime + ", lastWriteTime="
-                + lastWriteTime + "]";
+                + lastWriteTime + "buffer," + dataBuffer + "]";
     }
 
     public String getReactor() {
