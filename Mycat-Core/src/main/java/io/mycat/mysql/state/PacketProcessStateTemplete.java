@@ -19,29 +19,29 @@ public abstract class PacketProcessStateTemplete extends AbstractMysqlConnection
     private static final Logger LOGGER = LoggerFactory.getLogger(PacketProcessStateTemplete.class);
     private boolean interrupted = false;
 
-
     @Override
     public boolean handle(StateMachine context, Connection connection, Object attachment) throws IOException {
-        LOGGER.debug(this.getClass().getSimpleName() + " handle packet = " + connection.getDataBuffer());
         MycatByteBuffer buffer = connection.getDataBuffer();
         PacketIterator it = buffer.packetIterator();
         boolean result = false;
         while (it.hasPacket()) {
-            long pakcetDescriptor = it.nextPacket();
-            LOGGER.debug("Iterate packet {}", pakcetDescriptor);
-            int packetStartPos = PacketDescriptor.getPacketStartPos(pakcetDescriptor);
-            int packetLen = PacketDescriptor.getPacketLen(pakcetDescriptor);
-            byte type = PacketDescriptor.getCommandType(pakcetDescriptor);
-            PacketDescriptor.PacketType packetType = PacketDescriptor.getPacketType(pakcetDescriptor);
+            long packetDescriptor = it.nextPacket();
+            int packetStartPos = PacketDescriptor.getPacketStartPos(packetDescriptor);
+            int packetLen = PacketDescriptor.getPacketLen(packetDescriptor);
+            byte type = PacketDescriptor.getCommandType(packetDescriptor);
+            PacketDescriptor.PacketType packetType = PacketDescriptor.getPacketType(packetDescriptor);
             switch (packetType) {
                 case FULL:
+                    LOGGER.debug(connection.getClass().getSimpleName() + ",handle A FULL packet.packetStartPos=" + packetStartPos + ",packetLen=" + packetLen + ",type=" + type);
                     result = handleFullPacket(connection, attachment, packetStartPos, packetLen, type);
                     break;
                 case LONG_HALF:
+                    LOGGER.debug(connection.getClass().getSimpleName() + ",handle A FULL_HALF packet.packetStartPos=" + packetStartPos + ",packetLen=" + packetLen + ",type=" + type);
                     result = handleLongHalfPacket(connection, attachment, packetStartPos, packetLen, type);
                     interruptIterate();
                     break;
                 case SHORT_HALF:
+                    LOGGER.debug(connection.getClass().getSimpleName() + ",handle A Short packet.packetStartPos=" + packetStartPos);
                     result = handleShortHalfPacket(connection, attachment, packetStartPos);
                     interruptIterate();
                     break;

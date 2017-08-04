@@ -14,8 +14,6 @@ import org.slf4j.LoggerFactory;
  * @author ynfeng
  */
 public class FrontendInitialState extends AbstractMysqlConnectionState {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FrontendInitialState.class);
-
     public static final FrontendInitialState INSTANCE = new FrontendInitialState();
 
     private FrontendInitialState() {
@@ -26,8 +24,7 @@ public class FrontendInitialState extends AbstractMysqlConnectionState {
      */
     @Override
     public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) {
-        LOGGER.debug("Frontend in FrontendConnectingState");
-        MySQLFrontConnection mySQLFrontConnection  = (MySQLFrontConnection)connection;
+        MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
         mySQLFrontConnection.getProtocolStateMachine().setNextState(FrontendConnectingState.INSTANCE);
         return true;
     }

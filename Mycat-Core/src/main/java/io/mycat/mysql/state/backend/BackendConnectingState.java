@@ -19,7 +19,6 @@ import java.io.IOException;
  * @author ynfeng
  */
 public class BackendConnectingState extends AbstractMysqlConnectionState {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BackendConnectingState.class);
     public static final BackendConnectingState INSTANCE = new BackendConnectingState();
 
     private BackendConnectingState() {
@@ -30,7 +29,6 @@ public class BackendConnectingState extends AbstractMysqlConnectionState {
      */
     @Override
     public boolean handle(StateMachine stateMachine, Connection connection, Object attachment) throws IOException {
-        LOGGER.debug("Backend in FrontendConnectingState");
         MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
         mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendHandshakeState.INSTANCE);
         NetSystem.getInstance().getConnector().postConnect(mySQLBackendConnection);

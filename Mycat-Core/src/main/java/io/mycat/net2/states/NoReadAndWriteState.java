@@ -21,7 +21,6 @@ public class NoReadAndWriteState implements State {
     @Override
     public boolean handle(StateMachine context, Connection conn, Object attachment)
             throws IOException {
-        LOGGER.debug("Current conn in NoReadAndWriteState. conn is " + conn.getClass());
         SelectionKey processKey = conn.getProcessKey();
         boolean needWakeup = false;
         try {

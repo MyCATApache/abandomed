@@ -20,7 +20,6 @@ public class ReadWaitingState implements State {
 
     @Override
     public boolean handle(StateMachine context, Connection conn, Object attachment) throws IOException {
-        LOGGER.debug("Current conn in ReadWaitingState. conn is " + conn.getClass());
         boolean needWakeup = false;
         try {
             conn.getProcessKey().interestOps(conn.getProcessKey().interestOps() & Connection.OP_NOT_WRITE);

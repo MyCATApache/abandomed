@@ -12,7 +12,6 @@ import io.mycat.net2.NetSystem;
 
 public class ListeningState implements State {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(ListeningState.class);
     public static final ListeningState INSTANCE = new ListeningState();
 
 
@@ -21,7 +20,6 @@ public class ListeningState implements State {
 
 	@Override
 	public boolean handle(StateMachine context, Connection conn, Object attachment) throws IOException {
-		LOGGER.debug("Current conn in ListeningState. conn is "+conn.getClass());
 		NetSystem.getInstance().addConnection(conn);
         conn.setDataBuffer(conn.getMycatByteBufferAllocator().allocate());
         return conn.init();

@@ -44,7 +44,6 @@ public class FrontendAuthenticatingState extends PacketProcessStateTemplete {
     public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         MySQLFrontConnection mySQLFrontConnection = (MySQLFrontConnection) connection;
         try {
-            LOGGER.debug("Frontend in FrontendAuthenticatingState");
             AuthPacket auth = new AuthPacket();
             auth.read(mySQLFrontConnection.getDataBuffer());
 

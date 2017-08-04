@@ -37,7 +37,6 @@ public class BackendAuthenticatingState extends PacketProcessStateTemplete {
     @Override
     public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
-        LOGGER.debug("Backend in AuthenticatingState");
         try {
             if (type == MySQLPacket.ERROR_PACKET) {
                 mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendCloseState.INSTANCE);

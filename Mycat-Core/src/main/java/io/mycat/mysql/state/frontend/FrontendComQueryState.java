@@ -19,7 +19,6 @@ import java.io.IOException;
  * @author ynfeng
  */
 public class FrontendComQueryState extends PacketProcessStateTemplete {
-    private static final Logger LOGGER = LoggerFactory.getLogger(FrontendComQueryState.class);
     public static final FrontendComQueryState INSTANCE = new FrontendComQueryState();
 
     private FrontendComQueryState() {
@@ -32,13 +31,11 @@ public class FrontendComQueryState extends PacketProcessStateTemplete {
 
     @Override
     public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
-        LOGGER.debug("Frontend in FrontendComQueryState long half packet");
         return internalProcess(connection, false);
     }
 
     @Override
     public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
-        LOGGER.debug("Frontend in FrontendComQueryState");
         return internalProcess(connection, true);
     }
 

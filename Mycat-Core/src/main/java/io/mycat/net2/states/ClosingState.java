@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 import io.mycat.net2.Connection;
 
 public class ClosingState implements State {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClosingState.class);
     public static final ClosingState INSTANCE = new ClosingState();
 
 
@@ -21,7 +19,6 @@ public class ClosingState implements State {
     @Override
     public boolean handle(StateMachine context, Connection conn, Object attachment)
             throws IOException {
-        LOGGER.debug("Current conn in ClosingState. conn is " + conn.getClass());
         conn.close(" close connection!");
         return false;
     }

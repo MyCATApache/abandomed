@@ -22,7 +22,6 @@ import io.mycat.mysql.packet.MySQLPacket;
  * @author ynfeng
  */
 public class BackendComQueryColumnDefState extends PacketProcessStateTemplete {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BackendComQueryColumnDefState.class);
     public static final BackendComQueryColumnDefState INSTANCE = new BackendComQueryColumnDefState();
 
 

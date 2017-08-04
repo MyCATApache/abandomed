@@ -37,7 +37,6 @@ public class BackendHandshakeState extends PacketProcessStateTemplete {
     @Override
     public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
-        LOGGER.debug("Backend in HandshakeState");
         try {
             processHandShakePacket(mySQLBackendConnection);
             mySQLBackendConnection.authenticate();

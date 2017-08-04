@@ -21,7 +21,6 @@ public class ParseCmdState implements State {
     @Override
     public boolean handle(StateMachine context, Connection conn, Object object)
             throws IOException {
-        LOGGER.debug("Current conn in ParseCmdState. conn is " + conn.getClass());
         ((MySQLConnection) conn).getProtocolStateMachine().driveState(null);
         if (conn.getNetworkStateMachine().getWriteRemaining() == 0) {
             conn.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);

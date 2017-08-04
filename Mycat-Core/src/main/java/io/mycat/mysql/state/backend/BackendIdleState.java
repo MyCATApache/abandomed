@@ -21,7 +21,6 @@ import io.mycat.mysql.packet.MySQLPacket;
  * @author ynfeng
  */
 public class BackendIdleState extends PacketProcessStateTemplete {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BackendIdleState.class);
 
     public static final BackendIdleState INSTANCE = new BackendIdleState();
 
@@ -35,17 +34,14 @@ public class BackendIdleState extends PacketProcessStateTemplete {
 
     @Override
     public boolean handleLongHalfPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
-        LOGGER.debug("Backend in IdleState long half packet");
         return handleFullPacket(connection, attachment, packetStartPos, packetLen, type);
     }
 
     @Override
     public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
-        LOGGER.debug("Backend in IdleState");
         switch (type) {
             case MySQLPacket.COM_QUERY:
-                LOGGER.debug("Backend receive a COM_QUERY in IdleState");
                 mySQLBackendConnection.getDataBuffer().packetIterator().fallback();
                 mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendComQueryState.INSTANCE);
                 return true;
