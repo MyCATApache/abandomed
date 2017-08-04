@@ -2,13 +2,9 @@ package io.mycat.net2.states;
 
 import java.io.IOException;
 
-import io.mycat.machine.State;
-import io.mycat.machine.StateMachine;
-import io.mycat.mysql.MySQLConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.mycat.common.State;
+import io.mycat.common.StateMachine;
 
-import io.mycat.backend.WriteCompleteListener;
 import io.mycat.net2.Connection;
 
 /**

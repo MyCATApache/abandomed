@@ -1,4 +1,4 @@
-package io.mycat.machine;
+package io.mycat.common;
 
 import io.mycat.net2.Connection;
 import org.slf4j.Logger;

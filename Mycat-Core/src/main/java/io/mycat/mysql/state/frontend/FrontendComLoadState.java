@@ -2,7 +2,7 @@ package io.mycat.mysql.state.frontend;
 
 import java.io.IOException;
 
-import io.mycat.machine.StateMachine;
+import io.mycat.common.StateMachine;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
 import io.mycat.net2.Connection;
 import org.slf4j.Logger;

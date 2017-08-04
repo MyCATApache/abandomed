@@ -5,8 +5,8 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
-import io.mycat.machine.SimpleStateMachine;
-import io.mycat.machine.State;
+import io.mycat.common.SimpleStateMachine;
+import io.mycat.common.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +14,6 @@ import io.mycat.backend.WriteCompleteListener;
 import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.buffer.MycatByteBufferAllocator;
 import io.mycat.engine.dataChannel.TransferMode;
-import io.mycat.machine.StateMachine;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.states.ClosedState;
 import io.mycat.net2.states.ClosingState;

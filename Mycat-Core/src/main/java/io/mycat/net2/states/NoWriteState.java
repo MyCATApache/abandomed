@@ -1,7 +1,7 @@
 package io.mycat.net2.states;
 
-import io.mycat.machine.State;
-import io.mycat.machine.StateMachine;
+import io.mycat.common.State;
+import io.mycat.common.StateMachine;
 import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

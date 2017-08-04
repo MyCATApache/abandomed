@@ -1,9 +1,7 @@
 package io.mycat.mysql.state.frontend;
 
 
-import io.mycat.front.MySQLFrontConnection;
-import io.mycat.machine.StateMachine;
-import io.mycat.mysql.MySQLConnection;
+import io.mycat.common.StateMachine;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
 import io.mycat.net2.Connection;
 import io.mycat.net2.states.ClosingState;

@@ -3,18 +3,10 @@ package io.mycat.mysql.state.backend;
 
 import java.io.IOException;
 
-import io.mycat.machine.StateMachine;
-import io.mycat.mysql.MySQLConnection;
-import io.mycat.mysql.state.AbstractMysqlConnectionState;
 import io.mycat.mysql.state.PacketProcessStateTemplete;
 import io.mycat.net2.Connection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import io.mycat.SQLEngineCtx;
 import io.mycat.backend.MySQLBackendConnection;
-import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.mysql.packet.MySQLPacket;
 
 /**
  * 列定义传送状态

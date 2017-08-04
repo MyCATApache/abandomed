@@ -2,11 +2,9 @@ package io.mycat.mysql.state.frontend;
 
 
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.machine.StateMachine;
+import io.mycat.common.StateMachine;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
 import io.mycat.net2.Connection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 握手状态

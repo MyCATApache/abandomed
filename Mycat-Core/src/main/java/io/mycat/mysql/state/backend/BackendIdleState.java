@@ -3,14 +3,8 @@ package io.mycat.mysql.state.backend;
 
 import java.io.IOException;
 
-import io.mycat.machine.StateMachine;
-import io.mycat.mysql.MySQLConnection;
-import io.mycat.mysql.state.AbstractMysqlConnectionState;
 import io.mycat.mysql.state.PacketProcessStateTemplete;
 import io.mycat.net2.Connection;
-import io.mycat.net2.states.network.TRY_READ_RESULT;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.mysql.packet.MySQLPacket;

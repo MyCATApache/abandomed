@@ -28,6 +28,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
+import io.mycat.common.ExecutorUtil;
+import io.mycat.common.NameableExecutor;
+import io.mycat.common.NamebleScheduledExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,12 +41,9 @@ import io.mycat.beans.SchemaBean;
 import io.mycat.engine.impl.NormalSchemaSQLCommandHandler;
 import io.mycat.engine.impl.PartionSchemaSQLCommandHandler;
 import io.mycat.front.MySQLFrontendConnectionFactory;
-import io.mycat.net2.ExecutorUtil;
 import io.mycat.net2.NIOAcceptor;
 import io.mycat.net2.NIOConnector;
 import io.mycat.net2.NIOReactorPool;
-import io.mycat.net2.NameableExecutor;
-import io.mycat.net2.NamebleScheduledExecutor;
 import io.mycat.net2.NetSystem;
 import io.mycat.net2.SystemConfig;
 

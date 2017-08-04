@@ -1,4 +1,4 @@
-package io.mycat.net2;
+package io.mycat.common;
 
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;

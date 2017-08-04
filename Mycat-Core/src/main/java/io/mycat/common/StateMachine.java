@@ -1,4 +1,4 @@
-package io.mycat.machine;
+package io.mycat.common;
 
 import java.io.IOException;
 

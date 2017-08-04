@@ -3,7 +3,7 @@ package io.mycat.mysql.state;
 import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.buffer.PacketDescriptor;
 import io.mycat.buffer.PacketIterator;
-import io.mycat.machine.StateMachine;
+import io.mycat.common.StateMachine;
 import io.mycat.net2.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

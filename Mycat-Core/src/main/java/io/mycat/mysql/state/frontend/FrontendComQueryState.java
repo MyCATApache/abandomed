@@ -3,13 +3,9 @@ package io.mycat.mysql.state.frontend;
 
 import io.mycat.backend.MySQLBackendConnection;
 import io.mycat.front.MySQLFrontConnection;
-import io.mycat.machine.StateMachine;
 import io.mycat.mysql.state.PacketProcessStateTemplete;
 import io.mycat.mysql.state.backend.BackendComQueryResponseState;
 import io.mycat.net2.Connection;
-import io.mycat.net2.states.NoReadAndWriteState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
