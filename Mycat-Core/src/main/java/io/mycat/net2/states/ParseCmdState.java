@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 import io.mycat.net2.Connection;
 
 public class ParseCmdState implements State {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ParseCmdState.class);
     public static final ParseCmdState INSTANCE = new ParseCmdState();
 
     private ParseCmdState() {

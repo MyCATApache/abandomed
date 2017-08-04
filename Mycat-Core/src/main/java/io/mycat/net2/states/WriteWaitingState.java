@@ -20,21 +20,21 @@ public class WriteWaitingState implements State {
 
 
     @Override
-    public boolean handle(StateMachine context, Connection conn, Object attachment)
+    public boolean handle(StateMachine context, Connection connection, Object attachment)
             throws IOException {
-        boolean needWakeup = false;
-        SelectionKey processKey = conn.getProcessKey();
+        SelectionKey processKey = connection.getProcessKey();
+        Connection.NetworkStateMachine networkStateMachine = ((Connection.NetworkStateMachine) context);
         try {
             processKey.interestOps(processKey.interestOps() & Connection.OP_NOT_READ);
             processKey.interestOps(processKey.interestOps() | SelectionKey.OP_WRITE);
-            needWakeup = true;
+            connection.getNetworkStateMachine().setNextState(WriteState.INSTANCE);
+            if (connection != networkStateMachine.getDest()) {
+                networkStateMachine.getDest().getNetworkStateMachine().setNextState(NoReadState.INSTANCE);
+            }
+            processKey.selector().wakeup();
         } catch (Exception e) {
             LOGGER.warn("enable read fail " + e);
-            conn.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
-        }
-        if (needWakeup) {
-            processKey.selector().wakeup();
-            conn.getNetworkStateMachine().setNextState(WriteState.INSTANCE);
+            connection.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
         }
         return false;
     }

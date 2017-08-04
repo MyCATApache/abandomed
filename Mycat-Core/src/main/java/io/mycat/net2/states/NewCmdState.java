@@ -12,8 +12,6 @@ import io.mycat.backend.WriteCompleteListener;
 import io.mycat.net2.Connection;
 
 /**
- * 当前状态会
- *
  * @author yanjunli
  */
 public class NewCmdState implements State {
@@ -25,13 +23,13 @@ public class NewCmdState implements State {
     }
 
     @Override
-    public boolean handle(StateMachine context, Connection conn, Object attachment) throws IOException {
-        MySQLConnection mySQLConnection = (MySQLConnection) conn;
-        if (mySQLConnection.getProtocolStateMachine().getNextState() == null) {
-            throw new IllegalStateException(conn + " has no nextState!");
+    public boolean handle(StateMachine context, Connection connection, Object attachment) throws IOException {
+        Connection.NetworkStateMachine networkStateMachine = ((Connection.NetworkStateMachine) context);
+        networkStateMachine.getBuffer().compact();
+        networkStateMachine.setNextState(ReadWaitingState.INSTANCE);
+        if (networkStateMachine.getDest() != connection) {
+            networkStateMachine.getDest().getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
         }
-        ((Connection.NetworkStateMachine) context).getBuffer().compact();
-        conn.getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);
         return true;
     }
 

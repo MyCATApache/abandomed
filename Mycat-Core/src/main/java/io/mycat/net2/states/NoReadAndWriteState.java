@@ -22,17 +22,12 @@ public class NoReadAndWriteState implements State {
     public boolean handle(StateMachine context, Connection conn, Object attachment)
             throws IOException {
         SelectionKey processKey = conn.getProcessKey();
-        boolean needWakeup = false;
         try {
-
             processKey.interestOps(processKey.interestOps() & Connection.OP_NOT_READ);
             processKey.interestOps(processKey.interestOps() & Connection.OP_NOT_WRITE);
-            needWakeup = true;
+            return true;
         } catch (Exception e) {
             LOGGER.warn("enable read fail " + e);
-        }
-        if (needWakeup) {
-            processKey.selector().wakeup();
         }
         return false;
     }
