@@ -157,8 +157,6 @@ public class MySQLBackendConnection extends MySQLConnection {
             throw new RuntimeException(e.getMessage());
         }
         packet.database = schema;
-        System.out.println("auth " + user + " :" + password + "@" + schema);
-
         // write to connection
         this.writeMsqlPackage(packet);
 

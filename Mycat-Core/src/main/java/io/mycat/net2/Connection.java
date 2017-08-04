@@ -5,8 +5,8 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 
-import io.mycat.machine.SimpleStateMachine;
-import io.mycat.machine.State;
+import io.mycat.common.SimpleStateMachine;
+import io.mycat.common.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +14,6 @@ import io.mycat.backend.WriteCompleteListener;
 import io.mycat.buffer.MycatByteBuffer;
 import io.mycat.buffer.MycatByteBufferAllocator;
 import io.mycat.engine.dataChannel.TransferMode;
-import io.mycat.machine.StateMachine;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.states.ClosedState;
 import io.mycat.net2.states.ClosingState;
@@ -295,9 +294,7 @@ public abstract class Connection implements ClosableConnection {
      */
     public void startTransfer(Connection dest, MycatByteBuffer mycatByteBuffer, int length) throws IOException {
         NetworkStateMachine networkStateMachine = dest.getNetworkStateMachine();
-        if (networkStateMachine.getWriteRemaining() != 0) {
-            throw new IOException("A transmission is in progress!");
-        }
+        networkStateMachine.setWriteRemaining(networkStateMachine.getWriteRemaining() + length);
         networkStateMachine.setDest(dest);
         networkStateMachine.setSrc(this);
         networkStateMachine.setBuffer(mycatByteBuffer);
@@ -375,7 +372,7 @@ public abstract class Connection implements ClosableConnection {
     public String toString() {
         return "Connection [host=" + host + ",  port=" + port + ", id=" + id + ", state=" + networkStateMachine.getCurrentState() + ", direction="
                 + direction + ", startupTime=" + startupTime + ", lastReadTime=" + lastReadTime + ", lastWriteTime="
-                + lastWriteTime + "]";
+                + lastWriteTime + "buffer," + dataBuffer + "]";
     }
 
     public String getReactor() {
@@ -541,6 +538,16 @@ public abstract class Connection implements ClosableConnection {
 
         public void setBuffer(MycatByteBuffer buffer) {
             this.buffer = buffer;
+        }
+
+        @Override
+        public String toString() {
+            return "NetworkStateMachine[" +
+                    "writeRemaining=" + writeRemaining +
+                    ", src=" + src +
+                    ", dest=" + dest +
+                    ", buffer=" + buffer +
+                    ']';
         }
     }
 }

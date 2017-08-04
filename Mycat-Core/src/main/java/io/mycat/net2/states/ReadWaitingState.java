@@ -3,8 +3,8 @@ package io.mycat.net2.states;
 import java.io.IOException;
 import java.nio.channels.SelectionKey;
 
-import io.mycat.machine.State;
-import io.mycat.machine.StateMachine;
+import io.mycat.common.State;
+import io.mycat.common.StateMachine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,19 +19,19 @@ public class ReadWaitingState implements State {
     }
 
     @Override
-    public boolean handle(StateMachine context, Connection conn, Object attachment) throws IOException {
-        boolean needWakeup = false;
+    public boolean handle(StateMachine context, Connection connection, Object attachment) throws IOException {
         try {
-            conn.getProcessKey().interestOps(conn.getProcessKey().interestOps() & Connection.OP_NOT_WRITE);
-            conn.getProcessKey().interestOps(conn.getProcessKey().interestOps() | SelectionKey.OP_READ);
-            needWakeup = true;
+            Connection.NetworkStateMachine networkStateMachine = ((Connection.NetworkStateMachine) context);
+            connection.getProcessKey().interestOps(connection.getProcessKey().interestOps() & Connection.OP_NOT_WRITE);
+            connection.getProcessKey().interestOps(connection.getProcessKey().interestOps() | SelectionKey.OP_READ);
+            connection.getNetworkStateMachine().setNextState(ReadState.INSTANCE);
+            if (connection != networkStateMachine.getDest()) {
+                networkStateMachine.getDest().getNetworkStateMachine().setNextState(NoWriteState.INSTANCE);
+            }
+            connection.getProcessKey().selector().wakeup();
         } catch (Exception e) {
             LOGGER.warn("enable read fail ", e);
-            conn.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
-        }
-        if (needWakeup) {
-            conn.getProcessKey().selector().wakeup();
-            conn.getNetworkStateMachine().setNextState(ReadState.INSTANCE);   //继续解析剩下的数据
+            connection.getNetworkStateMachine().setNextState(ClosingState.INSTANCE);
         }
         return false;
     }

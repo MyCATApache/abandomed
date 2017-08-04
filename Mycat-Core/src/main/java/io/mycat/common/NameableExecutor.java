@@ -1,4 +1,4 @@
-package io.mycat.net2;
+package io.mycat.common;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author wuzh
  */
-public class NameableExecutor  extends ThreadPoolExecutor implements NameableExecutorService{
+public class NameableExecutor  extends ThreadPoolExecutor implements NameableExecutorService {
     protected  final String name;
 
     public NameableExecutor(String name, int size, BlockingQueue<Runnable> queue, ThreadFactory factory) {

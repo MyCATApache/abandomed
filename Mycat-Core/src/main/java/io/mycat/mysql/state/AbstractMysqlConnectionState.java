@@ -9,7 +9,7 @@ import io.mycat.backend.MySQLDataSource;
 import io.mycat.backend.MySQLReplicatSet;
 import io.mycat.beans.DNBean;
 import io.mycat.buffer.MycatByteBuffer;
-import io.mycat.machine.State;
+import io.mycat.common.State;
 import io.mycat.engine.dataChannel.TransferMode;
 import io.mycat.front.MySQLFrontConnection;
 import io.mycat.mysql.MySQLConnection;

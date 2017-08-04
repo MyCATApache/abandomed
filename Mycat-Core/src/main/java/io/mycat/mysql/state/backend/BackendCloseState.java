@@ -1,8 +1,7 @@
 package io.mycat.mysql.state.backend;
 
 
-import io.mycat.machine.StateMachine;
-import io.mycat.mysql.MySQLConnection;
+import io.mycat.common.StateMachine;
 import io.mycat.mysql.state.AbstractMysqlConnectionState;
 import io.mycat.net2.Connection;
 import org.slf4j.Logger;

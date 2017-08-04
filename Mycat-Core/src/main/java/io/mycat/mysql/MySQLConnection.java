@@ -26,8 +26,8 @@ package io.mycat.mysql;
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
 
-import io.mycat.machine.SimpleStateMachine;
-import io.mycat.machine.State;
+import io.mycat.common.SimpleStateMachine;
+import io.mycat.common.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +36,6 @@ import io.mycat.mysql.packet.ErrorPacket;
 import io.mycat.mysql.packet.HandshakePacket;
 import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.net2.Connection;
-import io.mycat.net2.states.WriteWaitingState;
 import io.mycat.util.RandomUtil;
 
 /**
@@ -209,8 +208,23 @@ public class MySQLConnection extends Connection {
 
     public class ProtocolStateMachine extends SimpleStateMachine {
 
-        public ProtocolStateMachine(Connection connection, State initialState) {
+        public ProtocolStateMachine(Connection connection, State initialState)
+        {
             super(connection, initialState);
         }
+
+        @Override
+        public String toString() {
+            return "ProtocolStateMachine{" +
+                    "state=" + state +
+                    '}';
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "MySQLConnection{" +
+                "protocolStateMachine=" + protocolStateMachine +
+                '}' + super.toString();
     }
 }
