@@ -23,6 +23,10 @@ public class BackendComQueryColumnDefState extends PacketProcessStateTemplete {
 
     @Override
     public boolean handleShortHalfPacket(Connection connection, Object attachment, int packetStartPos) throws IOException {
+        MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
+        if (mySQLBackendConnection.getDataBuffer().writableBytes() == 0) {
+            mySQLBackendConnection.startTransfer(mySQLBackendConnection.getMySQLFrontConnection(), mySQLBackendConnection.getDataBuffer());
+        }
         return false;
     }
 
@@ -41,8 +45,10 @@ public class BackendComQueryColumnDefState extends PacketProcessStateTemplete {
             interruptIterate();
             return true;
         }
-        //TODO bug!!!此处如果不透传，刚好buffer满了，网络状态机会一直卡在读状
-        mySQLBackendConnection.startTransfer(mySQLBackendConnection.getMySQLFrontConnection(), mySQLBackendConnection.getDataBuffer());
+        if (mySQLBackendConnection.getDataBuffer().writableBytes() == 0) {
+            mySQLBackendConnection.startTransfer(mySQLBackendConnection.getMySQLFrontConnection(), mySQLBackendConnection.getDataBuffer());
+            interruptIterate();
+        }
         return false;
     }
 }
