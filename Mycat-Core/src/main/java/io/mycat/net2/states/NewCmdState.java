@@ -21,7 +21,9 @@ public class NewCmdState implements State {
     @Override
     public boolean handle(StateMachine context, Connection connection, Object attachment) throws IOException {
         Connection.NetworkStateMachine networkStateMachine = ((Connection.NetworkStateMachine) context);
-        networkStateMachine.getBuffer().compact();
+        if (networkStateMachine.getBuffer().writableBytes() < (networkStateMachine.getBuffer().capacity() / 2)) {
+            networkStateMachine.getBuffer().compact();
+        }
         networkStateMachine.setNextState(ReadWaitingState.INSTANCE);
         if (networkStateMachine.getDest() != connection) {
             networkStateMachine.getDest().getNetworkStateMachine().setNextState(ReadWaitingState.INSTANCE);

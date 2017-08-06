@@ -31,7 +31,7 @@ public class FrontendComLoadState extends AbstractMysqlConnectionState {
             frontCon.getNetworkStateMachine().setNextState(NoReadAndWriteState.INSTANCE);
             //  如果当前状态数据报文可能有多个，需要透传
             while (true) {
-                processPacketHeader(frontCon);
+//                processPacketHeader(frontCon);
                 MycatByteBuffer dataBuffer = frontCon.getDataBuffer();
                 switch (frontCon.getDirectTransferMode()) {
                     case COMPLETE_PACKET:
