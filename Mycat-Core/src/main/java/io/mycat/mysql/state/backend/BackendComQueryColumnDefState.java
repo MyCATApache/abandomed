@@ -3,6 +3,7 @@ package io.mycat.mysql.state.backend;
 
 import java.io.IOException;
 
+import io.mycat.mysql.packet.MySQLPacket;
 import io.mycat.mysql.state.PacketProcessStateTemplete;
 import io.mycat.net2.Connection;
 
@@ -40,7 +41,7 @@ public class BackendComQueryColumnDefState extends PacketProcessStateTemplete {
     @Override
     public boolean handleFullPacket(Connection connection, Object attachment, int packetStartPos, int packetLen, byte type) throws IOException {
         MySQLBackendConnection mySQLBackendConnection = (MySQLBackendConnection) connection;
-        if (type == (byte) 0xfe) {
+        if (type == MySQLPacket.EOF_PACKET) {
             mySQLBackendConnection.getProtocolStateMachine().setNextState(BackendComQueryRowState.INSTANCE);
             interruptIterate();
             return true;
