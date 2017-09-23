@@ -1,3 +1,3 @@
-# Mycat2
-Mycat 2.0 incubate
-Mycat 2.0 孵化版本，全新的NIO框架，更加高效，欢迎更多牛人参与
+# Mycat2（ mycat 2.0 转移到 https://github.com/MyCATApache/tcp-proxy）
+
+mycat2.0 最新代码，及后续的更新都会在 https://github.com/MyCATApache/tcp-proxy 项目进行。
